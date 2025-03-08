@@ -1,0 +1,46 @@
+########################
+#   SIR by CroaBeast   #
+# Depressed since 2004 #
+########################
+# Want to use Unicode characters? Check this site: https://coolsymbol.com
+
+# The Updater Checker for new plugin updates and new file settings.
+updater:
+  # Sends a reminder when the plugin is completely enabled.
+  # Disabling won't send any reminder.
+  on-start: true
+  # Sends a reminder to OP's or players with 'sir.admin.update'
+  # permission. Disabling won't send any reminder.
+  send-op: true
+
+# Some useful options for this plugin if you want to change them.
+options:
+  lang: en
+  # Use color in the console, you can disable it if any color issue
+  # is present in the logger.
+  colored-console: true
+  # if enabled, it will show the prefix of the message type in
+  # the console. Example:
+  # [ACTION-BAR] My action bar message.
+  show-prefix: true
+  # Custom check that deny OP permission system and check if that OP
+  # player has a certain permission.
+  # False by default to replicate vanilla behaviour.
+  override-op: false
+  # Custom check that will verify first SIR mute feature player status
+  # before any mute-plugin checks for mute.
+  check-mute: true
+
+# You can delete the values' section if you want to use the hard-coded values.
+values:
+  # Every message that start with this string, will have the main-prefix.
+  lang-prefix-key: '<P>'
+  # The main prefix will be inserted in lines with <P> or "lang-prefix-key" string.
+  lang-prefix: ' &e&lSIR &8>&7'
+  # Valid only in SIR files and inputs that accept centered messages.
+  # Put this first on those chat messages you want to center.
+  center-prefix: '<C>'
+  # Can be used in most of the plugin files and the /print command.
+  # If you want to add more than one line in your CHAT type message,
+  # or you want title AND subtitle, use it to split the message.
+  line-separator: '<n>'

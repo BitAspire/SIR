@@ -1,0 +1,17 @@
+emojis:
+  # a random number or a custom name
+  1:
+    # the key to be replaced for the value
+    key: ':admin:'
+    checks:
+      # If the key is using regex format
+      is-regex: false
+      # If the key will check only in every word
+      is-word: false
+      # If the key is case-sensitive
+      case-sensitive: false
+    # the output value of the emoji
+    value: '&5owo'
+  2:
+    key: ':heart:'
+    value: '&c<3'

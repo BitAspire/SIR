@@ -1,0 +1,112 @@
+package me.croabeast.sir.plugin.command;
+
+import me.croabeast.lib.command.BaseCommand;
+import me.croabeast.lib.command.TabBuilder;
+import me.croabeast.lib.file.ConfigurableFile;
+import me.croabeast.lib.util.ServerInfoUtils;
+import me.croabeast.sir.plugin.aspect.AspectButton;
+import me.croabeast.sir.plugin.SIRPlugin;
+import me.croabeast.sir.plugin.file.FileData;
+import me.croabeast.sir.plugin.misc.Timer;
+import me.croabeast.takion.message.MessageSender;
+import org.apache.commons.lang.SystemUtils;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Deque;
+import java.util.LinkedList;
+import java.util.Objects;
+import java.util.function.BiPredicate;
+
+final class MainCommand extends SIRCommand {
+
+    MainCommand() {
+        super("sir", false);
+
+        final MessageSender sender = plugin.getLibrary().getLoadedSender();
+
+        editSubCommand("reload", (s, strings) -> {
+            final Timer timer = Timer.create(true);
+            FileData.loadFiles();
+
+            plugin.getModuleManager().unregister();
+            plugin.getCommandManager().unregister();
+
+            plugin.getModuleManager().register();
+            plugin.getCommandManager().register();
+
+            return senderPredicate("{time}", timer.result(), "reload").test(s, strings);
+        });
+
+        editSubCommand("modules", (s, strings) -> {
+            final Player player = s instanceof Player ? (Player) s : null;
+            if (player == null)
+                return sender.copy().send("&cThis command is only for players.");
+
+            if (ServerInfoUtils.SERVER_VERSION < 14.0)
+                return sender.copy().setTargets(player).send(
+                        "<P> &cModules GUI is not supported on this version.",
+                        "<P> &7Enable/disable modules in modules/modules.yml file"
+                );
+
+            plugin.getModuleManager().getMenu().showGUI(player);
+            return true;
+        });
+
+        editSubCommand("about", (s, strings) -> {
+            final Player player = s instanceof Player ? (Player) s : null;
+
+            return sender.copy().setTargets(player).send(
+                    "", " &eSIR &7- &f" + SIRPlugin.getVersion() + "&7:",
+                    "   &8• &7Server Software: &f" + ServerInfoUtils.SERVER_FORK,
+                    "   &8• &7Developer: &f" + SIRPlugin.getAuthor(),
+                    "   &8• &7Java Version: &f" + SystemUtils.JAVA_VERSION, ""
+            );
+        });
+
+        editSubCommand("help", senderPredicate("{version}", SIRPlugin.getVersion(), "help"));
+        editSubCommand("support",
+                senderPredicate("{link}", "https://discord.gg/s9YFGMrjyF", "support"));
+    }
+
+    private BiPredicate<CommandSender, String[]> senderPredicate(String key, Object o, String path) {
+        return (s, strings) -> createSender(s).addPlaceholder(key, o).send(path);
+    }
+
+    @Override
+    public boolean isOverriding() {
+        return true;
+    }
+
+    @Override
+    protected boolean execute(CommandSender sender, String[] args) {
+        return Objects.requireNonNull(getSubCommand("help"))
+                .getExecutable()
+                .executeAction(sender, args).asBoolean();
+    }
+
+    @NotNull
+    protected ConfigurableFile getLang() {
+        return FileData.Command.SIR.getFile();
+    }
+
+    @NotNull
+    public TabBuilder getCompletionBuilder() {
+        final TabBuilder builder = createBasicTabBuilder();
+
+        for (BaseCommand sub : getSubCommands()) {
+            Deque<String> list = new LinkedList<>(sub.getAliases());
+            list.addFirst(sub.getName());
+
+            builder.addArguments(0, (s, a) -> sub.isPermitted(s), list);
+        }
+
+        return builder;
+    }
+
+    @NotNull
+    public AspectButton getButton() {
+        return null;
+    }
+}

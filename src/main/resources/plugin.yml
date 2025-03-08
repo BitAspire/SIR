@@ -1,0 +1,96 @@
+main: me.croabeast.sir.plugin.SIRPlugin
+
+name: SIR # Simple In-game Receptionist
+version: '${project.version}'
+prefix: SIR
+authors: [ CroaBeast ]
+api-version: 1.13
+
+depend: [Takion]
+
+softdepend:
+  # Utility plugins
+  - ViaVersion
+  - Vault
+  - PlaceholderAPI
+  - PacketEvents
+  - InteractiveChat
+  # Login plugins
+  - UserLogin
+  - AuthMe
+  - NexAuth
+  - nLogin
+  - OpeNLogin
+  # Vanish plugins
+  - SuperVanish
+  - PremiumVanish
+  - CMI
+  - Essentials
+  # Misc
+  - AdvancedBan
+  - DiscordSRV
+
+permissions:
+  sir.*:
+    default: op
+    children:
+      sir.admin.*: true
+      sir.print.*: true
+      sir.announcer.*: true
+
+  sir.admin.*:
+    default: op
+    children:
+      sir.admin.about: true
+      sir.admin.modules: true
+      sir.admin.help: true
+      sir.admin.reload: true
+      sir.admin.updater: true
+
+  sir.print.*:
+    default: op
+    children:
+      sir.print.targets: true
+      sir.print.action-bar: true
+      sir.print.chat: true
+      sir.print.title: true
+
+  sir.announcer.*:
+    default: op
+    children:
+      sir.announcer.help: true
+      sir.announcer.preview: true
+      sir.announcer.start: true
+      sir.announcer.stop: true
+      sir.announcer.reboot: true
+
+  sir.admin.about:
+    default: op
+  sir.admin.modules:
+    default: op
+  sir.admin.help:
+    default: op
+  sir.admin.reload:
+    default: op
+  sir.admin.updater:
+    default: op
+
+  sir.print.targets:
+    default: op
+  sir.print.action-bar:
+    default: op
+  sir.print.chat:
+    default: op
+  sir.print.title:
+    default: op
+
+  sir.announcer.preview:
+    default: op
+  sir.announcer.help:
+    default: op
+  sir.announcer.start:
+    default: op
+  sir.announcer.stop:
+    default: op
+  sir.announcer.reboot:
+    default: op
