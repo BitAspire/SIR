@@ -11,7 +11,7 @@ import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.sir.plugin.misc.ChatChannel;
 import me.croabeast.sir.plugin.aspect.AspectKey;
 import me.croabeast.sir.plugin.SIRPlugin;
-import me.croabeast.sir.plugin.file.FileData;
+import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.misc.SIRUser;
 import me.croabeast.sir.plugin.manager.SIRUserManager;
 import me.croabeast.takion.message.chat.ChatClick;

@@ -1,13 +1,12 @@
-package me.croabeast.sir.plugin.file;
+package me.croabeast.sir.plugin;
 
 import lombok.Getter;
 import lombok.experimental.UtilityClass;
 import me.croabeast.lib.file.ConfigurableFile;
 import me.croabeast.lib.file.YAMLFile;
 import me.croabeast.lib.util.Exceptions;
-import me.croabeast.sir.plugin.SIRPlugin;
+import me.croabeast.sir.plugin.misc.FileKey;
 import me.croabeast.sir.plugin.misc.DelayLogger;
-import me.croabeast.takion.logger.TakionLogger;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -22,7 +21,7 @@ import java.util.regex.Pattern;
 @UtilityClass
 public class FileData {
 
-    private final Map<String, ConfigurableFile> FILE_MAP;
+    final Map<String, ConfigurableFile> FILE_MAP;
     private final List<String> FILE_PATHS;
 
     static {
@@ -75,9 +74,7 @@ public class FileData {
 
         SIRFile(String folder, String name) throws IOException {
             super(SIRPlugin.getInstance(), folder, name);
-
             setResourcePath("resources" + File.separator + getLocation());
-            setLoggerAction(TakionLogger.getLogger()::log);
         }
 
         @Override

@@ -6,7 +6,7 @@ import me.croabeast.lib.util.ReplaceUtils;
 import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.sir.api.file.ConfigUnit;
 import me.croabeast.sir.plugin.misc.ChatChannel;
-import me.croabeast.sir.plugin.file.FileData;
+import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.misc.SIRUser;
 import me.croabeast.takion.message.chat.ChatComponent;
 import org.apache.commons.lang.StringUtils;
@@ -114,7 +114,7 @@ final class MentionFormatter extends SIRModule implements PlayerFormatter<ChatCh
 
                 String result = op.apply(mention.value);
 
-                ChatComponent b = ChatComponent.create(result)
+                ChatComponent b = ChatComponent.create(plugin.getLibrary(), result)
                         .setHover(hover).setClick(click);
 
                 String replace = b.toPatternString();

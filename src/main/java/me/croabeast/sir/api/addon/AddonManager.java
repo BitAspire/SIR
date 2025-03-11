@@ -75,15 +75,5 @@ public interface AddonManager {
      * @return a list of loaded addons
      */
     @NotNull List<SIRAddon> getAddons();
-
-    /**
-     * Gets the singleton instance of the AddonManager.
-     * @return the AddonManager instance
-     */
-    @NotNull
-    static AddonManager getManager() {
-        AddonManager manager = AddonMngrImpl.manager;
-        return manager == null ? (AddonMngrImpl.manager = new AddonMngrImpl()) : manager;
-    }
 }
 

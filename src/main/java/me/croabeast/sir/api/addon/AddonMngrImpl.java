@@ -1,6 +1,7 @@
 package me.croabeast.sir.api.addon;
 
-import me.croabeast.takion.logger.TakionLogger;
+import lombok.RequiredArgsConstructor;
+import me.croabeast.sir.plugin.SIRPlugin;
 import me.croabeast.lib.CollectionBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -10,15 +11,16 @@ import java.io.IOException;
 import java.util.*;
 import java.util.jar.JarFile;
 
+@RequiredArgsConstructor
 class AddonMngrImpl implements AddonManager {
 
     private final Map<String, SIRAddon> byName = new HashMap<>();
     private final Map<Class<? extends SIRAddon>, SIRAddon> byClass = new HashMap<>();
 
-    static AddonManager manager;
+    private final SIRPlugin plugin;
 
-    static void log(String string) {
-        TakionLogger.getLogger().log(string);
+    void log(String string) {
+        plugin.getLibrary().getLogger().log(string);
     }
 
     AddonFile getDescription(File file) throws IOException {
@@ -91,7 +93,7 @@ class AddonMngrImpl implements AddonManager {
         if (addon.isEnabled()) return true;
 
         String name = addon.getFullName();
-        TakionLogger.getLogger().log("Enabling " + name);
+        log("Enabling " + name);
 
         try {
             return addon.enabled = addon.enable();
@@ -108,7 +110,7 @@ class AddonMngrImpl implements AddonManager {
         if (!addon.isEnabled()) return true;
 
         String name = addon.getFullName();
-        TakionLogger.getLogger().log("Disabling " + name);
+        log("Disabling " + name);
 
         try {
             return !(addon.enabled = !addon.disable());

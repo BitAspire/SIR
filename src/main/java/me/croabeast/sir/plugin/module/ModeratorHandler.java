@@ -9,10 +9,9 @@ import me.croabeast.lib.Registrable;
 import me.croabeast.lib.file.ConfigurableFile;
 import me.croabeast.lib.util.ReplaceUtils;
 import me.croabeast.sir.api.CustomListener;
-import me.croabeast.sir.plugin.file.FileData;
+import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.manager.SIRUserManager;
 import me.croabeast.sir.plugin.LangUtils;
-import me.croabeast.takion.logger.TakionLogger;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -315,7 +314,7 @@ final class ModeratorHandler extends ListenerModule {
 
             String format = operator.apply(logs.get());
             if (logs.isEnabled())
-                TakionLogger.doLog(format);
+                plugin.getLibrary().getServerLogger().log(format);
 
             Result<String> staff = options.notifyOptions;
 

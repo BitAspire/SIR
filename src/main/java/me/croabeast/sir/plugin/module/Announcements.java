@@ -7,11 +7,11 @@ import me.croabeast.lib.command.TabBuilder;
 import me.croabeast.lib.file.Configurable;
 import me.croabeast.lib.file.ConfigurableFile;
 import me.croabeast.sir.plugin.Commandable;
-import me.croabeast.sir.plugin.file.FileData;
-import me.croabeast.sir.plugin.file.FileKey;
+import me.croabeast.sir.plugin.FileData;
+import me.croabeast.sir.plugin.misc.FileKey;
 import me.croabeast.sir.plugin.misc.SIRUser;
 import me.croabeast.sir.plugin.LangUtils;
-import me.croabeast.takion.logger.TakionLogger;
+import me.croabeast.takion.misc.StringAligner;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
@@ -68,7 +68,7 @@ final class Announcements extends SIRModule implements Actionable, Commandable<M
 
                 editSubCommand("preview", (sender, args) -> {
                     if (!(sender instanceof Player)) {
-                        TakionLogger.getLogger()
+                        plugin.getLibrary().getLogger()
                                 .log("&cYou can't preview an announce in console.");
                         return true;
                     }
@@ -227,11 +227,12 @@ final class Announcements extends SIRModule implements Actionable, Commandable<M
         void display(Set<SIRUser> users) {
             if (users.isEmpty()) return;
 
+            lines.replaceAll(s -> StringAligner.align(plugin.getLibrary(), s));
+
             plugin.getLibrary().getLoadedSender()
                     .setTargets(CollectionBuilder
                             .of(users)
-                            .map(SIRUser::getPlayer)
-                            .toSet())
+                            .map(SIRUser::getPlayer).toSet())
                     .send(lines);
 
             users.forEach(u -> u.playSound(sound));

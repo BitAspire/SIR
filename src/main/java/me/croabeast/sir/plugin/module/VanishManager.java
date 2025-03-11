@@ -9,7 +9,7 @@ import me.croabeast.lib.CollectionBuilder;
 import me.croabeast.lib.file.Configurable;
 import me.croabeast.lib.util.Exceptions;
 import me.croabeast.sir.api.CustomListener;
-import me.croabeast.sir.plugin.file.FileData;
+import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.misc.SIRUser;
 import me.croabeast.takion.message.MessageSender;
 import net.ess3.api.IUser;
@@ -29,14 +29,14 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@Getter
 final class VanishManager extends ListenerModule implements HookLoadable {
 
-    private final String[] supportedPlugins =
-            {"Essentials", "CMI", "SuperVanish", "PremiumVanish"};
+    @Getter
+    final String[] supportedPlugins = {"Essentials", "CMI", "SuperVanish", "PremiumVanish"};
     private final List<Plugin> loadedHooks;
 
     private final Set<LoadedListener> listeners = new HashSet<>();
+    @Getter
     private boolean loaded = false;
 
     VanishManager() {
@@ -91,6 +91,11 @@ final class VanishManager extends ListenerModule implements HookLoadable {
 
         listeners.removeIf(LoadedListener::unregister);
         loaded = false;
+    }
+
+    @Override
+    public Plugin getHookedPlugin() {
+        return loadedHooks.size() != 1 ? null : loadedHooks.get(0);
     }
 
     @EventHandler

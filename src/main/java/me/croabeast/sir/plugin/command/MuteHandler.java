@@ -8,7 +8,7 @@ import me.croabeast.lib.time.TimeFormatter;
 import me.croabeast.lib.time.TimeValues;
 import me.croabeast.sir.plugin.Commandable;
 import me.croabeast.sir.plugin.aspect.AspectButton;
-import me.croabeast.sir.plugin.file.FileData;
+import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.misc.SIRUser;
 import me.croabeast.sir.plugin.LangUtils;
 import me.croabeast.takion.message.MessageSender;
@@ -224,7 +224,7 @@ final class MuteHandler implements Commandable<SIRCommand> {
 
         String parseTime(long remaining) {
             ConfigurationSection section = getLang().getSection("lang.time");
-            return new TimeFormatter(
+            return new TimeFormatter(plugin.getLibrary(),
                     section == null ?
                             null :
                             TimeValues.fromSection(section),

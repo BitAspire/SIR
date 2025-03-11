@@ -5,7 +5,6 @@ import me.croabeast.lib.reflect.Reflector;
 import me.croabeast.sir.plugin.manager.CommandManager;
 import me.croabeast.sir.plugin.command.SIRCommand;
 import me.croabeast.sir.plugin.gui.MenuCreator;
-import me.croabeast.takion.logger.TakionLogger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -36,7 +35,7 @@ final class CommandManagerImpl implements CommandManager {
                     try {
                         c = Class.forName(s, true, classLoader);
                     } catch (Exception e) {
-                        TakionLogger.getLogger().log(s + " can not be loaded.");
+                        plugin.getLibrary().getServerLogger().log(s + " can not be loaded.");
                         return;
                     }
 

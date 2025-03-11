@@ -90,6 +90,11 @@ class HolderUtils {
         public List<String> getGroups() {
             return ArrayUtils.toList(source.getGroups());
         }
+
+        @Override
+        public String toString() {
+            return "VaultHolder{provider='VaultAPI', plugin='" + source.getName() + "'}";
+        }
     }
 
     @Getter
@@ -184,6 +189,79 @@ class HolderUtils {
                     .of(source.getGroupManager().getLoadedGroups())
                     .map(Group::getName).toList();
         }
+
+        @Override
+        public String toString() {
+            return "VaultHolder{provider='LuckPerms', version=" + getPlugin().getDescription().getVersion() + "}";
+        }
+    }
+
+    static final class NoHolder implements VaultHolder<Object> {
+
+        @NotNull
+        public Object getSource() {
+            throw new IllegalStateException("No source was found");
+        }
+
+        @Override
+        public Plugin getPlugin() {
+            return null;
+        }
+
+        @Override
+        public boolean isEnabled() {
+            return false;
+        }
+
+        @Override
+        public <V> V fromSource(Function<Object, V> function) {
+            throw new IllegalStateException("No source was found");
+        }
+
+        @Nullable
+        public String getPrimaryGroup(Player player) {
+            return null;
+        }
+
+        @Override
+        public boolean isInGroup(Player player, String group) {
+            return false;
+        }
+
+        @NotNull
+        public List<String> getGroups(Player player) {
+            return new ArrayList<>();
+        }
+
+        @Nullable
+        public String getPrefix(Player player) {
+            return null;
+        }
+
+        @Nullable
+        public String getSuffix(Player player) {
+            return null;
+        }
+
+        @Nullable
+        public String getGroupPrefix(World world, String group) {
+            return null;
+        }
+
+        @Nullable
+        public String getGroupSuffix(World world, String group) {
+            return null;
+        }
+
+        @Override
+        public @NotNull List<String> getGroups() {
+            return new ArrayList<>();
+        }
+
+        @Override
+        public String toString() {
+            return "VaultHolder{provider='NONE'}";
+        }
     }
 
     VaultHolder<?> loadHolder() {
@@ -193,67 +271,7 @@ class HolderUtils {
             try {
                 return new BasicHolder();
             } catch (Exception e1) {
-                return new VaultHolder<Object>() {
-                    @NotNull
-                    public Object getSource() {
-                        throw new IllegalStateException("No source was found");
-                    }
-
-                    @Override
-                    public Plugin getPlugin() {
-                        return null;
-                    }
-
-                    @Override
-                    public boolean isEnabled() {
-                        return false;
-                    }
-
-                    @Override
-                    public <V> V fromSource(Function<Object, V> function) {
-                        throw new IllegalStateException("No source was found");
-                    }
-
-                    @Nullable
-                    public String getPrimaryGroup(Player player) {
-                        return null;
-                    }
-
-                    @Override
-                    public boolean isInGroup(Player player, String group) {
-                        return false;
-                    }
-
-                    @NotNull
-                    public List<String> getGroups(Player player) {
-                        return new ArrayList<>();
-                    }
-
-                    @Nullable
-                    public String getPrefix(Player player) {
-                        return null;
-                    }
-
-                    @Nullable
-                    public String getSuffix(Player player) {
-                        return null;
-                    }
-
-                    @Nullable
-                    public String getGroupPrefix(World world, String group) {
-                        return null;
-                    }
-
-                    @Nullable
-                    public String getGroupSuffix(World world, String group) {
-                        return null;
-                    }
-
-                    @Override
-                    public @NotNull List<String> getGroups() {
-                        return new ArrayList<>();
-                    }
-                };
+                return new NoHolder();
             }
         }
     }

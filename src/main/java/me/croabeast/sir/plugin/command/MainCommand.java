@@ -6,7 +6,7 @@ import me.croabeast.lib.file.ConfigurableFile;
 import me.croabeast.lib.util.ServerInfoUtils;
 import me.croabeast.sir.plugin.aspect.AspectButton;
 import me.croabeast.sir.plugin.SIRPlugin;
-import me.croabeast.sir.plugin.file.FileData;
+import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.misc.Timer;
 import me.croabeast.takion.message.MessageSender;
 import org.apache.commons.lang.SystemUtils;

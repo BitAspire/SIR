@@ -3,7 +3,6 @@ package me.croabeast.sir.plugin;
 import me.croabeast.lib.applier.StringApplier;
 import me.croabeast.lib.file.Configurable;
 import me.croabeast.lib.util.TextUtils;
-import me.croabeast.sir.plugin.file.FileData;
 import me.croabeast.sir.plugin.manager.ModuleManager;
 import me.croabeast.sir.plugin.module.PlayerFormatter;
 import me.croabeast.sir.plugin.module.SIRModule;
@@ -43,8 +42,19 @@ public final class LangUtils extends TakionLib {
         getPlaceholderManager().load("{prefix}", instance.getVaultHolder()::getPrefix);
         getPlaceholderManager().load("{suffix}", instance.getVaultHolder()::getSuffix);
 
-        super.setLogger(new TakionLogger(this) {
+        getChannelManager().identify("action_bar").addPrefix("action-bar");
 
+        super.setServerLogger(new TakionLogger(this, false) {
+            public boolean isColored() {
+                return !FileData.Main.CONFIG.getFile().get("options.fix-logger", false);
+            }
+
+            public boolean isStripPrefix() {
+                return !FileData.Main.CONFIG.getFile().get("options.show-prefix", false);
+            }
+        });
+
+        super.setLogger(new TakionLogger(this) {
             public boolean isColored() {
                 return !FileData.Main.CONFIG.getFile().get("options.fix-logger", false);
             }
@@ -74,6 +84,11 @@ public final class LangUtils extends TakionLib {
                 return config().get("options.send-console", true);
             }
         });
+    }
+
+    @Override
+    public void setServerLogger(TakionLogger logger) {
+        throw new IllegalStateException("Server TakionLogger can not be set");
     }
 
     @Override

@@ -7,11 +7,10 @@ import me.croabeast.lib.command.TabBuilder;
 import me.croabeast.lib.file.ConfigurableFile;
 import me.croabeast.sir.plugin.SIRPlugin;
 import me.croabeast.sir.plugin.aspect.AspectButton;
-import me.croabeast.sir.plugin.file.FileData;
+import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.misc.SIRUser;
 import me.croabeast.sir.plugin.LangUtils;
 import me.croabeast.sir.plugin.Commandable;
-import me.croabeast.takion.logger.TakionLogger;
 import me.croabeast.takion.message.MessageSender;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.command.CommandSender;
@@ -40,7 +39,7 @@ final class AuditChatHandler implements Commandable<SIRCommand> {
             @Override
             protected boolean execute(CommandSender sender, String[] args) {
                 if (!(sender instanceof Player)) {
-                    TakionLogger.getLogger().log(
+                    plugin.getLibrary().getServerLogger().log(
                             "&cYou can not ignore players in the console.");
                     return true;
                 }

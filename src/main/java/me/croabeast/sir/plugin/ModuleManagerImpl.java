@@ -105,7 +105,7 @@ final class ModuleManagerImpl implements ModuleManager {
                     final Class<?> c;
                     try {
                         c = Class.forName(s, true, classLoader);
-                    } catch (Exception ignored) {
+                    } catch (Exception e) {
                         return;
                     }
 
@@ -173,7 +173,15 @@ final class ModuleManagerImpl implements ModuleManager {
                     }
                 }));
 
-        modules.getModulesAsType(Type.LOADABLE).forEach(HookLoadable::load);
+        modules.getModulesAsType(Type.LOADABLE).forEach(loadable -> {
+            loadable.load();
+
+            if (!loadable.isPluginEnabled()) {
+                AspectButton button = ((SIRModule) loadable).getButton();
+                button.allowToggle(false);
+                if (button.isEnabled()) button.toggle();
+            }
+        });
         loaded = true;
     }
 
@@ -216,7 +224,8 @@ final class ModuleManagerImpl implements ModuleManager {
 
     @Nullable
     public <S extends SIRModule> S getModule(AspectKey key) {
-        return (S) modules.map.get(key).module;
+        ModuleHolder holder = modules.map.get(key);
+        return holder != null ? (S) holder.module : null;
     }
 
     @Nullable

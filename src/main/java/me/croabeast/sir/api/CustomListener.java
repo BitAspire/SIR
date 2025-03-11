@@ -7,8 +7,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.Objects;
-
 /**
  * A custom interface that extends the {@link Listener} interface from the Bukkit API.
  * <p>
@@ -40,13 +38,12 @@ public interface CustomListener extends Listener, Registrable {
      *
      * @param plugin The plugin to register this listener for. Must not be null.
      *
-     * @return {@code true} if the listener was successfully registered, {@code false} if it was already registered.
-     * @throws NullPointerException if the plugin is {@code null}.
+     * @return {@code true} if the listener was successfully registered, {@code false} if it was already registered or plugin is null.
      */
     default boolean register(Plugin plugin) {
-        if (isRegistered()) return false;
+        if (isRegistered() || plugin == null) return false;
 
-        Bukkit.getPluginManager().registerEvents(this, Objects.requireNonNull(plugin));
+        Bukkit.getPluginManager().registerEvents(this, plugin);
         setRegistered(true);
 
         return true;
@@ -78,6 +75,7 @@ public interface CustomListener extends Listener, Registrable {
 
         HandlerList.unregisterAll(this);
         setRegistered(false);
+
         return true;
     }
 }

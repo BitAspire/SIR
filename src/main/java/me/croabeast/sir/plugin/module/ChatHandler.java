@@ -11,13 +11,12 @@ import me.croabeast.lib.util.ReplaceUtils;
 import me.croabeast.lib.util.TextUtils;
 import me.croabeast.sir.plugin.Commandable;
 import me.croabeast.sir.plugin.misc.ChatChannel;
-import me.croabeast.sir.plugin.file.FileData;
-import me.croabeast.sir.plugin.file.FileKey;
+import me.croabeast.sir.plugin.FileData;
+import me.croabeast.sir.plugin.misc.FileKey;
 import me.croabeast.sir.plugin.misc.SIRUser;
 import me.croabeast.sir.plugin.LangUtils;
 import me.croabeast.takion.TakionLib;
 import me.croabeast.takion.channel.Channel;
-import me.croabeast.takion.logger.TakionLogger;
 import me.croabeast.takion.message.chat.ChatClick;
 import me.croabeast.takion.message.chat.ChatComponent;
 import org.apache.commons.lang.StringUtils;
@@ -63,7 +62,7 @@ final class ChatHandler extends ListenerModule implements Commandable<ModuleComm
             @Override
             protected boolean execute(CommandSender sender, String[] args) {
                 if (!(sender instanceof Player)) {
-                    TakionLogger.getLogger().log("&cYou can't toggle a local chat in console.");
+                    plugin.getLibrary().getLogger().log("&cYou can't toggle a local chat in console.");
                     return true;
                 }
 
@@ -268,9 +267,9 @@ final class ChatHandler extends ListenerModule implements Commandable<ModuleComm
             Player p = u.getPlayer();
             String temp = channel.formatString(p, player, message, true);
 
-            ChatComponent component = ChatComponent.create(temp);
+            ChatComponent component = ChatComponent.create(lib, temp);
             if (click != null)
-                component.setClickToAll(new ChatClick(click.getAction(), input));
+                component.setClickToAll(new ChatClick(lib, click.getAction(), input));
 
             component.setHoverToAll(hover);
             chat.send(p, player, component.toPatternString());

@@ -10,7 +10,6 @@ import me.croabeast.lib.Registrable;
 import me.croabeast.lib.file.ConfigurableFile;
 import me.croabeast.lib.util.Exceptions;
 import me.croabeast.sir.api.CustomListener;
-import me.croabeast.sir.plugin.file.FileData;
 import me.croabeast.sir.plugin.manager.SIRUserManager;
 import me.croabeast.sir.plugin.module.SIRModule;
 import me.croabeast.sir.plugin.misc.SIRUser;
@@ -33,6 +32,7 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.regex.Pattern;
@@ -56,7 +56,7 @@ final class UserManagerImpl implements SIRUserManager, Registrable {
                 loadData(event.getPlayer());
             }
 
-            @EventHandler(priority = EventPriority.LOWEST)
+            @EventHandler(priority = EventPriority.HIGHEST)
             void onQuit(PlayerQuitEvent event) {
                 saveData(event.getPlayer());
             }
@@ -467,6 +467,16 @@ final class UserManagerImpl implements SIRUserManager, Registrable {
             ignoreData = new IgnoreData(uuid);
             muteData = new MuteData(uuid);
             chatData = new ChatViewData(uuid);
+        }
+
+        @Nullable
+        public String getPrefix() {
+            return plugin.getVaultHolder().getPrefix(getPlayer());
+        }
+
+        @Nullable
+        public String getSuffix() {
+            return plugin.getVaultHolder().getSuffix(getPlayer());
         }
 
         @Override

@@ -6,7 +6,6 @@ import me.croabeast.lib.CollectionBuilder;
 import me.croabeast.lib.file.ResourceUtils;
 import me.croabeast.lib.util.ServerInfoUtils;
 import me.croabeast.sir.plugin.command.SIRCommand;
-import me.croabeast.sir.plugin.file.FileData;
 import me.croabeast.sir.plugin.hook.*;
 import me.croabeast.sir.plugin.manager.*;
 import me.croabeast.sir.plugin.misc.DelayLogger;
@@ -83,6 +82,7 @@ public final class SIRPlugin extends JavaPlugin {
         moduleManager.register();
 
         lib = new LangUtils(this);
+        FileData.FILE_MAP.forEach((k, v) -> v.setLoggerAction(lib.getLogger()::log));
 
         commandManager = new CommandManagerImpl(this);
         commandManager.load();
@@ -176,8 +176,7 @@ public final class SIRPlugin extends JavaPlugin {
                         "None / Other"
                 );
 
-        for (OfflinePlayer o : Bukkit.getOfflinePlayers())
-            userManager.loadData(o);
+        for (OfflinePlayer o : Bukkit.getOfflinePlayers()) userManager.loadData(o);
 
         if (SIRModule.Key.LOGIN.isEnabled())
             userManager.getOnlineUsers().forEach(u -> u.setLogged(true));

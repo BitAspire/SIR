@@ -12,12 +12,16 @@ import me.croabeast.lib.util.ArrayUtils;
 import me.croabeast.lib.util.ReplaceUtils;
 import me.croabeast.lib.util.TextUtils;
 import me.croabeast.prismatic.PrismaticAPI;
-import me.croabeast.sir.plugin.file.FileData;
-import me.croabeast.sir.plugin.file.FileKey;
+import me.croabeast.sir.plugin.FileData;
+import me.croabeast.sir.plugin.hook.HookChecker;
+import me.croabeast.sir.plugin.misc.FileKey;
 import org.apache.commons.lang.StringUtils;
+import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Field;
 import java.time.Instant;
@@ -26,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.UnaryOperator;
 
-final class DiscordHook extends SIRModule implements Actionable {
+final class DiscordHook extends SIRModule implements Actionable, HookLoadable {
 
     private final Map<String, List<String>> idMap = new HashMap<>();
     private final Map<String, EmbedObject> embedMap = new HashMap<>();
@@ -66,7 +70,7 @@ final class DiscordHook extends SIRModule implements Actionable {
 
     @Override
     public void act(Object... objects) {
-        if (!isLoaded()) return;
+        if (!isEnabled() && !HookChecker.DISCORD_ENABLED) return;
 
         if (Actionable.failsCheck(objects,
                 String.class, Player.class, String[].class, String[].class))
@@ -86,6 +90,22 @@ final class DiscordHook extends SIRModule implements Actionable {
 
         new Sender(ids, object, player).set(keys, values).send();
     }
+
+    @NotNull
+    public String[] getSupportedPlugins() {
+        return new String[] {"DiscordSRV"};
+    }
+
+    @Override
+    public Plugin getHookedPlugin() {
+        return Bukkit.getPluginManager().getPlugin("DiscordSRV");
+    }
+
+    @Override
+    public void load() {}
+
+    @Override
+    public void unload() {}
 
     private class EmbedObject {
 

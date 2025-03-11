@@ -1,4 +1,4 @@
-package me.croabeast.sir.plugin.file;
+package me.croabeast.sir.plugin.misc;
 
 import me.croabeast.lib.file.ConfigurableFile;
 import me.croabeast.sir.api.BaseKey;

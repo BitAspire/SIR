@@ -1,27 +1,17 @@
 package me.croabeast.sir.plugin.module;
 
+import me.croabeast.lib.Loadable;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
-
-public interface HookLoadable {
+public interface HookLoadable extends Loadable {
 
     @NotNull
     String[] getSupportedPlugins();
 
-    @NotNull
-    List<Plugin> getLoadedHooks();
+    Plugin getHookedPlugin();
 
-    boolean isLoaded();
-
-    void load();
-
-    void unload();
-
-    @Nullable
-    default Plugin getHookedPlugin() {
-        return getLoadedHooks().size() != 1 ? null : getLoadedHooks().get(0);
+    default boolean isPluginEnabled() {
+        return getHookedPlugin() != null && getHookedPlugin().isEnabled();
     }
 }

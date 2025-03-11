@@ -10,7 +10,7 @@ import me.croabeast.lib.util.Exceptions;
 import me.croabeast.sir.plugin.aspect.AspectKey;
 import me.croabeast.sir.plugin.aspect.SIRAspect;
 import me.croabeast.sir.plugin.SIRPlugin;
-import me.croabeast.sir.plugin.file.FileData;
+import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.manager.SIRUserManager;
 import me.croabeast.takion.message.MessageSender;
 import org.apache.commons.lang.StringUtils;

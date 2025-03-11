@@ -1,6 +1,6 @@
 package me.croabeast.sir.plugin.manager;
 
-import me.croabeast.sir.plugin.file.FileData;
+import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.misc.SIRUser;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.OfflinePlayer;

@@ -11,11 +11,11 @@ import me.croabeast.lib.CollectionBuilder;
 import me.croabeast.lib.util.Exceptions;
 import me.croabeast.sir.api.CustomListener;
 import me.croabeast.sir.plugin.misc.SIRUser;
-import me.croabeast.takion.logger.TakionLogger;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.Nullable;
 import su.nexmedia.auth.api.event.AuthPlayerLoginEvent;
 import su.nexmedia.auth.api.event.AuthPlayerRegisterEvent;
 
@@ -23,14 +23,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-@Getter
 final class LoginManager extends SIRModule implements HookLoadable {
 
-    private final String[] supportedPlugins =
-            {"AuthMe", "UserLogin", "nLogin", "OpeNLogin", "NexAuth"};
+    @Getter
+    final String[] supportedPlugins = {"AuthMe", "UserLogin", "nLogin", "OpeNLogin", "NexAuth"};
     private final List<Plugin> loadedHooks;
 
     private final Set<LoadedListener> listeners = new HashSet<>();
+    @Getter
     private boolean loaded = false;
 
     LoginManager() {
@@ -87,7 +87,7 @@ final class LoginManager extends SIRModule implements HookLoadable {
                 }.register();
             }
             catch (Exception e) {
-                TakionLogger.getLogger().log("&cUpdate nLogin to v10.");
+                plugin.getLibrary().getLogger().log("&cUpdate nLogin to v10.");
             }
 
         if (Exceptions.isPluginEnabled("OpeNLogin"))
@@ -123,6 +123,11 @@ final class LoginManager extends SIRModule implements HookLoadable {
 
         listeners.forEach(LoadedListener::unregister);
         loaded = false;
+    }
+
+    @Nullable
+    public Plugin getHookedPlugin() {
+        return loadedHooks.size() != 1 ? null : loadedHooks.get(0);
     }
 
     @Override

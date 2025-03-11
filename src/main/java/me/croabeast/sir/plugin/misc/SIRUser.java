@@ -1,6 +1,5 @@
 package me.croabeast.sir.plugin.misc;
 
-import me.croabeast.sir.plugin.SIRPlugin;
 import me.croabeast.sir.plugin.manager.SIRUserManager;
 import org.bukkit.*;
 import org.bukkit.configuration.ConfigurationSection;
@@ -25,14 +24,10 @@ public interface SIRUser {
     UUID getUuid();
 
     @Nullable
-    default String getPrefix() {
-        return SIRPlugin.getInstance().getVaultHolder().getPrefix(getPlayer());
-    }
+    String getPrefix();
 
     @Nullable
-    default String getSuffix() {
-        return SIRPlugin.getInstance().getVaultHolder().getSuffix(getPlayer());
-    }
+    String getSuffix();
 
     default boolean hasPerm(String perm) {
         return SIRUserManager.hasPerm(getPlayer(), perm);
@@ -40,7 +35,7 @@ public interface SIRUser {
 
     default boolean isOnline() {
         return getOfflinePlayer().isOnline();
-    };
+    }
 
     boolean isLogged();
 

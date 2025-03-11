@@ -2,9 +2,8 @@ package me.croabeast.sir.plugin.module;
 
 import me.croabeast.lib.file.ResourceUtils;
 import me.croabeast.lib.util.ArrayUtils;
-import me.croabeast.sir.plugin.file.FileData;
-import me.croabeast.sir.plugin.file.FileKey;
-import me.croabeast.takion.logger.TakionLogger;
+import me.croabeast.sir.plugin.FileData;
+import me.croabeast.sir.plugin.misc.FileKey;
 import me.croabeast.takion.misc.StringAligner;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -186,7 +185,7 @@ final class MotdHandler extends ListenerModule {
             try {
                 event.setServerIcon(icon);
             } catch (Exception e) {
-                TakionLogger.getLogger().log(
+                plugin.getLibrary().getLogger().log(
                         "&cError when trying to set the server icon.",
                         "&7Your server doesn't support this feature.",
                         "&cAvoid this error upgrading your server jar!"

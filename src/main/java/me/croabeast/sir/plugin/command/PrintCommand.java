@@ -9,7 +9,7 @@ import me.croabeast.lib.command.TabBuilder;
 import me.croabeast.lib.file.ConfigurableFile;
 import me.croabeast.sir.plugin.module.PlayerFormatter;
 import me.croabeast.sir.plugin.aspect.AspectButton;
-import me.croabeast.sir.plugin.file.FileData;
+import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.hook.HookChecker;
 import me.croabeast.sir.plugin.manager.ModuleManager;
 import me.croabeast.sir.plugin.module.SIRModule;

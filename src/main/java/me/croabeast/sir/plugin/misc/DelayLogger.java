@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import me.croabeast.lib.util.ArrayUtils;
 import me.croabeast.sir.plugin.SIRPlugin;
 import me.croabeast.takion.TakionLib;
-import me.croabeast.takion.logger.TakionLogger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,18 +37,12 @@ public final class DelayLogger {
     public void sendLines() {
         if (list.isEmpty()) return;
 
-        list.forEach(l -> {
-            if (l.usePrefix) {
-                lib.getLogger().log(l.line);
-                return;
-            }
-            TakionLogger.doLog(l.line);
-        });
+        list.forEach(l -> (l.use ? lib.getLogger() : lib.getServerLogger()).log(l.line));
     }
 
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
     static class LoggerLine {
         final String line;
-        final boolean usePrefix;
+        final boolean use;
     }
 }
