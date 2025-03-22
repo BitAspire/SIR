@@ -4,7 +4,6 @@ import me.croabeast.lib.command.BaseCommand;
 import me.croabeast.lib.command.TabBuilder;
 import me.croabeast.lib.file.ConfigurableFile;
 import me.croabeast.lib.util.ServerInfoUtils;
-import me.croabeast.sir.plugin.aspect.AspectButton;
 import me.croabeast.sir.plugin.SIRPlugin;
 import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.misc.Timer;
@@ -22,7 +21,7 @@ import java.util.function.BiPredicate;
 final class MainCommand extends SIRCommand {
 
     MainCommand() {
-        super("sir", false);
+        super(Key.SIR, false);
 
         final MessageSender sender = plugin.getLibrary().getLoadedSender();
 
@@ -54,6 +53,21 @@ final class MainCommand extends SIRCommand {
             return true;
         });
 
+        editSubCommand("commands", (s, strings) -> {
+            final Player player = s instanceof Player ? (Player) s : null;
+            if (player == null)
+                return sender.copy().send("&cThis command is only for players.");
+
+            if (ServerInfoUtils.SERVER_VERSION < 14.0)
+                return sender.copy().setTargets(player).send(
+                        "<P> &cCommands GUI is not supported on this version.",
+                        "<P> &7Enable/disable commands in commands/commands.yml file"
+                );
+
+            plugin.getCommandManager().getMenu().showGUI(player);
+            return true;
+        });
+
         editSubCommand("about", (s, strings) -> {
             final Player player = s instanceof Player ? (Player) s : null;
 
@@ -68,15 +82,12 @@ final class MainCommand extends SIRCommand {
         editSubCommand("help", senderPredicate("{version}", SIRPlugin.getVersion(), "help"));
         editSubCommand("support",
                 senderPredicate("{link}", "https://discord.gg/s9YFGMrjyF", "support"));
+
+        setClickActionAsDefault();
     }
 
     private BiPredicate<CommandSender, String[]> senderPredicate(String key, Object o, String path) {
         return (s, strings) -> createSender(s).addPlaceholder(key, o).send(path);
-    }
-
-    @Override
-    public boolean isOverriding() {
-        return true;
     }
 
     @Override
@@ -103,10 +114,5 @@ final class MainCommand extends SIRCommand {
         }
 
         return builder;
-    }
-
-    @NotNull
-    public AspectButton getButton() {
-        return null;
     }
 }

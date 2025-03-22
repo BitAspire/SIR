@@ -8,13 +8,12 @@ import me.croabeast.lib.CollectionBuilder;
 import me.croabeast.lib.command.TabBuilder;
 import me.croabeast.lib.file.ConfigurableFile;
 import me.croabeast.sir.plugin.module.PlayerFormatter;
-import me.croabeast.sir.plugin.aspect.AspectButton;
 import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.hook.HookChecker;
 import me.croabeast.sir.plugin.manager.ModuleManager;
 import me.croabeast.sir.plugin.module.SIRModule;
 import me.croabeast.sir.plugin.misc.SIRUser;
-import me.croabeast.sir.plugin.manager.SIRUserManager;
+import me.croabeast.sir.plugin.manager.UserManager;
 import me.croabeast.sir.plugin.LangUtils;
 import me.croabeast.takion.TakionLib;
 import me.croabeast.takion.channel.Channel;
@@ -34,7 +33,7 @@ import java.util.Set;
 final class PrintCommand extends SIRCommand {
 
     PrintCommand() {
-        super("print");
+        super(Key.PRINT, true);
 
         editSubCommand("targets", (sender, args) -> args.length == 0 ?
                 createSender(sender).send("help.targets") :
@@ -83,6 +82,8 @@ final class PrintCommand extends SIRCommand {
 
             return true;
         });
+
+        setClickActionAsDefault();
     }
 
     @NotNull
@@ -129,11 +130,6 @@ final class PrintCommand extends SIRCommand {
                 (s, a) -> a[0].matches("(?i)chat|title"),
                 "<message>"
         );
-    }
-
-    @NotNull
-    public AspectButton getButton() {
-        return null;
     }
 
     private class TargetCatcher {
@@ -188,7 +184,7 @@ final class PrintCommand extends SIRCommand {
 
                     case "PERM":
                         targets = stream
-                                .filter(p -> SIRUserManager.hasPerm(p, array[1]))
+                                .filter(p -> UserManager.hasPerm(p, array[1]))
                                 .toSet();
                         break;
 

@@ -22,7 +22,7 @@ public final class MenuCreator {
     @Getter
     private final ChestGui gui;
 
-    private boolean isLoaded = false;
+    private boolean loaded = false;
 
     private MenuCreator(int rows, String name) {
         gui = new ChestGui(rows, PrismaticAPI.colorize(name));
@@ -33,7 +33,7 @@ public final class MenuCreator {
         this.paginatedPane = creator.paginatedPane;
         this.gui = creator.gui;
 
-        this.isLoaded = creator.isLoaded;
+        this.loaded = creator.loaded;
     }
 
     public MenuCreator modifyGUI(Consumer<ChestGui> consumer) {
@@ -99,9 +99,9 @@ public final class MenuCreator {
     }
 
     public void showGUI(HumanEntity entity) {
-        if (!isLoaded) {
+        if (!loaded) {
             gui.addPane(paginatedPane);
-            isLoaded = true;
+            loaded = true;
         }
         gui.show(entity);
     }
