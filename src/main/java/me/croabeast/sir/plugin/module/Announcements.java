@@ -8,10 +8,10 @@ import me.croabeast.lib.file.Configurable;
 import me.croabeast.lib.file.ConfigurableFile;
 import me.croabeast.sir.plugin.Commandable;
 import me.croabeast.sir.plugin.FileData;
+import me.croabeast.sir.plugin.command.SIRCommand;
 import me.croabeast.sir.plugin.misc.FileKey;
 import me.croabeast.sir.plugin.misc.SIRUser;
 import me.croabeast.sir.plugin.LangUtils;
-import me.croabeast.takion.misc.StringAligner;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
@@ -20,7 +20,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
-final class Announcements extends SIRModule implements Actionable, Commandable<ModuleCommand> {
+final class Announcements extends SIRModule implements Actionable, Commandable {
 
     private final Map<Integer, Announce> announcesMap = new HashMap<>();
     private final FileKey<String> key;
@@ -29,13 +29,13 @@ final class Announcements extends SIRModule implements Actionable, Commandable<M
     private int taskId = -1, order = 0;
 
     @Getter
-    final Set<ModuleCommand> commands = new HashSet<>();
+    final Set<SIRCommand> commands = new HashSet<>();
 
     Announcements() {
         super(Key.ANNOUNCEMENTS);
         key = FileData.Module.ANNOUNCEMENT;
 
-        commands.add(new ModuleCommand(this, "announcer") {
+        commands.add(new SIRCommand(this, SIRCommand.Key.ANNOUNCER) {
             {
                 editSubCommand("help", (sender, args) -> {
                     if (args.length > 0)
@@ -79,6 +79,8 @@ final class Announcements extends SIRModule implements Actionable, Commandable<M
                     }
                     return createSender(sender).send("select");
                 });
+
+                setClickActionAsParent();
             }
 
             @NotNull
@@ -227,7 +229,7 @@ final class Announcements extends SIRModule implements Actionable, Commandable<M
         void display(Set<SIRUser> users) {
             if (users.isEmpty()) return;
 
-            lines.replaceAll(s -> StringAligner.align(plugin.getLibrary(), s));
+            lines.replaceAll(plugin.getLibrary().getCharacterManager()::align);
 
             plugin.getLibrary().getLoadedSender()
                     .setTargets(CollectionBuilder

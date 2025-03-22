@@ -8,6 +8,8 @@ import me.croabeast.lib.file.ConfigurableFile;
 import me.croabeast.sir.plugin.SIRPlugin;
 import me.croabeast.sir.plugin.aspect.AspectButton;
 import me.croabeast.sir.plugin.FileData;
+import me.croabeast.sir.plugin.aspect.AspectKey;
+import me.croabeast.sir.plugin.aspect.SIRAspect;
 import me.croabeast.sir.plugin.misc.SIRUser;
 import me.croabeast.sir.plugin.LangUtils;
 import me.croabeast.sir.plugin.Commandable;
@@ -20,16 +22,23 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 import java.util.function.Supplier;
 
-final class AuditChatHandler implements Commandable<SIRCommand> {
+final class AuditChatHandler implements Commandable {
 
     private final Map<CommandSender, CommandSender> replies = new HashMap<>();
+
+    private final SIRAspect aspect = new MessageAspect();
+    private final List<SIRCommand> messageCommands = new ArrayList<>();
+
     @Getter
     private final Set<SIRCommand> commands = new HashSet<>();
 
     AuditChatHandler() {
-        commands.add(new SIRCommand("ignore") {
-
+        commands.add(new SIRCommand(SIRCommand.Key.IGNORE, true) {
             private final String[] baseKeys = {"{target}", "{type}"};
+
+            {
+                setClickActionAsDefault();
+            }
 
             @NotNull
             protected ConfigurableFile getLang() {
@@ -96,14 +105,9 @@ final class AuditChatHandler implements Commandable<SIRCommand> {
                         .addArgument(0, "@a")
                         .addArgument(1, "-chat");
             }
-
-            @NotNull
-            public AspectButton getButton() {
-                return null;
-            }
         });
 
-        commands.add(new BaseCommand("msg") {
+        messageCommands.add(new BaseCommand("msg") {
             @Override
             protected boolean execute(CommandSender s, String[] args) {
                 if (!isPermitted(s)) return true;
@@ -183,8 +187,7 @@ final class AuditChatHandler implements Commandable<SIRCommand> {
                         .addArgument(1, "<message>").build(sender, arguments);
             }
         });
-
-        commands.add(new BaseCommand("reply") {
+        messageCommands.add(new BaseCommand("reply") {
             @Override
             protected boolean execute(CommandSender sender, String[] args) {
                 if (!isPermitted(sender)) return true;
@@ -256,6 +259,45 @@ final class AuditChatHandler implements Commandable<SIRCommand> {
                 return () -> createBasicTabBuilder().addArgument(0, "<message>").build(sender, arguments);
             }
         });
+
+        commands.addAll(messageCommands);
+    }
+
+    @Getter
+    private class MessageAspect implements SIRAspect {
+
+        private final ConfigurableFile file;
+
+        private final AspectKey key;
+        private final AspectButton button;
+
+        MessageAspect() {
+            file = FileData.Command.getMain();
+
+            SIRCommand.Key key = SIRCommand.Key.MSG_REPLY;
+            this.key = key;
+
+            (button = new AspectButton(
+                    key,
+                    file.get("commands.msg.enabled", true)
+            )).setDefaultItems("Messaging Commands");
+
+            button.setOnClick(b -> e -> {
+                file.set("commands.mute.enabled", b.isEnabled());
+                file.save();
+
+                if (b.isEnabled()) {
+                    messageCommands.forEach(SIRCommand::register);
+                } else {
+                    messageCommands.forEach(SIRCommand::unregister);
+                }
+
+                String s = "Messaging commands registered: " + b.isEnabled();
+                SIRPlugin.getLib().getLogger().log(s);
+            });
+
+            key.setSupplier(button::isEnabled);
+        }
     }
 
     @RequiredArgsConstructor
@@ -282,13 +324,14 @@ final class AuditChatHandler implements Commandable<SIRCommand> {
         }
     }
 
-    static abstract class BaseCommand extends SIRCommand {
+    abstract class BaseCommand extends SIRCommand {
 
         protected BaseCommand(String name) {
-            super(name);
+            super(aspect, name);
+            setButton(aspect.getButton());
         }
 
-        String isConsoleValue(CommandSender sender) {
+        protected final String isConsoleValue(CommandSender sender) {
             return !(sender instanceof Player) ?
                     getLang().get("lang.console-formatting.name", "") :
                     sender.getName();
@@ -303,11 +346,6 @@ final class AuditChatHandler implements Commandable<SIRCommand> {
         public abstract Supplier<Collection<String>> generateCompletions(CommandSender sender, String[] arguments);
 
         public final TabBuilder getCompletionBuilder() {
-            return null;
-        }
-
-        @NotNull
-        public AspectButton getButton() {
             return null;
         }
     }

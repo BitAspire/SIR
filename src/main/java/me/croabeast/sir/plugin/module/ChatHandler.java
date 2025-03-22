@@ -10,6 +10,7 @@ import me.croabeast.lib.file.UnitMappable;
 import me.croabeast.lib.util.ReplaceUtils;
 import me.croabeast.lib.util.TextUtils;
 import me.croabeast.sir.plugin.Commandable;
+import me.croabeast.sir.plugin.command.SIRCommand;
 import me.croabeast.sir.plugin.misc.ChatChannel;
 import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.misc.FileKey;
@@ -34,20 +35,23 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 
-final class ChatHandler extends ListenerModule implements Commandable<ModuleCommand> {
+final class ChatHandler extends ListenerModule implements Commandable {
 
     private UnitMappable<ChatChannel> locals = UnitMappable.empty();
     private UnitMappable<ChatChannel> globals = UnitMappable.empty();
 
     private final ConfigurableFile file;
     @Getter
-    final Set<ModuleCommand> commands = new HashSet<>();
+    final Set<SIRCommand> commands = new HashSet<>();
 
     ChatHandler() {
         super(Key.CHANNELS);
         file = FileData.Module.Chat.CHANNELS.getFile();
 
-        commands.add(new ModuleCommand(this, "chatview") {
+        commands.add(new SIRCommand(this, SIRCommand.Key.CHAT_VIEW) {
+            {
+                setClickActionAsParent();
+            }
 
             private final FileKey<Boolean> chatFile = FileData.Command.Multi.CHAT_VIEW;
 
@@ -230,7 +234,7 @@ final class ChatHandler extends ListenerModule implements Commandable<ModuleComm
 
     @EventHandler
     private void onSIRChat(SIRChatEvent event) {
-        if (event.isCancelled() || !isEnabled()) return;
+        if (!isEnabled()) return;
 
         TakionLib lib = plugin.getLibrary();
 
@@ -263,21 +267,26 @@ final class ChatHandler extends ListenerModule implements Commandable<ModuleComm
             input = ReplaceUtils.replaceEach(keys, values, input);
 
         Channel chat = lib.getChannelManager().identify("chat");
-        for (SIRUser u : event.getRecipients()) {
-            Player p = u.getPlayer();
+
+        Set<SIRUser> users = event.getRecipients();
+        users.add(event.getUser());
+
+        for (final SIRUser user : users) {
+            Player p = user.getPlayer();
             String temp = channel.formatString(p, player, message, true);
 
             ChatComponent component = ChatComponent.create(lib, temp);
+
             if (click != null)
                 component.setClickToAll(new ChatClick(lib, click.getAction(), input));
+            if (hover != null) component.setHoverToAll(hover);
 
-            component.setHoverToAll(hover);
             chat.send(p, player, component.toPatternString());
         }
     }
 
     @Getter @Setter
-    final static class SIRChatEvent extends Event implements Cancellable {
+    final static class SIRChatEvent extends Event {
 
         @Getter
         private static final HandlerList handlerList = new HandlerList();
@@ -288,7 +297,6 @@ final class ChatHandler extends ListenerModule implements Commandable<ModuleComm
         private ChatChannel channel;
         private String message;
 
-        private boolean cancelled = false;
         private boolean global = false;
 
         public SIRChatEvent(SIRUser user, ChatChannel channel, String message, boolean async) {
@@ -305,9 +313,8 @@ final class ChatHandler extends ListenerModule implements Commandable<ModuleComm
             return channel.getRecipients(user);
         }
 
-        public boolean call() {
+        public void call() {
             Bukkit.getPluginManager().callEvent(this);
-            return !isCancelled();
         }
 
         @NotNull

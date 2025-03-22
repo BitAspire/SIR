@@ -1,10 +1,16 @@
 package me.croabeast.sir.plugin;
 
+import com.github.stefvanschie.inventoryframework.pane.Pane;
 import lombok.Getter;
 import me.croabeast.lib.reflect.Reflector;
+import me.croabeast.sir.plugin.aspect.AspectButton;
+import me.croabeast.sir.plugin.gui.ItemCreator;
 import me.croabeast.sir.plugin.manager.CommandManager;
 import me.croabeast.sir.plugin.command.SIRCommand;
 import me.croabeast.sir.plugin.gui.MenuCreator;
+import me.croabeast.takion.character.SmallCaps;
+import org.apache.commons.lang.StringUtils;
+import org.bukkit.Material;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -16,6 +22,8 @@ final class CommandManagerImpl implements CommandManager {
     private final Map<String, SIRCommand> commands = new LinkedHashMap<>();
     private final Set<Class<?>> classes = new HashSet<>();
 
+    @Getter
+    private final MenuCreator menu;
     private final SIRPlugin plugin;
 
     @Getter
@@ -41,6 +49,26 @@ final class CommandManagerImpl implements CommandManager {
 
                     if (Modifier.isFinal(c.getModifiers())) classes.add(c);
                 });
+
+        menu = MenuCreator
+                .of(4, "&8" + SmallCaps.toSmallCaps("Loaded SIR Commands:"))
+                .addSingleItem(
+                        0, 1, 1, ItemCreator.of(Material.BARREL)
+                                .modifyLore(
+                                        "&7Opens a new menu with all the available",
+                                        "&7options from each command.",
+                                        "&eComing soon in SIR+. &8" +
+                                                SmallCaps.toSmallCaps("[Paid Version]")
+                                )
+                                .modifyName("&f&lCommands Options:").setActionToEmpty(),
+                        b -> b.setPriority(Pane.Priority.LOW)
+                )
+                .addSingleItem(
+                        0, 5, 2, ItemCreator.of(Material.BARRIER)
+                                .modifyLore("&8More commands will be added soon.")
+                                .modifyName("&c&lCOMING SOON...").setActionToEmpty(),
+                        b -> b.setPriority(Pane.Priority.LOW)
+                );
     }
 
     @Override
@@ -52,33 +80,27 @@ final class CommandManagerImpl implements CommandManager {
 
             if (SIRCommand.class.isAssignableFrom(clazz)) {
                 SIRCommand command = (SIRCommand) init;
-
-                if (!commands.containsValue(command))
-                    commands.put(command.getName(), command);
+                commands.put(command.getName(), command);
                 continue;
             }
 
             if (!Commandable.class.isAssignableFrom(clazz))
                 continue;
 
-            @SuppressWarnings("unchecked")
-            Commandable<SIRCommand> c = (Commandable<SIRCommand>) init;
+            Commandable commandable = (Commandable) init;
 
-            final Set<SIRCommand> set = c.getCommands();
-            set.forEach(command -> {
-                if (!commands.containsValue(command))
-                    commands.putIfAbsent(command.getName(), command);
-            });
+            final Set<SIRCommand> set = commandable.getCommands();
+            set.forEach(c -> commands.put(c.getName(), c));
         }
 
-        Set<SIRCommand> set = new HashSet<>();
         plugin.getModuleManager()
-                .getCommands().values().forEach(set::addAll);
+                .getCommands()
+                .forEach(c -> commands.put(c.getName(), c));
 
-        set.forEach(command -> {
-            if (!commands.containsValue(command))
-                commands.putIfAbsent(command.getName(), command);
-        });
+        Set<AspectButton> buttons = new HashSet<>();
+        commands.values().forEach(c -> buttons.add(c.getButton()));
+
+        buttons.forEach(b -> menu.addPane(0, b));
         loaded = true;
     }
 
@@ -106,16 +128,11 @@ final class CommandManagerImpl implements CommandManager {
 
     @Nullable
     public SIRCommand fromName(String name) {
-        return commands.get(name);
+        return StringUtils.isBlank(name) ? null : commands.get(name);
     }
 
     @NotNull
     public Set<SIRCommand> getValues() {
         return new HashSet<>(commands.values());
-    }
-
-    @NotNull
-    public MenuCreator getMenu() {
-        return null;
     }
 }

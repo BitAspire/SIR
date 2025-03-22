@@ -9,14 +9,6 @@ commands:
         - help
         - commands
         - support
-  announcer:
-    permissions:
-      main: sir.announcer
-      subcommands:
-        - preview
-        - start
-        - cancel;stop
-        - reboot
   print:
     override-existing: true
     enabled: true
@@ -29,49 +21,51 @@ commands:
         - action-bar;action_bar
         - title
         - webhook
-  msg:
-    override-existing: true
-    enabled: true
-    aliases: [ m, tell ]
+  announcer:
     permissions:
-      main: sir.message
-  reply:
-    override-existing: true
-    enabled: true
-    aliases: [ r ]
+      main: sir.announcer
+      subcommands:
+        - preview
+        - start
+        - cancel;stop
+        - reboot
+  chatview:
     permissions:
-      main: sir.reply
+      main: sir.chatview
   ignore:
     override-existing: true
     enabled: true
     aliases: [ ig ]
     permissions:
       main: sir.ignore
+  msg:
+    override-existing: true
+    enabled: true
+    aliases: [ m, message, tell ]
+    permissions:
+      main: sir.message
+  reply:
+    parent: msg # Do not edit this
+    aliases: [ r ]
+    permissions:
+      main: sir.reply
   mute:
     override-existing: true
     enabled: true
     permissions:
       main: sir.mute.perm
   tempmute:
-    override-existing: true
-    enabled: true
+    parent: mute # Do not edit this
     permissions:
       main: sir.mute.temp
   unmute:
-    override-existing: true
-    enabled: true
+    parent: mute # Do not edit this
     permissions:
       main: sir.unmute
   checkmute:
-    override-existing: true
-    enabled: true
+    parent: mute # Do not edit this
     permissions:
       main: sir.checkmute
-  chatview:
-    override-existing: true
-    enabled: true
-    permissions:
-      main: sir.chatview
 
 lang:
   no-permission: '<P> You do not have the permission &c{perm} &7to use this.'
