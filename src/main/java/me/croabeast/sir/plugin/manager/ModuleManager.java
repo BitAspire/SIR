@@ -1,7 +1,7 @@
 package me.croabeast.sir.plugin.manager;
 
 import me.croabeast.sir.plugin.aspect.AspectKey;
-import me.croabeast.sir.plugin.module.ModuleCommand;
+import me.croabeast.sir.plugin.command.SIRCommand;
 import me.croabeast.sir.plugin.module.Actionable;
 import me.croabeast.sir.plugin.module.PlayerFormatter;
 import me.croabeast.sir.plugin.module.SIRModule;
@@ -35,9 +35,8 @@ public interface ModuleManager extends BaseManager<SIRModule> {
         }
     }
 
-    @NotNull
-    Set<ModuleCommand> getCommands(AspectKey key);
+    @NotNull Set<SIRCommand> getCommands(AspectKey key);
 
     @NotNull
-    Map<SIRModule, Set<ModuleCommand>> getCommands();
+    Set<SIRCommand> getCommands();
 }

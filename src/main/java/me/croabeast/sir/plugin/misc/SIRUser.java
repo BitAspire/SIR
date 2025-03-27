@@ -1,6 +1,6 @@
 package me.croabeast.sir.plugin.misc;
 
-import me.croabeast.sir.plugin.manager.SIRUserManager;
+import me.croabeast.sir.plugin.manager.UserManager;
 import org.bukkit.*;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -30,7 +30,7 @@ public interface SIRUser {
     String getSuffix();
 
     default boolean hasPerm(String perm) {
-        return SIRUserManager.hasPerm(getPlayer(), perm);
+        return UserManager.hasPerm(getPlayer(), perm);
     }
 
     default boolean isOnline() {

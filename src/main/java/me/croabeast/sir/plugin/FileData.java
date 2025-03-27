@@ -27,7 +27,7 @@ public class FileData {
     static {
         FILE_MAP = new LinkedHashMap<>();
 
-        FILE_PATHS = SIRPlugin.getJarEntries().copy()
+        FILE_PATHS = SIRPlugin.getJarEntries()
                 .filter(s -> s.matches("^resources/.*[.]yml$"))
                 .apply(s -> s.substring(10)
                         .replace("/", File.separator)

@@ -2,13 +2,12 @@ package me.croabeast.sir.plugin.module;
 
 import lombok.Getter;
 import me.croabeast.lib.file.Configurable;
+import me.croabeast.lib.file.ConfigurableFile;
 import me.croabeast.lib.file.UnitMappable;
-import me.croabeast.sir.api.file.ConfigUnit;
+import me.croabeast.sir.api.file.PermissibleUnit;
 import me.croabeast.sir.plugin.FileData;
-import me.croabeast.sir.plugin.misc.FileKey;
 import me.croabeast.sir.plugin.misc.SIRUser;
 import me.croabeast.sir.plugin.LangUtils;
-import me.croabeast.takion.message.AnimatedBossbar;
 import me.croabeast.takion.message.MessageSender;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
@@ -21,57 +20,47 @@ import java.util.*;
 
 final class JoinQuitHandler extends ListenerModule {
 
-    final Map<UUID, Long> joins, quits, plays;
-    final Map<Type, UnitMappable<ConnectionUnit>> unitMap;
+    final Map<Type, UnitMappable<Unit>> unitMap = new HashMap<>();
+    final TimeMap timeMap = new TimeMap();
 
-    final FileKey<String> key;
+    final ConfigurableFile file = FileData.Module.JOIN_QUIT.getFile();
 
     JoinQuitHandler() {
         super(Key.JOIN_QUIT);
-
-        key = FileData.Module.JOIN_QUIT;
-
-        joins = new HashMap<>();
-        quits = new HashMap<>();
-        plays = new HashMap<>();
-        unitMap = new HashMap<>();
     }
 
     @Override
     public boolean register() {
         unitMap.clear();
 
+        ConfigurableFile messages = FileData.Module.JOIN_QUIT.getFile("messages");
         for (Type type : Type.values())
-            unitMap.put(type, key.getFile("messages").asUnitMap(
-                    type.name,
-                    s -> new ConnectionUnit(s, type)
-            ));
+            unitMap.put(type, messages.asUnitMap(type.name, s -> new Unit(s, type)));
 
         return super.register();
     }
 
-    ConnectionUnit get(Type type, SIRUser user) {
-        UnitMappable<ConnectionUnit> loaded = unitMap.get(type);
+    Unit get(Type type, SIRUser user) {
+        UnitMappable<Unit> loaded = unitMap.get(type);
         if (loaded.isEmpty()) return null;
 
-        for (Map.Entry<Integer, Set<ConnectionUnit>> maps : loaded.entrySet())
-            for (ConnectionUnit unit : maps.getValue())
-                if (user.hasPerm(unit.getPermission())) return unit;
+        for (Set<Unit> maps : loaded.values())
+            for (Unit unit : maps)
+                if (user.hasPerm(unit.getPermission()))
+                    return unit;
 
         return null;
     }
 
-    void performConnectionActions(ConnectionUnit unit, SIRUser user) {
-        UUID uuid = user.getUuid();
-
-        long data = System.currentTimeMillis();
+    void performUnitActions(Unit unit, SIRUser user) {
+        final UUID uuid = user.getUuid();
         unit.performAllActions(user);
 
-        if (key.getFile().get("cooldown.join", 0) > 0)
-            joins.put(uuid, data);
+        if (file.get("cooldown.join", 0) > 0)
+            timeMap.put(Time.JOIN, uuid);
 
-        if (key.getFile().get("cooldown.between", 0) > 0)
-            plays.put(uuid, data);
+        if (file.get("cooldown.between", 0) > 0)
+            timeMap.put(Time.BETWEEN, uuid);
     }
 
     @EventHandler
@@ -83,17 +72,18 @@ final class JoinQuitHandler extends ListenerModule {
 
         SIRUser user = plugin.getUserManager().getUser(player);
 
-        final ConnectionUnit unit = get(type, user);
+        final Unit unit = get(type, user);
         if (unit == null) return;
 
-        if (key.getFile().get("default-messages.disable-join", true))
+        if (file.get("default-messages.disable-join", true))
             event.setJoinMessage(null);
 
-        int joinTime = key.getFile().get("cooldown.join", 0);
+        int joinTime = file.get("cooldown.join", 0);
         UUID uuid = player.getUniqueId();
 
-        if (joinTime > 0 && joins.containsKey(uuid)) {
-            long rest = System.currentTimeMillis() - joins.get(uuid);
+        if (joinTime > 0 && timeMap.contains(Time.JOIN, uuid)) {
+            long loaded = timeMap.get(Time.JOIN, uuid);
+            long rest = System.currentTimeMillis() - loaded;
             if (rest < joinTime * 1000L) return;
         }
 
@@ -101,13 +91,12 @@ final class JoinQuitHandler extends ListenerModule {
 
         if (Key.LOGIN.isEnabled() && FileData.Module.Hook.LOGIN
                 .getFile()
-                .get("spawn-before", false))
-        {
+                .get("spawn-before", false)) {
             unit.teleportToSpawn(user);
             return;
         }
 
-        performConnectionActions(unit, user);
+        performUnitActions(unit, user);
     }
 
     @EventHandler
@@ -115,37 +104,63 @@ final class JoinQuitHandler extends ListenerModule {
         Player player = event.getPlayer();
         SIRUser user = plugin.getUserManager().getUser(player);
 
-        AnimatedBossbar.unregisterAll();
         user.giveImmunity(0);
-        //Conversation.remove(player);
-
         if (!this.isEnabled()) return;
 
-        ConnectionUnit unit = get(Type.QUIT, user);
+        Unit unit = get(Type.QUIT, user);
         if (unit == null) return;
 
-        if (key.getFile().get("default-messages.disable-quit", true))
+        if (file.get("default-messages.disable-quit", true))
             event.setQuitMessage(null);
 
         UUID uuid = player.getUniqueId();
 
-        int playTime = key.getFile().get("cooldown.between", 0);
-        int quitTime = key.getFile().get("cooldown.quit", 0);
+        int playTime = file.get("cooldown.between", 0);
+        int quitTime = file.get("cooldown.quit", 0);
 
         final long now = System.currentTimeMillis();
 
-        if (quitTime > 0 && quits.containsKey(uuid) &&
-                now - quits.get(uuid) < quitTime * 1000L) return;
+        if (quitTime > 0 && timeMap.contains(Time.QUIT, uuid) &&
+                now - timeMap.get(Time.QUIT, uuid) < quitTime * 1000L)
+            return;
 
-        if (playTime > 0 && plays.containsKey(uuid) &&
-                now - plays.get(uuid) < playTime * 1000L) return;
+        if (playTime > 0 && timeMap.contains(Time.BETWEEN, uuid) &&
+                now - timeMap.get(Time.BETWEEN, uuid) < playTime * 1000L)
+            return;
 
         if (user.isVanished()) return;
 
         user.setLogged(true);
         unit.performAllActions(user);
 
-        if (quitTime > 0) quits.put(uuid, System.currentTimeMillis());
+        if (quitTime > 0) timeMap.put(Time.QUIT, uuid);
+    }
+
+    enum Time {
+        JOIN,
+        QUIT,
+        BETWEEN
+    }
+
+    final static class TimeMap {
+
+        private final Map<Time, Map<UUID, Long>> map = new HashMap<>();
+
+        Map<UUID, Long> getMap(Time time) {
+            return this.map.computeIfAbsent(time, k -> new HashMap<>());
+        }
+
+        boolean contains(Time time, UUID uuid) {
+            return getMap(time).containsKey(uuid);
+        }
+
+        void put(Time time, UUID uuid) {
+            getMap(time).put(uuid, System.currentTimeMillis());
+        }
+
+        long get(Time time, UUID uuid) {
+            return getMap(time).get(uuid);
+        }
     }
 
     enum Type {
@@ -160,10 +175,10 @@ final class JoinQuitHandler extends ListenerModule {
         }
     }
 
-    class ConnectionUnit implements ConfigUnit {
+    class Unit implements PermissibleUnit {
 
         @Getter
-        private final ConfigurationSection section;
+        final ConfigurationSection section;
         private final Type type;
 
         private final List<String> publicList;
@@ -176,7 +191,7 @@ final class JoinQuitHandler extends ListenerModule {
 
         private ConfigurationSection spawn;
 
-        ConnectionUnit(ConfigurationSection section, Type type) {
+        Unit(ConfigurationSection section, Type type) {
             this.section = section;
             this.type = type;
 
@@ -208,13 +223,10 @@ final class JoinQuitHandler extends ListenerModule {
                 teleportToSpawn(user);
             }
 
-            LangUtils.executeCommands(
-                    type != Type.QUIT ? player : null, commandList
-            );
+            LangUtils.executeCommands(type != Type.QUIT ? player : null, commandList);
 
             Actionable actor = plugin.getModuleManager().getActionable(Key.DISCORD);
-            if (actor != null)
-                actor.act(type.name, player, new String[0], new String[0]);
+            if (actor != null) actor.act(type.name, player, new String[0], new String[0]);
         }
 
         void teleportToSpawn(SIRUser user) {

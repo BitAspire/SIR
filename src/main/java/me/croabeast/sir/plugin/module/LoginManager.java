@@ -51,9 +51,9 @@ final class LoginManager extends SIRModule implements HookLoadable {
         JoinQuitHandler.Type type = player.hasPlayedBefore() ?
                 JoinQuitHandler.Type.JOIN : JoinQuitHandler.Type.FIRST;
 
-        JoinQuitHandler.ConnectionUnit unit = handler.get(type, user);
+        JoinQuitHandler.Unit unit = handler.get(type, user);
         if (unit != null)
-            handler.performConnectionActions(unit, user);
+            handler.performUnitActions(unit, user);
     }
 
     @Override

@@ -82,8 +82,6 @@ final class PrintCommand extends SIRCommand {
 
             return true;
         });
-
-        setClickActionAsDefault();
     }
 
     @NotNull

@@ -5,7 +5,6 @@ import lombok.Getter;
 import me.croabeast.lib.file.Configurable;
 import me.croabeast.lib.util.ArrayUtils;
 import me.croabeast.lib.util.Exceptions;
-import me.croabeast.lib.util.TextUtils;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -105,19 +104,6 @@ public final class AddonFile implements Configurable {
     @NotNull
     public FileConfiguration getConfiguration() {
         throw new UnsupportedOperationException("This file can't be edited");
-    }
-
-    public <T> T get(String path, Class<T> clazz) {
-        try {
-            return clazz.cast(configuration.get(path));
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> T get(String path, T def) {
-        return (T) configuration.get(path, def);
     }
 
     /**

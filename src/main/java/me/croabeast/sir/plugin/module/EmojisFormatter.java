@@ -3,7 +3,7 @@ package me.croabeast.sir.plugin.module;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import me.croabeast.prismatic.PrismaticAPI;
-import me.croabeast.sir.api.file.ConfigUnit;
+import me.croabeast.sir.api.file.PermissibleUnit;
 import me.croabeast.sir.plugin.FileData;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.configuration.ConfigurationSection;
@@ -55,7 +55,7 @@ final class EmojisFormatter extends SIRModule implements PlayerFormatter<Object>
         return string;
     }
 
-    static class Emoji implements ConfigUnit {
+    static class Emoji implements PermissibleUnit {
 
         private final ConfigurationSection section;
 

@@ -8,8 +8,8 @@ lang:
     mute-reason: "Not following server rules."
     unmute-reason: "Time ended."
   is-muted:
-    perm: "&e&lMUTE &8> &b{target} is already muted permanently due to {reason}."
-    temp: "&e&lMUTE &8> &b{target} is already muted due to {reason}. Time left: {time}"
+    perm: "&e&lMUTE &8> &b{target} is already muted permanently by &c{admin}&7 due to {reason}."
+    temp: "&e&lMUTE &8> &b{target} is already muted by &c{admin}&7 due to {reason}. Time left: {time}"
     unmute: "&e&lMUTE &8> &b{target} is not muted yet."
   time:
     seconds: "second(s)"
@@ -20,9 +20,9 @@ lang:
     months: "month(s)"
     years: "year(s)"
   action:
-    perm: "&e&lMUTE &8> &b{target} was muted permanently due to &b{reason}."
-    temp: "&e&lMUTE &8> &b{target} was muted for &3{time} due to &b{reason}."
-    unmute: "&e&lMUTE &8> &b{player} was unmuted due to &b{reason}."
+    perm: "&e&lMUTE &8> &b{target}&7 was muted permanently by &c{admin}&7 due to &b{reason}&7."
+    temp: "&e&lMUTE &8> &b{target}&7 was muted for &3{time}&7 by &c{admin}&7 due to &b{reason}&7."
+    unmute: "&e&lMUTE &8> &b{player}&7 was unmuted by &c{admin}&7 due to &b{reason}&7."
   check:
     - ""
     - ""

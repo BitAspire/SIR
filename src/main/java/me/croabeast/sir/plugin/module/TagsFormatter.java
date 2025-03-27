@@ -2,7 +2,7 @@ package me.croabeast.sir.plugin.module;
 
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import me.croabeast.lib.file.Configurable;
-import me.croabeast.sir.api.file.ConfigUnit;
+import me.croabeast.sir.api.file.PermissibleUnit;
 import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.hook.HookChecker;
 import org.apache.commons.lang.StringUtils;
@@ -180,7 +180,7 @@ final class TagsFormatter extends SIRModule implements PlayerFormatter<Object> {
         return string;
     }
 
-    private static class ChatTag implements ConfigUnit {
+    private static class ChatTag implements PermissibleUnit {
 
         private final ConfigurationSection section;
 

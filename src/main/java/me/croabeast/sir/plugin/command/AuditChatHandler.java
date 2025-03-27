@@ -36,10 +36,6 @@ final class AuditChatHandler implements Commandable {
         commands.add(new SIRCommand(SIRCommand.Key.IGNORE, true) {
             private final String[] baseKeys = {"{target}", "{type}"};
 
-            {
-                setClickActionAsDefault();
-            }
-
             @NotNull
             protected ConfigurableFile getLang() {
                 return FileData.Command.Multi.IGNORE.getFile(true);
@@ -117,22 +113,23 @@ final class AuditChatHandler implements Commandable {
                     return createSender(s).send("is-muted");
 
                 if (args.length == 0)
-                    return createSender(s).send("need-player");
+                    return createSender(s).setLogger(false).send("need-player");
 
                 SIRUser target = plugin.getUserManager().fromClosest(args[0]);
                 if (target == null)
-                    return createSender(s)
+                    return createSender(s).setLogger(false)
                             .addPlaceholder("{target}", args[0])
                             .send("not-player");
 
                 if (Objects.equals(target, user))
-                    return createSender(s).send("not-yourself");
+                    return createSender(s).setLogger(false).send("not-yourself");
 
                 if (target.isIgnoring(user, false)) {
                     ConfigurableFile lang =
                             FileData.Command.Multi.IGNORE.getFile(false);
 
                     return plugin.getLibrary().getLoadedSender()
+                            .setLogger(false)
                             .addPlaceholder(
                                     "{type}",
                                     lang.get("lang.channels.msg", "")
@@ -143,36 +140,35 @@ final class AuditChatHandler implements Commandable {
                 boolean vanished = getLang()
                         .get("lang.vanish-messages.enabled", true);
                 if (target.isVanished() && vanished)
-                    return createSender(s).send("vanish-messages.message");
+                    return createSender(s)
+                            .setLogger(false).send("vanish-messages.message");
 
-                String message = LangUtils.stringFromArray(args, 0);
+                String message = LangUtils.stringFromArray(args, 1);
                 if (StringUtils.isBlank(message))
-                    return createSender(s).send("empty-message");
+                    return createSender(s).setLogger(false).send("empty-message");
 
                 Values initValues = new Values(plugin, true);
-                Values receiveValues = new Values(plugin, true);
+                Values receiveValues = new Values(plugin, false);
 
-                MessageSender sender = createSender(s)
+                Player player = target.getPlayer();
+
+                MessageSender sender = createSender(null)
+                        .setLogger(false)
+                        .addPlaceholder("{receiver}", isConsoleValue(player))
                         .addPlaceholder("{message}", message)
-                        .setLogger(false);
+                        .addPlaceholder("{sender}", isConsoleValue(s));
 
                 initValues.playSound(s);
-                receiveValues.playSound(target.getPlayer());
+                receiveValues.playSound(player);
 
-                sender.copy()
-                        .addPlaceholder("{receiver}", isConsoleValue(target.getPlayer()))
-                        .send(initValues.getOutput());
+                sender.copy().setTargets(s).send(initValues.getOutput());
+                sender.copy().setTargets(player).send(receiveValues.getOutput());
 
-                sender.copy().setTargets(target.getPlayer())
-                        .addPlaceholder("{sender}", isConsoleValue(s))
-                        .send(receiveValues.getOutput());
+                replies.put(player, s);
+                replies.put(s, player);
 
-                replies.put(target.getPlayer(), s);
-
-                return createSender(null).setLogger(true)
-                        .addPlaceholder("{receiver}", isConsoleValue(target.getPlayer()))
-                        .addPlaceholder("{message}", message)
-                        .addPlaceholder("{sender}", isConsoleValue(s))
+                return sender.setErrorPrefix(null)
+                        .setLogger(true)
                         .send("console-formatting.format");
             }
 
@@ -189,19 +185,16 @@ final class AuditChatHandler implements Commandable {
         });
         messageCommands.add(new BaseCommand("reply") {
             @Override
-            protected boolean execute(CommandSender sender, String[] args) {
-                if (!isPermitted(sender)) return true;
+            protected boolean execute(CommandSender s, String[] args) {
+                if (!isPermitted(s)) return true;
 
-                SIRUser receiver = plugin.getUserManager().getUser(sender);
+                SIRUser receiver = plugin.getUserManager().getUser(s);
                 if (receiver != null && receiver.isMuted())
-                    return createSender(sender).send("is-muted");
+                    return createSender(s).setLogger(false).send("is-muted");
 
-                if (args.length == 0)
-                    return createSender(sender).send("empty-message");
-
-                final CommandSender init = replies.get(sender);
+                final CommandSender init = replies.get(s);
                 if (init == null)
-                    return createSender(sender).send("not-replied");
+                    return createSender(s).setLogger(false).send("not-replied");
 
                 SIRUser initiator = plugin.getUserManager().getUser(init);
                 if (initiator != null) {
@@ -210,6 +203,7 @@ final class AuditChatHandler implements Commandable {
                                 FileData.Command.Multi.IGNORE.getFile(false);
 
                         return plugin.getLibrary().getLoadedSender()
+                                .setLogger(false)
                                 .addPlaceholder(
                                         "{type}",
                                         lang.get("lang.channels.msg", "")
@@ -220,37 +214,36 @@ final class AuditChatHandler implements Commandable {
                     boolean vanished = getLang()
                             .get("lang.vanish-messages.enabled", true);
                     if (initiator.isVanished() && vanished)
-                        return createSender(sender)
+                        return createSender(s)
+                                .setLogger(false)
                                 .send("vanish-messages.message");
                 }
 
-                String message = LangUtils.stringFromArray(args, 1);
+                String message = LangUtils.stringFromArray(args, 0);
                 if (StringUtils.isBlank(message))
-                    return createSender(sender).send("empty-message");
+                    return createSender(s)
+                            .setLogger(false)
+                            .send("empty-message");
 
                 Values initValues = new Values(plugin, true);
-                Values receiveValues = new Values(plugin, true);
+                Values receiveValues = new Values(plugin, false);
 
                 initValues.playSound(init);
-                receiveValues.playSound(sender);
+                receiveValues.playSound(s);
 
-                final MessageSender msg = createSender(sender)
-                        .addPlaceholder("{message}", message).setLogger(false);
-
-                msg.copy()
-                        .addPlaceholder("{receiver}", isConsoleValue(init))
-                        .send(initValues.getOutput());
-
-                msg.copy().setTargets(!(init instanceof Player) ?
-                                null :
-                                (Player) init)
-                        .addPlaceholder("{sender}", isConsoleValue(sender))
-                        .send(receiveValues.getOutput());
-
-                return createSender(null)
+                final MessageSender sender = createSender(null)
+                        .setLogger(false)
                         .addPlaceholder("{receiver}", isConsoleValue(init))
                         .addPlaceholder("{message}", message)
-                        .addPlaceholder("{sender}", isConsoleValue(sender))
+                        .addPlaceholder("{sender}", isConsoleValue(s));
+
+                sender.copy().setTargets(s).send(initValues.getOutput());
+
+                sender.copy().setTargets(init)
+                        .send(receiveValues.getOutput());
+
+                return sender.setErrorPrefix(null)
+                        .setLogger(true)
                         .send("console-formatting.format");
             }
 

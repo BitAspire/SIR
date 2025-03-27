@@ -2,7 +2,7 @@ package me.croabeast.sir.api.file;
 
 import me.croabeast.lib.file.ConfigurableUnit;
 import me.croabeast.sir.plugin.SIRPlugin;
-import me.croabeast.sir.plugin.manager.SIRUserManager;
+import me.croabeast.sir.plugin.manager.UserManager;
 import me.croabeast.sir.plugin.misc.SIRUser;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
@@ -13,7 +13,7 @@ import java.util.Objects;
 /**
  * Represents a configuration unit used for handling permissions and groups in a configuration section.
  */
-public interface ConfigUnit extends ConfigurableUnit {
+public interface PermissibleUnit extends ConfigurableUnit {
 
     /**
      * Checks if the given command sender has the permission associated with this unit.
@@ -22,7 +22,7 @@ public interface ConfigUnit extends ConfigurableUnit {
      * @return True if the sender has the permission, false otherwise.
      */
     default boolean hasPerm(CommandSender sender) {
-        return SIRUserManager.hasPerm(sender, getPermission());
+        return UserManager.hasPerm(sender, getPermission());
     }
 
     /**
@@ -32,7 +32,7 @@ public interface ConfigUnit extends ConfigurableUnit {
      * @return True if the sender has the permission, false otherwise.
      */
     default boolean hasPerm(SIRUser user) {
-        return SIRUserManager.hasPerm(user, getPermission());
+        return UserManager.hasPerm(user, getPermission());
     }
 
     /**
@@ -55,7 +55,7 @@ public interface ConfigUnit extends ConfigurableUnit {
      * @return A new ConfigUnit instance.
      * @throws NullPointerException If the configuration section is null.
      */
-    static ConfigUnit of(ConfigurationSection section) {
+    static PermissibleUnit of(ConfigurationSection section) {
         return () -> Objects.requireNonNull(section);
     }
 
@@ -65,7 +65,7 @@ public interface ConfigUnit extends ConfigurableUnit {
      * @param unit The ConfigUnit instance.
      * @return A new ConfigUnit instance.
      */
-    static ConfigUnit of(ConfigUnit unit) {
+    static PermissibleUnit of(PermissibleUnit unit) {
         return of(unit.getSection());
     }
 }

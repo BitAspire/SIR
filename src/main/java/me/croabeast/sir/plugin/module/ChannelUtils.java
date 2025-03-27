@@ -13,9 +13,8 @@ import me.croabeast.sir.plugin.aspect.AspectKey;
 import me.croabeast.sir.plugin.SIRPlugin;
 import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.misc.SIRUser;
-import me.croabeast.sir.plugin.manager.SIRUserManager;
+import me.croabeast.sir.plugin.manager.UserManager;
 import me.croabeast.takion.message.chat.ChatClick;
-import me.croabeast.takion.misc.StringAligner;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
@@ -181,8 +180,8 @@ class ChannelUtils {
             return users.toSet();
         }
 
-        @Override
-        public @NotNull Set<SIRUser> getRecipients(Player player) {
+        @NotNull
+        public Set<SIRUser> getRecipients(Player player) {
             return getRecipients(plugin.getUserManager().getUser(player));
         }
 
@@ -221,7 +220,7 @@ class ChannelUtils {
             if (isDefault() && !TextUtils.IS_JSON.test(applier.toString()))
                 return applier
                         .apply(s -> SIRPlugin.getLib().colorize(target, parser, s))
-                        .apply(StringAligner::align).toString();
+                        .apply(plugin.getLibrary().getCharacterManager()::align).toString();
 
             return isChatEventless() ? applier.toString() :
                     applier.apply(TextUtils.STRIP_JSON).toString();
@@ -337,7 +336,7 @@ class ChannelUtils {
                     b = normal;
                     break;
             }
-            return !SIRUserManager.hasPerm(player, PERM + perm) && !b;
+            return !UserManager.hasPerm(player, PERM + perm) && !b;
         }
 
         String check(Player player, String string) {

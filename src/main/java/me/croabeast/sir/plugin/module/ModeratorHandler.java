@@ -10,7 +10,7 @@ import me.croabeast.lib.file.ConfigurableFile;
 import me.croabeast.lib.util.ReplaceUtils;
 import me.croabeast.sir.api.CustomListener;
 import me.croabeast.sir.plugin.FileData;
-import me.croabeast.sir.plugin.manager.SIRUserManager;
+import me.croabeast.sir.plugin.manager.UserManager;
 import me.croabeast.sir.plugin.LangUtils;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
@@ -18,6 +18,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.function.UnaryOperator;
@@ -28,7 +29,8 @@ final class ModeratorHandler extends ListenerModule {
 
     final Set<Registrable> modules = new HashSet<>();
 
-    ConfigurableFile getFile() {
+    @NotNull
+    public ConfigurableFile getFile() {
         return FileData.Module.Chat.MODERATION.getFile();
     }
 
@@ -106,7 +108,7 @@ final class ModeratorHandler extends ListenerModule {
             @EventHandler(priority = EventPriority.LOWEST)
             private void onChatEvent(AsyncPlayerChatEvent event) {
                 if (!base.isEnabled() ||
-                        SIRUserManager.hasPerm(event.getPlayer(), base.get()))
+                        UserManager.hasPerm(event.getPlayer(), base.get()))
                     return;
 
                 String message = event.getMessage();
@@ -321,7 +323,7 @@ final class ModeratorHandler extends ListenerModule {
             if (staff.isEnabled()) {
                 Set<? extends Player> set = CollectionBuilder
                         .of(Bukkit.getOnlinePlayers())
-                        .filter(p -> SIRUserManager.hasPerm(p, staff.get())).toSet();
+                        .filter(p -> UserManager.hasPerm(p, staff.get())).toSet();
 
                 plugin.getLibrary().getLoadedSender().setTargets(set).send(format);
             }

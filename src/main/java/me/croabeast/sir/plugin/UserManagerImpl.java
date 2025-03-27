@@ -10,7 +10,7 @@ import me.croabeast.lib.Registrable;
 import me.croabeast.lib.file.ConfigurableFile;
 import me.croabeast.lib.util.Exceptions;
 import me.croabeast.sir.api.CustomListener;
-import me.croabeast.sir.plugin.manager.SIRUserManager;
+import me.croabeast.sir.plugin.manager.UserManager;
 import me.croabeast.sir.plugin.module.SIRModule;
 import me.croabeast.sir.plugin.misc.SIRUser;
 import me.leoko.advancedban.manager.PunishmentManager;
@@ -37,7 +37,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.regex.Pattern;
 
-final class UserManagerImpl implements SIRUserManager, Registrable {
+final class UserManagerImpl implements UserManager, Registrable {
 
     private final Map<UUID, BaseUser> userMap = new HashMap<>();
 
@@ -85,11 +85,12 @@ final class UserManagerImpl implements SIRUserManager, Registrable {
     void loadData(OfflinePlayer offline) {
         BaseUser user = new OfflineUser(offline);
 
-        userMap.putIfAbsent(user.getUuid(), user);
+        userMap.put(user.getUuid(), user);
         user = userMap.get(user.getUuid());
 
-        user.getMuteData().load();
         user.getIgnoreData().load();
+        user.getMuteData().load();
+        user.getChatData().load();
     }
 
     void loadData(Player player) {
@@ -125,7 +126,7 @@ final class UserManagerImpl implements SIRUserManager, Registrable {
 
         for (OfflinePlayer player : plugin.getServer().getOfflinePlayers()) {
             BaseUser user = userMap.remove(player.getUniqueId());
-            String key = user.ignoreData.uuidKey;
+            String key = user.getUuid().toString();
 
             user.giveImmunity(0);
 
@@ -221,12 +222,11 @@ final class UserManagerImpl implements SIRUserManager, Registrable {
 
     @Override
     public Set<SIRUser> getOnlineUsers() {
-        final Set<SIRUser> set = new HashSet<>();
-
-        for (SIRUser user : userMap.values())
-            if (user.isOnline()) set.add(user);
-
-        return Collections.unmodifiableSet(set);
+        return Collections
+                .unmodifiableSet(CollectionBuilder
+                        .of(userMap.values())
+                        .filter(SIRUser::isOnline)
+                        .toSet());
     }
 
     static class IgnoreData {
@@ -455,6 +455,7 @@ final class UserManagerImpl implements SIRUserManager, Registrable {
         private final MuteData muteData;
         private final ChatViewData chatData;
 
+        @Getter(AccessLevel.NONE)
         @Setter
         private boolean logged = false;
 
@@ -477,6 +478,11 @@ final class UserManagerImpl implements SIRUserManager, Registrable {
         @Nullable
         public String getSuffix() {
             return plugin.getVaultHolder().getSuffix(getPlayer());
+        }
+
+        @Override
+        public boolean isLogged() {
+            return !SIRModule.Key.LOGIN.isEnabled() || logged;
         }
 
         @Override
@@ -593,33 +599,33 @@ final class UserManagerImpl implements SIRUserManager, Registrable {
             getPlayer().setInvulnerable(this.immune = immune);
         }
 
+        private void cancelTask() {
+            if (immuneTask != -1)
+                plugin.getServer().getScheduler().cancelTask(immuneTask);
+        }
+
         @Override
         public void giveImmunity(int seconds) {
-            BukkitScheduler scheduler = plugin.getServer().getScheduler();
-
-            if (seconds == 0 && immune) {
-                if (immuneTask != -1)
-                    scheduler.cancelTask(immuneTask);
-                setImmune(false);
+            if (seconds == 0) {
+                if (immune) {
+                    cancelTask();
+                    setImmune(false);
+                }
                 return;
             }
 
             if (seconds < 0) {
-                if (immuneTask != -1)
-                    scheduler.cancelTask(immuneTask);
-                if (!immune)
-                    setImmune(true);
+                cancelTask();
+                if (!immune) setImmune(true);
                 return;
             }
 
             setImmune(true);
-
-            immuneTask = scheduler
+            immuneTask = plugin.getServer().getScheduler()
                     .runTaskLater(
                             plugin, () -> setImmune(false),
                             seconds * 20L
-                    )
-                    .getTaskId();
+                    ).getTaskId();
         }
 
         @NotNull

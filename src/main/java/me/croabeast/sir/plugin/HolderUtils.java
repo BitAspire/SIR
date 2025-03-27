@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.experimental.UtilityClass;
 import me.croabeast.lib.CollectionBuilder;
 import me.croabeast.lib.util.ArrayUtils;
+import me.croabeast.lib.util.Exceptions;
 import me.croabeast.sir.plugin.hook.VaultHolder;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.model.group.Group;
@@ -22,6 +23,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 
 @UtilityClass
@@ -103,13 +105,7 @@ class HolderUtils {
         private final LuckPerms source;
 
         LuckHolder() {
-            ServicesManager manager = Bukkit.getServer().getServicesManager();
-
-            RegisteredServiceProvider<LuckPerms> perms = manager.getRegistration(LuckPerms.class);
-            if (perms == null)
-                throw new IllegalStateException();
-
-            source = perms.getProvider();
+            source = Objects.requireNonNull(Bukkit.getServer().getServicesManager().getRegistration(LuckPerms.class)).getProvider();
         }
 
         @Override
@@ -119,7 +115,7 @@ class HolderUtils {
 
         @Override
         public boolean isEnabled() {
-            return getPlugin().isEnabled();
+            return Exceptions.isPluginEnabled("LuckPerms");
         }
 
         <T> T getAsUser(Player player, Function<User, T> function) {
@@ -265,14 +261,13 @@ class HolderUtils {
     }
 
     VaultHolder<?> loadHolder() {
-        try {
+        if (Exceptions.isPluginEnabled("LuckPerms"))
             return new LuckHolder();
-        } catch (Exception e) {
-            try {
-                return new BasicHolder();
-            } catch (Exception e1) {
-                return new NoHolder();
-            }
+
+        try {
+            return new BasicHolder();
+        } catch (Exception e1) {
+            return new NoHolder();
         }
     }
 }

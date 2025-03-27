@@ -10,10 +10,10 @@ lang:
   not-player: '<P> &cThe player {target} does not exist.'
   ignoring: '<P> &7This player is ignoring you in &e{type}&7.'
   success:
-    player: '<P> &7You are now ignoring &a{target} in &e{type}&7.'
+    player: '<P> &7You are now ignoring &a{target}&7 in &e{type}&7.'
     all: '<P> &7You are now ignoring all players in &e{type}&7.'
   remove:
-    player: '<P> &7You are now&c not&7 ignoring &a{target} in &e{type}&7.'
+    player: '<P> &7You are now&c not&7 ignoring &a{target}&7 in &e{type}&7.'
     all: '<P> &7You are now&c not&7 ignoring all players in &e{type}&7.'
   channels:
     chat: 'Chat'

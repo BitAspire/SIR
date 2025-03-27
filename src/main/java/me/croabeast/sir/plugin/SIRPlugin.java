@@ -15,9 +15,13 @@ import me.croabeast.takion.TakionLib;
 import me.croabeast.takion.message.AnimatedBossbar;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.command.PluginCommand;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.net.URLDecoder;
@@ -139,7 +143,7 @@ public final class SIRPlugin extends JavaPlugin {
 
         Plugin permission = vaultHolder.getPlugin();
         if (permission != null) {
-            logger.add("- Permission Plugin: &e" + function.apply(permission), true);
+            logger.add("- Permission: &e" + function.apply(permission), true);
             hooksEnabled++;
         }
 
@@ -149,12 +153,12 @@ public final class SIRPlugin extends JavaPlugin {
                 .fromParent(SIRModule.Key.VANISH, HookLoadable::getHookedPlugin);
 
         if (login != null) {
-            logger.add("- Login Plugin: &e" + function.apply(login), true);
+            logger.add("- Login: &e" + function.apply(login), true);
             hooksEnabled++;
         }
 
         if (vanish != null) {
-            logger.add("- Vanish Plugin: &e" + function.apply(vanish), true);
+            logger.add("- Vanish: &e" + function.apply(vanish), true);
             hooksEnabled++;
         }
 
@@ -176,13 +180,14 @@ public final class SIRPlugin extends JavaPlugin {
                         "None / Other"
                 );
 
-        for (OfflinePlayer o : Bukkit.getOfflinePlayers()) userManager.loadData(o);
+        for (OfflinePlayer o : Bukkit.getOfflinePlayers())
+            userManager.loadData(o);
 
         if (SIRModule.Key.LOGIN.isEnabled())
             userManager.getOnlineUsers().forEach(u -> u.setLogged(true));
 
-        logger.add(true, "&e[Status]",
-                "- SIR initialized completely.",
+        logger.add(true,
+                "&e[Status]", "- SIR initialized completely.",
                 "- Loading time: " + initializer.result() + " ms",
                 "==================================="
         ).sendLines();
@@ -190,6 +195,18 @@ public final class SIRPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        final Timer initializer = Timer.create(true);
+
+        final DelayLogger logger = new DelayLogger(lib);
+        logger.add(true,
+                "===================================",
+                "&0 * &6____ &0* &6___ &0* &6____",
+                "&0* &6(___&0 * * &6|&0* * &6|___)",
+                "&0* &6____) . _|_ . | &0* &6\\ . &f" + version,
+                "      &f&oDeveloped by " + author,
+                "==================================="
+        );
+
         AnimatedBossbar.unregisterAll();
 
         moduleManager.unload();
@@ -198,28 +215,56 @@ public final class SIRPlugin extends JavaPlugin {
         userManager.unregister();
         userManager.saveAllData();
 
+        getServer().getScheduler().cancelTasks(this);
+        HandlerList.unregisterAll(this);
+
+        logger.add(true,
+                "SIR disabled completely in " + initializer.result() + " ms.",
+                "==================================="
+        ).sendLines();
+
         lib = null;
         instance = null;
     }
 
-    ClassLoader classLoader() {
-        return getClassLoader();
-    }
-
     @NotNull
-    public SIRUserManager getUserManager() {
+    public UserManager getUserManager() {
         return userManager;
-    }
-
-    public File fileFrom(String... childPaths) {
-        return ResourceUtils.fileFrom(getDataFolder(), childPaths);
     }
 
     public TakionLib getLibrary() {
         return lib;
     }
 
-    public static CollectionBuilder<String> getJarEntries() {
+    public File fileFrom(String... childPaths) {
+        return ResourceUtils.fileFrom(getDataFolder(), childPaths);
+    }
+
+    @NotNull
+    public FileConfiguration getConfig() {
+        throw new IllegalStateException("Please use FileData for File management.");
+    }
+
+    @Override
+    public void reloadConfig() {
+        throw new IllegalStateException("Please use FileData for File management.");
+    }
+
+    @Override
+    public void saveConfig() {
+        throw new IllegalStateException("Please use FileData for File management.");
+    }
+
+    @Nullable
+    public PluginCommand getCommand(@NotNull String name) {
+        throw new IllegalStateException("Please refer to SIRPlugin#getCommandManager() for command management.");
+    }
+
+    ClassLoader classLoader() {
+        return getClassLoader();
+    }
+
+    static CollectionBuilder<String> getJarEntries() {
         try (JarFile jar = new JarFile(JAR_PATH)) {
             return CollectionBuilder.of(jar.entries()).map(ZipEntry::getName);
         } catch (Exception e) {

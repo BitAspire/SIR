@@ -49,9 +49,6 @@ final class ChatHandler extends ListenerModule implements Commandable {
         file = FileData.Module.Chat.CHANNELS.getFile();
 
         commands.add(new SIRCommand(this, SIRCommand.Key.CHAT_VIEW) {
-            {
-                setClickActionAsParent();
-            }
 
             private final FileKey<Boolean> chatFile = FileData.Command.Multi.CHAT_VIEW;
 
@@ -110,8 +107,8 @@ final class ChatHandler extends ListenerModule implements Commandable {
         ChannelUtils.loadDefaults();
         UnitMappable<ChatChannel> channels = file.asUnitMap("channels", ChannelUtils::of);
 
-        locals = channels.filter(ChatChannel::isLocal).order(false);
-        globals = channels.filter(ChatChannel::isGlobal).order(false);
+        locals = channels.copy().filter(ChatChannel::isLocal);
+        globals = channels.copy().filter(ChatChannel::isGlobal);
 
         return super.register();
     }

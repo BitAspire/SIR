@@ -3,7 +3,7 @@ package me.croabeast.sir.plugin.module;
 import lombok.Getter;
 import me.croabeast.lib.file.Configurable;
 import me.croabeast.lib.file.UnitMappable;
-import me.croabeast.sir.api.file.ConfigUnit;
+import me.croabeast.sir.api.file.PermissibleUnit;
 import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.LangUtils;
 import org.bukkit.configuration.ConfigurationSection;
@@ -102,7 +102,7 @@ final class CooldownHandler extends ListenerModule {
     }
 
     @Getter
-    private static class CooldownUnit implements ConfigUnit {
+    private static class CooldownUnit implements PermissibleUnit {
 
         private final ConfigurationSection section;
 

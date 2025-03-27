@@ -82,8 +82,6 @@ final class MainCommand extends SIRCommand {
         editSubCommand("help", senderPredicate("{version}", SIRPlugin.getVersion(), "help"));
         editSubCommand("support",
                 senderPredicate("{link}", "https://discord.gg/s9YFGMrjyF", "support"));
-
-        setClickActionAsDefault();
     }
 
     private BiPredicate<CommandSender, String[]> senderPredicate(String key, Object o, String path) {

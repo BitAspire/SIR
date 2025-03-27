@@ -6,7 +6,7 @@
 
     <groupId>me.croabeast</groupId>
     <artifactId>SIR</artifactId>
-    <version>4.0-2025.SS9</version>
+    <version>4.0-2025.SS17</version>
     <packaging>jar</packaging>
 
     <name>SIR_Plugin</name> <!--Simple In-game Receptionist-->
@@ -76,7 +76,7 @@
                 <version>2.5.2</version>
                 <executions>
                     <execution>
-                        <id>BeansLib</id>
+                        <id>Takion</id>
                         <phase>initialize</phase>
                         <goals>
                             <goal>install-file</goal>
@@ -196,6 +196,11 @@
         <repository>
             <id>nickuc-repo</id>
             <url>https://repo.nickuc.com/maven-releases/</url>
+        </repository>
+
+        <repository>
+            <id>svenar</id>
+            <url>https://svenar.nl/repo/</url>
         </repository>
     </repositories>
 

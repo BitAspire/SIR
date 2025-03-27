@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.jar.JarFile;
 
 @RequiredArgsConstructor
-class AddonMngrImpl implements AddonManager {
+final class AddonMngrImpl implements AddonManager {
 
     private final Map<String, SIRAddon> byName = new HashMap<>();
     private final Map<Class<? extends SIRAddon>, SIRAddon> byClass = new HashMap<>();
@@ -33,7 +33,7 @@ class AddonMngrImpl implements AddonManager {
 
     @Nullable
     public SIRAddon loadAddon(File file) {
-        if (file == null || file.isDirectory() ||!file.exists())
+        if (file == null || file.isDirectory() || !file.exists())
             return null;
 
         final AddonFile description;
@@ -60,6 +60,7 @@ class AddonMngrImpl implements AddonManager {
             byName.put(addon.getName(), addon);
             byClass.put(addon.getClass(), addon);
 
+            addon.plugin = plugin;
             return addon;
         } catch (Exception e) {
             return null;
@@ -113,7 +114,7 @@ class AddonMngrImpl implements AddonManager {
         log("Disabling " + name);
 
         try {
-            return !(addon.enabled = !addon.disable());
+            return !  (addon.enabled = !addon.disable());
         } catch (Exception e) {
             log("Error disabling " + name + ":");
 
@@ -142,9 +143,8 @@ class AddonMngrImpl implements AddonManager {
         return new ArrayList<>(byName.values());
     }
 
-    /*
     void loadAllAddons() {
-        File folder = SIRPlugin.fileFrom("addons");
+        File folder = plugin.fileFrom("addons");
         if (!folder.exists()) {
             folder.mkdirs();
             return;
@@ -172,7 +172,7 @@ class AddonMngrImpl implements AddonManager {
     }
 
     void unloadAllAddons() {
-        File folder = SIRPlugin.fileFrom("addons");
+        File folder = plugin.fileFrom("addons");
         if (!folder.exists()) {
             folder.mkdirs();
             return;
@@ -180,5 +180,4 @@ class AddonMngrImpl implements AddonManager {
 
         byName.values().forEach(this::unloadAddon);
     }
-    */
 }

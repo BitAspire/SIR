@@ -24,13 +24,11 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryClickEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.BiPredicate;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 @Accessors(makeFinal = true)
@@ -114,9 +112,10 @@ public abstract class SIRCommand extends BukkitCommand {
         options.getSubCommands()
                 .forEach(s -> registerSubCommand(new SubCommand(this, s) {
                     @Override
-                    public boolean isPermitted(CommandSender sender, boolean log) {
-                        return UserManager.hasPerm(sender, getWildcardPermission()) ||
-                                UserManager.hasPerm(sender, this.getPermission());
+                    public boolean isPermitted(CommandSender s, boolean log) {
+                        final String wild = getWildcardPermission();
+                        return UserManager.hasPerm(s, wild) ||
+                                UserManager.hasPerm(s, getPermission());
                     }
                 }));
         setExecutingError((sender, e) -> {
@@ -150,52 +149,21 @@ public abstract class SIRCommand extends BukkitCommand {
         button.setDefaultItems();
         button.allowToggle(modifiable);
 
-        button.setOnClick((Consumer<InventoryClickEvent>) e -> {
-            throw new IllegalStateException("Click action not set");
-        });
-    }
-
-    private void loadParent(SIRAspect parent) {
-        this.parent = parent;
-        button.allowToggle(false);
-
-        if (parent.isEnabled() != button.isEnabled())
-            button.toggleAll();
-    }
-
-    protected SIRCommand(@NotNull SIRAspect parent, String name) {
-        this(parent.getKey(), name, true);
-        loadParent(parent);
-    }
-
-    protected SIRCommand(@NotNull SIRAspect parent, Key key) {
-        this(key, key.getName(), true);
-        loadParent(parent);
-    }
-
-    protected SIRCommand(@NotNull Key key, boolean modifiable) {
-        this(key, key.getName(), modifiable);
-    }
-
-    protected void setClickActionAsParent() {
-        Objects.requireNonNull(parent, "Parent not set, aborting...");
-
         button.setOnClick(b -> e -> {
-            plugin.getLibrary().getLoadedSender()
-                    .setLogger(false)
-                    .setTargets((Player) e.getView().getPlayer())
-                    .send(
-                            "<P> &a" + parent.getName() +
-                                    "&7 should be toggled instead " +
-                                    "of this command."
-                    );
+            if (parent != null) {
+                plugin.getLibrary().getLoadedSender()
+                        .setLogger(false)
+                        .setTargets((Player) e.getView().getPlayer())
+                        .send(
+                                "<P> &a" + parent.getName() +
+                                        "&7 should be toggled instead " +
+                                        "of this command."
+                        );
 
-            e.setCancelled(true);
-        });
-    }
+                e.setCancelled(true);
+                return;
+            }
 
-    protected void setClickActionAsDefault() {
-        button.setOnClick(b -> e -> {
             if (!modifiable) {
                 plugin.getLibrary().getLoadedSender()
                         .setLogger(false)
@@ -219,6 +187,28 @@ public abstract class SIRCommand extends BukkitCommand {
                     .log("Command '/" + name + "' registered: " + b.isEnabled());
             b.toggleRegistering();
         });
+    }
+
+    private void loadParent(SIRAspect parent) {
+        this.parent = parent;
+        button.allowToggle(false);
+
+        if (parent.isEnabled() != button.isEnabled())
+            button.toggleAll();
+    }
+
+    protected SIRCommand(@NotNull SIRAspect parent, String name) {
+        this(parent.getKey(), name, true);
+        loadParent(parent);
+    }
+
+    protected SIRCommand(@NotNull SIRAspect parent, Key key) {
+        this(key, key.getName(), true);
+        loadParent(parent);
+    }
+
+    protected SIRCommand(@NotNull Key key, boolean modifiable) {
+        this(key, key.getName(), modifiable);
     }
 
     private void loadOptionsFromFile() {
@@ -305,8 +295,17 @@ public abstract class SIRCommand extends BukkitCommand {
 
     private class CommandDisplayer extends MessageSender {
 
+        private CommandDisplayer(MessageSender sender) {
+            super(sender);
+        }
+
         private CommandDisplayer() {
             super(plugin.getLibrary().getLoadedSender());
+        }
+
+        @Override
+        public MessageSender copy() {
+            return new CommandDisplayer(this);
         }
 
         @Override
@@ -424,6 +423,7 @@ public abstract class SIRCommand extends BukkitCommand {
         private final UUID uuid;
         private final Slot menuSlot;
 
+        @SuppressWarnings("all")
         @Setter
         private Supplier<Boolean> supplier = () -> false;
         private SIRCommand init;

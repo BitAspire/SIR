@@ -4,7 +4,7 @@ import lombok.Getter;
 import me.croabeast.lib.file.Configurable;
 import me.croabeast.lib.util.ReplaceUtils;
 import me.croabeast.prismatic.PrismaticAPI;
-import me.croabeast.sir.api.file.ConfigUnit;
+import me.croabeast.sir.api.file.PermissibleUnit;
 import me.croabeast.sir.plugin.misc.ChatChannel;
 import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.misc.SIRUser;
@@ -139,7 +139,7 @@ final class MentionFormatter extends SIRModule implements PlayerFormatter<ChatCh
         throw new UnsupportedOperationException("A channel should be used");
     }
 
-    static class Mention implements ConfigUnit {
+    static class Mention implements PermissibleUnit {
 
         @Getter
         ConfigurationSection section;

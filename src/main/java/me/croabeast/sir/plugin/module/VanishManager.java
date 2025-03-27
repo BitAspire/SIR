@@ -114,12 +114,15 @@ final class VanishManager extends ListenerModule implements HookLoadable {
         JoinQuitHandler.Type type = vanished ?
                 JoinQuitHandler.Type.JOIN : JoinQuitHandler.Type.QUIT;
 
-        JoinQuitHandler.ConnectionUnit unit = handler.get(type, user);
+        JoinQuitHandler.Unit unit = handler.get(type, user);
         if (unit == null) return;
 
-        int timer = handler.key.getFile().get("cooldown." + type.name, 0);
-        Map<UUID, Long> players =
-                vanished ? handler.joins : handler.quits;
+        int timer = handler.file.get("cooldown." + type.name, 0);
+        Map<UUID, Long> players = handler.timeMap.getMap(
+                vanished ?
+                        JoinQuitHandler.Time.JOIN :
+                        JoinQuitHandler.Time.QUIT
+        );
 
         UUID uuid = user.getUuid();
         if (timer > 0 && players.containsKey(uuid)) {

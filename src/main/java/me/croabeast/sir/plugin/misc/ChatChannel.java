@@ -1,7 +1,7 @@
 package me.croabeast.sir.plugin.misc;
 
 import me.croabeast.lib.CollectionBuilder;
-import me.croabeast.sir.api.file.ConfigUnit;
+import me.croabeast.sir.api.file.PermissibleUnit;
 import me.croabeast.takion.message.chat.ChatClick;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-public interface ChatChannel extends ConfigUnit {
+public interface ChatChannel extends PermissibleUnit {
 
     boolean isGlobal();
 

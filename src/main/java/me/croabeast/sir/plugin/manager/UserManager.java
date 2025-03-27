@@ -11,7 +11,7 @@ import org.bukkit.entity.Player;
 import java.util.Set;
 import java.util.UUID;
 
-public interface SIRUserManager {
+public interface UserManager {
 
     SIRUser getUser(UUID uuid);
 
@@ -39,12 +39,20 @@ public interface SIRUserManager {
 
     void unmute(SIRUser user);
 
+    default void mute(OfflinePlayer player, int seconds, String admin, String reason) {
+        mute(getUser(player), seconds, admin, reason);
+    }
+
     default void mute(OfflinePlayer player, int seconds) {
         mute(getUser(player), seconds);
     }
 
     default void unmute(OfflinePlayer player) {
         unmute(getUser(player));
+    }
+
+    default void mute(Player player, int seconds, String admin, String reason) {
+        mute(getUser(player), seconds, admin, reason);
     }
 
     default void mute(Player player, int seconds) {

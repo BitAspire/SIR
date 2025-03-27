@@ -1,7 +1,10 @@
 package me.croabeast.sir.api.addon;
 
+import lombok.Getter;
+import lombok.experimental.Accessors;
 import me.croabeast.lib.file.ResourceUtils;
 import me.croabeast.sir.api.SIRExtension;
+import me.croabeast.sir.plugin.SIRPlugin;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -12,14 +15,17 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 
+@Accessors(makeFinal = true)
+@Getter
 public abstract class SIRAddon implements SIRExtension {
 
-    private ClassLoader loader;
+    private ClassLoader classLoader;
+    SIRPlugin plugin;
 
     private File file;
     private File dataFolder;
 
-    private AddonFile description;
+    private AddonFile descriptionFile;
 
     boolean loaded = false;
     boolean enabled = false;
@@ -32,51 +38,17 @@ public abstract class SIRAddon implements SIRExtension {
         ((AddonClassLoader) loader).initialize(this);
     }
 
-    public final ClassLoader getClassLoader() {
-        return loader;
-    }
-
-    public final AddonFile getDescriptionFile() {
-        return description;
-    }
-
     /**
      * {@inheritDoc}
      */
     @NotNull
     public final String getName() {
-        return description.getName();
+        return descriptionFile.getName();
     }
 
     @NotNull
     public final String getFullName() {
-        return description.getName() + ' ' + description.getVersion();
-    }
-
-    public final File getFile() {
-        return file;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @NotNull
-    public final File getDataFolder() {
-        return dataFolder;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public final boolean isLoaded() {
-        return loaded;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public final boolean isEnabled() {
-        return enabled;
+        return getName() + ' ' + descriptionFile.getVersion();
     }
 
     protected abstract boolean enable();
@@ -117,9 +89,9 @@ public abstract class SIRAddon implements SIRExtension {
     }
 
     final void initialize(AddonClassLoader loader, File file, File folder, AddonFile description) {
-        this.loader = loader;
+        this.classLoader = loader;
         this.file = file;
-        this.description = description;
+        this.descriptionFile = description;
         this.dataFolder = folder;
     }
 }

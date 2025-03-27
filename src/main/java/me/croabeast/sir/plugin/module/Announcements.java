@@ -79,8 +79,6 @@ final class Announcements extends SIRModule implements Actionable, Commandable {
                     }
                     return createSender(sender).send("select");
                 });
-
-                setClickActionAsParent();
             }
 
             @NotNull

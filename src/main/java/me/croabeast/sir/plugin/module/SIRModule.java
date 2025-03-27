@@ -1,20 +1,17 @@
 package me.croabeast.sir.plugin.module;
 
-import com.github.stefvanschie.inventoryframework.gui.GuiItem;
 import com.github.stefvanschie.inventoryframework.pane.util.Slot;
 import lombok.Getter;
+import me.croabeast.lib.Registrable;
 import me.croabeast.lib.file.ConfigurableFile;
-import me.croabeast.lib.util.ArrayUtils;
-import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.sir.api.SIRExtension;
+import me.croabeast.sir.plugin.Commandable;
 import me.croabeast.sir.plugin.aspect.AspectButton;
 import me.croabeast.sir.plugin.aspect.AspectKey;
 import me.croabeast.sir.plugin.aspect.SIRAspect;
 import me.croabeast.sir.plugin.SIRPlugin;
 import me.croabeast.sir.plugin.FileData;
-import me.croabeast.sir.plugin.gui.ItemCreator;
-import me.croabeast.takion.character.SmallCaps;
-import org.bukkit.Material;
+import me.croabeast.sir.plugin.command.SIRCommand;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -22,28 +19,27 @@ import java.util.*;
 import java.util.function.Function;
 
 @Getter
-public abstract class SIRModule implements SIRAspect, SIRExtension {
+public abstract class SIRModule implements SIRAspect, SIRExtension, Registrable {
 
-    private final AspectKey aspectKey;
     protected final SIRPlugin plugin;
+    private final AspectKey key;
 
-    private final ConfigurableFile mainFile;
+    private final ConfigurableFile file;
     private final AspectButton button;
 
     SIRModule(Key key) {
         this.plugin = SIRPlugin.getInstance();
+
+        this.key = key;
         key.init = this;
 
-        this.aspectKey = key;
-        this.mainFile = FileData.Module.getMain();
+        file = FileData.Module.getMain();
 
         String path = "modules." + key.getFullName();
-        boolean e = mainFile.get(path, false);
+        boolean e = file.get(path, false);
 
-        button = new AspectButton(this, e);
-
-        loadButton(true, Material.LIME_STAINED_GLASS_PANE);
-        loadButton(false, Material.RED_STAINED_GLASS_PANE);
+        button = new AspectButton(this, this.key, e);
+        button.setDefaultItems();
 
         button.setOnClick(b -> event -> {
             HookLoadable loadable = !(SIRModule.this instanceof HookLoadable) ?
@@ -53,65 +49,51 @@ public abstract class SIRModule implements SIRAspect, SIRExtension {
                 plugin.getLibrary().getLoadedSender().
                         setLogger(false).
                         setTargets((Player) event.getView().getPlayer()).
-                        send(
-                                "<P> &7Module can't be enabled since " +
-                                        ((Function<String[], String>) strings -> {
-                                            final int length = strings.length;
-                                            if (length == 1)
-                                                return strings[0] + " is";
+                        send("<P> &7Module can't be enabled since " +
+                                ((Function<String[], String>) strings -> {
+                                    final int length = strings.length;
+                                    if (length == 1)
+                                        return strings[0] + " is";
 
-                                            StringBuilder br = new StringBuilder();
-                                            for (int i = 0; i < length; i++) {
-                                                br.append(strings[i]);
+                                    StringBuilder br = new StringBuilder();
+                                    for (int i = 0; i < length; i++) {
+                                        br.append(strings[i]);
 
-                                                if (i < length - 1)
-                                                    br.append(i == length - 2 ? " or " : ", ");
-                                            }
-                                            return br.append(" are").toString();
-                                        }).apply(loadable.getSupportedPlugins()) +
-                                        "n't installed in the server."
+                                        if (i < length - 1)
+                                            br.append(i == length - 2 ? " or " : ", ");
+                                    }
+
+                                    return br.append(" are").toString();
+                                }).apply(loadable.getSupportedPlugins()) +
+                                "n't installed in the server."
                         );
 
                 if (isRegistered()) {
                     unregister();
-                    mainFile.set(path, false);
-                    mainFile.save();
+                    file.set(path, false);
+                    file.save();
                 }
-                return;
+            }
+            else {
+                file.set(path, b.isEnabled());
+                file.save();
+
+                if (SIRModule.this instanceof Commandable) {
+                    Set<SIRCommand> set = ((Commandable) SIRModule.this).getCommands();
+                    set.forEach(c -> c.getButton().toggleAll());
+                }
+
+                String.valueOf(b.isEnabled() ? register() : unregister());
             }
 
-            mainFile.set(path, b.isEnabled());
-            mainFile.save();
-
-            String.valueOf(b.isEnabled() ? register() : unregister());
+            String s = "Module '" + getName() + "' active: " + b.isEnabled();
+            plugin.getLibrary().getLogger().log(s);
         });
-    }
-
-    void loadButton(boolean enabled, Material material) {
-        String title = SmallCaps.toSmallCaps(aspectKey.getTitle());
-        title = "&7• &f" + title + ':' + (enabled ? " &a&l✔" : " &c&l❌");
-
-        GuiItem item = ItemCreator.of(material)
-                .modifyName(title)
-                .modifyMeta(m -> {
-                    List<String> list = ArrayUtils.toList(aspectKey.getDescription());
-                    list.replaceAll(s ->
-                            PrismaticAPI.colorize("&7 " + SmallCaps.toSmallCaps(s)));
-
-                    m.setLore(list);
-                }).create();
-
-        if (enabled) {
-            button.setEnabledItem(item);
-            return;
-        }
-
-        button.setDisabledItem(item);
     }
 
     @NotNull
     public final String getName() {
-        return aspectKey.getName();
+        return key.getName();
     }
 
     @Override
@@ -131,7 +113,7 @@ public abstract class SIRModule implements SIRAspect, SIRExtension {
 
     @Override
     public String toString() {
-        return "SIRModule{key=" + aspectKey + '}';
+        return "SIRModule{key=" + key + '}';
     }
 
     enum Type {
@@ -156,8 +138,8 @@ public abstract class SIRModule implements SIRAspect, SIRExtension {
                 "Handles if custom join and quit",
                 "messages are enabled.",
                 "Works with multiple messages types",
-                "like chat, title, action bar,",
-                "boss bar, json, etc."
+                "like chat, title, action bar, boss",
+                "bar, json, etc."
         ),
         MOTD(6, 1,
                 "Handles the motd of the server,",

@@ -4,7 +4,6 @@ import me.croabeast.lib.file.ResourceUtils;
 import me.croabeast.lib.util.ArrayUtils;
 import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.misc.FileKey;
-import me.croabeast.takion.misc.StringAligner;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
@@ -143,7 +142,7 @@ final class MotdHandler extends ListenerModule {
 
         final Player p = player;
         UnaryOperator<String> operator = s ->
-                StringAligner.align(
+                plugin.getLibrary().getCharacterManager().align(
                         134,
                         plugin.getLibrary().colorize(p, s)
                 );
