@@ -2,9 +2,9 @@ package me.croabeast.sir.api.addon;
 
 import lombok.AccessLevel;
 import lombok.Getter;
-import me.croabeast.lib.file.Configurable;
-import me.croabeast.lib.util.ArrayUtils;
-import me.croabeast.lib.util.Exceptions;
+import me.croabeast.file.Configurable;
+import me.croabeast.common.util.ArrayUtils;
+import me.croabeast.common.util.Exceptions;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -103,7 +103,7 @@ public final class AddonFile implements Configurable {
      */
     @NotNull
     public FileConfiguration getConfiguration() {
-        throw new UnsupportedOperationException("This file can't be edited");
+        throw new UnsupportedOperationException("getConfiguration");
     }
 
     /**
@@ -111,6 +111,6 @@ public final class AddonFile implements Configurable {
      * @throws UnsupportedOperationException Since this file can not be edited.
      */
     public <T> void set(String path, T value) {
-        throw new UnsupportedOperationException("This file can't be edited");
+        throw new UnsupportedOperationException("set");
     }
 }

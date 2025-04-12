@@ -2,11 +2,11 @@ package me.croabeast.sir.plugin.module;
 
 import lombok.*;
 import lombok.experimental.UtilityClass;
-import me.croabeast.lib.CollectionBuilder;
-import me.croabeast.lib.applier.StringApplier;
-import me.croabeast.lib.file.Configurable;
-import me.croabeast.lib.util.ReplaceUtils;
-import me.croabeast.lib.util.TextUtils;
+import me.croabeast.common.CollectionBuilder;
+import me.croabeast.common.applier.StringApplier;
+import me.croabeast.file.Configurable;
+import me.croabeast.common.util.ReplaceUtils;
+import me.croabeast.common.util.TextUtils;
 import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.sir.plugin.misc.ChatChannel;
 import me.croabeast.sir.plugin.aspect.AspectKey;

@@ -2,16 +2,17 @@ package me.croabeast.sir.plugin;
 
 import lombok.AccessLevel;
 import lombok.Getter;
-import me.croabeast.lib.CollectionBuilder;
-import me.croabeast.lib.file.ResourceUtils;
-import me.croabeast.lib.util.ServerInfoUtils;
+import me.croabeast.common.CollectionBuilder;
+import me.croabeast.file.ResourceUtils;
+import me.croabeast.common.MetricsLoader;
+import me.croabeast.common.util.ServerInfoUtils;
 import me.croabeast.sir.plugin.command.SIRCommand;
-import me.croabeast.sir.plugin.hook.*;
 import me.croabeast.sir.plugin.manager.*;
 import me.croabeast.sir.plugin.misc.DelayLogger;
 import me.croabeast.sir.plugin.misc.Timer;
 import me.croabeast.sir.plugin.module.*;
 import me.croabeast.takion.TakionLib;
+import me.croabeast.takion.VaultHolder;
 import me.croabeast.takion.message.AnimatedBossbar;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -57,11 +58,10 @@ public final class SIRPlugin extends JavaPlugin {
 
     @Getter(AccessLevel.NONE)
     private UserManagerImpl userManager;
+    private VaultHolder<?> vaultHolder;
 
     private ModuleManager moduleManager;
     private CommandManager commandManager;
-
-    private VaultHolder<?> vaultHolder;
     private WorldRuleManager worldRuleManager;
 
     @Override
@@ -72,7 +72,6 @@ public final class SIRPlugin extends JavaPlugin {
         author = getDescription().getAuthors().get(0);
         version = getDescription().getVersion();
 
-        vaultHolder = HolderUtils.loadHolder();
         DelayLogger files = FileData.loadFiles();
 
         userManager = new UserManagerImpl(this);
@@ -85,6 +84,7 @@ public final class SIRPlugin extends JavaPlugin {
         moduleManager.load();
         moduleManager.register();
 
+        vaultHolder = VaultHolder.loadHolder();
         lib = new LangUtils(this);
         FileData.FILE_MAP.forEach((k, v) -> v.setLoggerAction(lib.getLogger()::log));
 
@@ -118,9 +118,9 @@ public final class SIRPlugin extends JavaPlugin {
 
         CollectionBuilder<SIRCommand> commands = commandManager.asBuilder();
         logger.add(true,
-                "- Loaded: " + commands.size() + "/11",
-                "- Enabled: " + commands.sizeByFilter(SIRCommand::isEnabled) + "/11",
-                "- Registered: " + commands.sizeByFilter(SIRCommand::isRegistered) + "/11"
+                "- Loaded: " + commands.size() + "/12",
+                "- Enabled: " + commands.sizeByFilter(SIRCommand::isEnabled) + "/12",
+                "- Registered: " + commands.sizeByFilter(SIRCommand::isRegistered) + "/12"
         );
 
         logger.add(true, "&e[Hooks]");
@@ -165,19 +165,23 @@ public final class SIRPlugin extends JavaPlugin {
         if (hooksEnabled < 1)
             logger.add("- &cNo hooks found. &7Skipping...", true);
 
-        MetricsLoader.initialize(this)
-                .addSimplePie("hasVault", HookChecker.VAULT_ENABLED)
-                .addSimplePie("hasPAPI", HookChecker.PAPI_ENABLED)
+        MetricsLoader.initialize(this, 25264)
                 .addSimplePie("hasDiscord", HookChecker.DISCORD_ENABLED)
+                .addSimplePie("hasPAPI", HookChecker.PAPI_ENABLED)
+                .addDrillDownPie(
+                        "permissionPlugins", "Permission Plugins",
+                        permission != null ? permission.getName() : null,
+                        "None/Other"
+                )
                 .addDrillDownPie(
                         "loginPlugins", "Login Plugins",
                         login != null ? login.getName() : null,
-                        "None / Other"
+                        "None/Other"
                 )
                 .addDrillDownPie(
                         "vanishPlugins", "Vanish Plugins",
                         vanish != null ? vanish.getName() : null,
-                        "None / Other"
+                        "None/Other"
                 );
 
         for (OfflinePlayer o : Bukkit.getOfflinePlayers())

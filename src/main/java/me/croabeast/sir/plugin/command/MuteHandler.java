@@ -1,10 +1,10 @@
 package me.croabeast.sir.plugin.command;
 
 import lombok.Getter;
-import me.croabeast.lib.command.TabBuilder;
-import me.croabeast.lib.file.ConfigurableFile;
-import me.croabeast.lib.time.TimeFormatter;
-import me.croabeast.lib.time.TimeValues;
+import me.croabeast.command.TabBuilder;
+import me.croabeast.file.ConfigurableFile;
+import me.croabeast.common.time.TimeFormatter;
+import me.croabeast.common.time.TimeValues;
 import me.croabeast.sir.plugin.Commandable;
 import me.croabeast.sir.plugin.SIRPlugin;
 import me.croabeast.sir.plugin.aspect.AspectButton;
@@ -34,7 +34,9 @@ final class MuteHandler implements Commandable {
         commands.add(new BaseCommand("checkmute") {
             @Override
             protected boolean execute(CommandSender sender, String[] args) {
-                return !isPermitted(sender);
+                if (!isPermitted(sender)) return true;
+
+
             }
         });
 

@@ -1,6 +1,6 @@
 package me.croabeast.sir.plugin.aspect;
 
-import me.croabeast.lib.file.ConfigurableFile;
+import me.croabeast.file.ConfigurableFile;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 

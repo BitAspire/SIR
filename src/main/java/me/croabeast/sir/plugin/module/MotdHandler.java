@@ -1,7 +1,7 @@
 package me.croabeast.sir.plugin.module;
 
-import me.croabeast.lib.file.ResourceUtils;
-import me.croabeast.lib.util.ArrayUtils;
+import me.croabeast.file.ResourceUtils;
+import me.croabeast.common.util.ArrayUtils;
 import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.misc.FileKey;
 import org.bukkit.Bukkit;

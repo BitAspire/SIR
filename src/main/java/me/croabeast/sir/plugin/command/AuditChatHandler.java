@@ -2,9 +2,9 @@ package me.croabeast.sir.plugin.command;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import me.croabeast.lib.CollectionBuilder;
-import me.croabeast.lib.command.TabBuilder;
-import me.croabeast.lib.file.ConfigurableFile;
+import me.croabeast.common.CollectionBuilder;
+import me.croabeast.command.TabBuilder;
+import me.croabeast.file.ConfigurableFile;
 import me.croabeast.sir.plugin.SIRPlugin;
 import me.croabeast.sir.plugin.aspect.AspectButton;
 import me.croabeast.sir.plugin.FileData;
@@ -33,7 +33,10 @@ final class AuditChatHandler implements Commandable {
     private final Set<SIRCommand> commands = new HashSet<>();
 
     AuditChatHandler() {
+        ConfigurableFile lang = FileData.Command.Multi.IGNORE.getFile(true);
+
         commands.add(new SIRCommand(SIRCommand.Key.IGNORE, true) {
+
             private final String[] baseKeys = {"{target}", "{type}"};
 
             @NotNull
@@ -125,9 +128,6 @@ final class AuditChatHandler implements Commandable {
                     return createSender(s).setLogger(false).send("not-yourself");
 
                 if (target.isIgnoring(user, false)) {
-                    ConfigurableFile lang =
-                            FileData.Command.Multi.IGNORE.getFile(false);
-
                     return plugin.getLibrary().getLoadedSender()
                             .setLogger(false)
                             .addPlaceholder(
@@ -199,9 +199,6 @@ final class AuditChatHandler implements Commandable {
                 SIRUser initiator = plugin.getUserManager().getUser(init);
                 if (initiator != null) {
                     if (initiator.isIgnoring(receiver, false)) {
-                        ConfigurableFile lang =
-                                FileData.Command.Multi.IGNORE.getFile(false);
-
                         return plugin.getLibrary().getLoadedSender()
                                 .setLogger(false)
                                 .addPlaceholder(
@@ -257,7 +254,7 @@ final class AuditChatHandler implements Commandable {
     }
 
     @Getter
-    private class MessageAspect implements SIRAspect {
+    private final class MessageAspect implements SIRAspect {
 
         private final ConfigurableFile file;
 

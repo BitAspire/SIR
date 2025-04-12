@@ -5,11 +5,11 @@ import com.earth2me.essentials.Essentials;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
-import me.croabeast.lib.CollectionBuilder;
-import me.croabeast.lib.Registrable;
-import me.croabeast.lib.file.ConfigurableFile;
-import me.croabeast.lib.util.Exceptions;
-import me.croabeast.sir.api.CustomListener;
+import me.croabeast.common.CollectionBuilder;
+import me.croabeast.common.Registrable;
+import me.croabeast.file.ConfigurableFile;
+import me.croabeast.common.util.Exceptions;
+import me.croabeast.common.CustomListener;
 import me.croabeast.sir.plugin.manager.UserManager;
 import me.croabeast.sir.plugin.module.SIRModule;
 import me.croabeast.sir.plugin.misc.SIRUser;
@@ -48,8 +48,8 @@ final class UserManagerImpl implements UserManager, Registrable {
         this.plugin = plugin;
 
         listener = new CustomListener() {
-            @Getter @Setter
-            private boolean registered = false;
+            @Getter
+            private final Status status = new Status();
 
             @EventHandler(priority = EventPriority.LOWEST)
             void onJoin(PlayerJoinEvent event) {

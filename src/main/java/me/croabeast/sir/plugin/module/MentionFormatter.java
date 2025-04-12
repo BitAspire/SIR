@@ -1,8 +1,8 @@
 package me.croabeast.sir.plugin.module;
 
 import lombok.Getter;
-import me.croabeast.lib.file.Configurable;
-import me.croabeast.lib.util.ReplaceUtils;
+import me.croabeast.file.Configurable;
+import me.croabeast.common.util.ReplaceUtils;
 import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.sir.api.file.PermissibleUnit;
 import me.croabeast.sir.plugin.misc.ChatChannel;

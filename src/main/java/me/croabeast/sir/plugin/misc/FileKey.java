@@ -1,6 +1,6 @@
 package me.croabeast.sir.plugin.misc;
 
-import me.croabeast.lib.file.ConfigurableFile;
+import me.croabeast.file.ConfigurableFile;
 import me.croabeast.sir.api.BaseKey;
 import org.jetbrains.annotations.NotNull;
 

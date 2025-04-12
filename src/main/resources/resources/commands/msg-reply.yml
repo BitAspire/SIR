@@ -11,9 +11,9 @@ lang:
   for-receiver:
     message: ' &6{sender} &8> &eME&7: &f{message}'
     sound: ENTITY_PLAYER_LEVELUP # Disable the sound setting it like this: ''
-  vanish-messages:
-    enabled: false
-    message: '<P> &cYou can not send a message to a vanished player.'
   console-formatting:
     name: '&cConsole'
     format: ' &6{sender} &8> &e{receiver}&7: &f{message}'
+  vanish-messages:
+    enabled: false
+    message: '<P> &cYou can not send a message to a vanished player.'

@@ -2,7 +2,7 @@ package me.croabeast.sir.api.addon;
 
 import lombok.Getter;
 import lombok.experimental.Accessors;
-import me.croabeast.lib.file.ResourceUtils;
+import me.croabeast.file.ResourceUtils;
 import me.croabeast.sir.api.SIRExtension;
 import me.croabeast.sir.plugin.SIRPlugin;
 import org.apache.commons.lang.StringUtils;
@@ -38,9 +38,6 @@ public abstract class SIRAddon implements SIRExtension {
         ((AddonClassLoader) loader).initialize(this);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @NotNull
     public final String getName() {
         return descriptionFile.getName();

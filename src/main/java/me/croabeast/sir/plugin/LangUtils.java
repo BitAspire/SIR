@@ -1,8 +1,8 @@
 package me.croabeast.sir.plugin;
 
-import me.croabeast.lib.applier.StringApplier;
-import me.croabeast.lib.file.Configurable;
-import me.croabeast.lib.util.TextUtils;
+import me.croabeast.common.applier.StringApplier;
+import me.croabeast.file.Configurable;
+import me.croabeast.common.util.TextUtils;
 import me.croabeast.sir.plugin.manager.ModuleManager;
 import me.croabeast.sir.plugin.module.PlayerFormatter;
 import me.croabeast.sir.plugin.module.SIRModule;

@@ -4,11 +4,10 @@ import com.Zrips.CMI.events.CMIPlayerUnVanishEvent;
 import com.Zrips.CMI.events.CMIPlayerVanishEvent;
 import de.myzelyam.api.vanish.PlayerVanishStateChangeEvent;
 import lombok.Getter;
-import lombok.Setter;
-import me.croabeast.lib.CollectionBuilder;
-import me.croabeast.lib.file.Configurable;
-import me.croabeast.lib.util.Exceptions;
-import me.croabeast.sir.api.CustomListener;
+import me.croabeast.common.CollectionBuilder;
+import me.croabeast.file.Configurable;
+import me.croabeast.common.util.Exceptions;
+import me.croabeast.common.CustomListener;
 import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.misc.SIRUser;
 import me.croabeast.takion.message.MessageSender;
@@ -184,10 +183,10 @@ final class VanishManager extends ListenerModule implements HookLoadable {
         event.setMessage(message.replace(match.group(), ""));
     }
 
-    @Setter @Getter
+    @Getter
     class LoadedListener implements CustomListener {
 
-        private boolean registered = false;
+        private final Status status = new Status();
 
         public boolean register() {
             listeners.add(this);

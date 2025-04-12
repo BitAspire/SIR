@@ -1,8 +1,8 @@
 package me.croabeast.sir.plugin.module;
 
 import lombok.Getter;
-import me.croabeast.lib.file.Configurable;
-import me.croabeast.lib.file.UnitMappable;
+import me.croabeast.file.Configurable;
+import me.croabeast.file.UnitMappable;
 import me.croabeast.sir.api.file.PermissibleUnit;
 import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.LangUtils;
@@ -19,7 +19,7 @@ final class CooldownHandler extends ListenerModule {
     private final Map<Player, Integer> checkMap = new HashMap<>();
     private final Map<Player, Long> timers = new HashMap<>();
 
-    private UnitMappable<CooldownUnit> units;
+    private UnitMappable.Set<CooldownUnit> units;
 
     CooldownHandler() {
         super(Key.COOLDOWNS);

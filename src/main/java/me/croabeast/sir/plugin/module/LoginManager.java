@@ -6,10 +6,9 @@ import com.nickuc.openlogin.bukkit.api.events.AsyncLoginEvent;
 import com.nickuc.openlogin.bukkit.api.events.AsyncRegisterEvent;
 import fr.xephi.authme.events.LoginEvent;
 import lombok.Getter;
-import lombok.Setter;
-import me.croabeast.lib.CollectionBuilder;
-import me.croabeast.lib.util.Exceptions;
-import me.croabeast.sir.api.CustomListener;
+import me.croabeast.common.CollectionBuilder;
+import me.croabeast.common.util.Exceptions;
+import me.croabeast.common.CustomListener;
 import me.croabeast.sir.plugin.misc.SIRUser;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -140,10 +139,10 @@ final class LoginManager extends SIRModule implements HookLoadable {
         return false;
     }
 
-    @Setter @Getter
+    @Getter
     class LoadedListener implements CustomListener {
 
-        private boolean registered = false;
+        private final Status status = new Status();
 
         public boolean register() {
             listeners.add(this);

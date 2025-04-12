@@ -2,9 +2,9 @@ package me.croabeast.sir.plugin;
 
 import lombok.Getter;
 import lombok.experimental.UtilityClass;
-import me.croabeast.lib.file.ConfigurableFile;
-import me.croabeast.lib.file.YAMLFile;
-import me.croabeast.lib.util.Exceptions;
+import me.croabeast.file.ConfigurableFile;
+import me.croabeast.file.YAMLFile;
+import me.croabeast.common.util.Exceptions;
 import me.croabeast.sir.plugin.misc.FileKey;
 import me.croabeast.sir.plugin.misc.DelayLogger;
 import org.apache.commons.lang.StringUtils;
@@ -250,6 +250,7 @@ public class FileData {
     @Getter
     public enum Command implements BaseKey {
         ANNOUNCER,
+        CLEAR_CHAT("clear-chat"),
         SIR,
         MSG_REPLY("msg-reply"),
         PRINT;

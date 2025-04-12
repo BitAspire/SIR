@@ -24,6 +24,4 @@ lang:
     temp: "&e&lMUTE &8> &b{target}&7 was muted for &3{time}&7 by &c{admin}&7 due to &b{reason}&7."
     unmute: "&e&lMUTE &8> &b{player}&7 was unmuted by &c{admin}&7 due to &b{reason}&7."
   check:
-    - ""
-    - ""
-    - ""
+    - "&e&lMUTE &8> {player} is muted for &3{time}&7 by &c{admin}&7 due to &b{reason}&7."

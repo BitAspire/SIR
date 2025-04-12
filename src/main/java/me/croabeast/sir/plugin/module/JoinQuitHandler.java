@@ -1,9 +1,9 @@
 package me.croabeast.sir.plugin.module;
 
 import lombok.Getter;
-import me.croabeast.lib.file.Configurable;
-import me.croabeast.lib.file.ConfigurableFile;
-import me.croabeast.lib.file.UnitMappable;
+import me.croabeast.file.Configurable;
+import me.croabeast.file.ConfigurableFile;
+import me.croabeast.file.UnitMappable;
 import me.croabeast.sir.api.file.PermissibleUnit;
 import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.misc.SIRUser;
@@ -20,7 +20,7 @@ import java.util.*;
 
 final class JoinQuitHandler extends ListenerModule {
 
-    final Map<Type, UnitMappable<Unit>> unitMap = new HashMap<>();
+    final Map<Type, UnitMappable.Set<Unit>> unitMap = new HashMap<>();
     final TimeMap timeMap = new TimeMap();
 
     final ConfigurableFile file = FileData.Module.JOIN_QUIT.getFile();
@@ -41,7 +41,7 @@ final class JoinQuitHandler extends ListenerModule {
     }
 
     Unit get(Type type, SIRUser user) {
-        UnitMappable<Unit> loaded = unitMap.get(type);
+        UnitMappable.Set<Unit> loaded = unitMap.get(type);
         if (loaded.isEmpty()) return null;
 
         for (Set<Unit> maps : loaded.values())
@@ -231,6 +231,11 @@ final class JoinQuitHandler extends ListenerModule {
 
         void teleportToSpawn(SIRUser user) {
             user.teleport(spawn);
+        }
+
+        @Override
+        public String toString() {
+            return "Unit{type=" + type + ", path='" + getName() + "'}";
         }
     }
 }

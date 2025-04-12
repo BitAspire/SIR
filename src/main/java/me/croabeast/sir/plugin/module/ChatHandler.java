@@ -2,13 +2,13 @@ package me.croabeast.sir.plugin.module;
 
 import lombok.Getter;
 import lombok.Setter;
-import me.croabeast.lib.CollectionBuilder;
-import me.croabeast.lib.command.TabBuilder;
-import me.croabeast.lib.file.ConfigurableFile;
-import me.croabeast.lib.file.ConfigurableUnit;
-import me.croabeast.lib.file.UnitMappable;
-import me.croabeast.lib.util.ReplaceUtils;
-import me.croabeast.lib.util.TextUtils;
+import me.croabeast.common.CollectionBuilder;
+import me.croabeast.command.TabBuilder;
+import me.croabeast.file.ConfigurableFile;
+import me.croabeast.file.ConfigurableUnit;
+import me.croabeast.file.UnitMappable;
+import me.croabeast.common.util.ReplaceUtils;
+import me.croabeast.common.util.TextUtils;
 import me.croabeast.sir.plugin.Commandable;
 import me.croabeast.sir.plugin.command.SIRCommand;
 import me.croabeast.sir.plugin.misc.ChatChannel;
@@ -37,8 +37,8 @@ import java.util.function.Predicate;
 
 final class ChatHandler extends ListenerModule implements Commandable {
 
-    private UnitMappable<ChatChannel> locals = UnitMappable.empty();
-    private UnitMappable<ChatChannel> globals = UnitMappable.empty();
+    private UnitMappable.Set<ChatChannel> locals = UnitMappable.asSet();
+    private UnitMappable.Set<ChatChannel> globals = UnitMappable.asSet();
 
     private final ConfigurableFile file;
     @Getter
@@ -53,7 +53,7 @@ final class ChatHandler extends ListenerModule implements Commandable {
             private final FileKey<Boolean> chatFile = FileData.Command.Multi.CHAT_VIEW;
 
             List<String> keys(SIRUser user) {
-                Set<ChatChannel> set = locals.values(HashSet::new);
+                Set<ChatChannel> set = locals.getStoredValues(HashSet::new);
                 return CollectionBuilder.of(set)
                         .filter(c -> !c.hasPerm(user))
                         .map(ConfigurableUnit::getName)
@@ -105,7 +105,7 @@ final class ChatHandler extends ListenerModule implements Commandable {
     @Override
     public boolean register() {
         ChannelUtils.loadDefaults();
-        UnitMappable<ChatChannel> channels = file.asUnitMap("channels", ChannelUtils::of);
+        UnitMappable.Set<ChatChannel> channels = file.asUnitMap("channels", ChannelUtils::of);
 
         locals = channels.copy().filter(ChatChannel::isLocal);
         globals = channels.copy().filter(ChatChannel::isGlobal);

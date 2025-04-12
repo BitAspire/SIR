@@ -1,6 +1,6 @@
 package me.croabeast.sir.api.file;
 
-import me.croabeast.lib.file.ConfigurableUnit;
+import me.croabeast.file.ConfigurableUnit;
 import me.croabeast.sir.plugin.SIRPlugin;
 import me.croabeast.sir.plugin.manager.UserManager;
 import me.croabeast.sir.plugin.misc.SIRUser;

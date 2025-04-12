@@ -1,6 +1,6 @@
 package me.croabeast.sir.plugin.misc;
 
-import me.croabeast.lib.CollectionBuilder;
+import me.croabeast.common.CollectionBuilder;
 import me.croabeast.sir.api.file.PermissibleUnit;
 import me.croabeast.takion.message.chat.ChatClick;
 import org.apache.commons.lang.StringUtils;

@@ -1,9 +1,10 @@
 package me.croabeast.sir.plugin.command;
 
-import me.croabeast.lib.command.BaseCommand;
-import me.croabeast.lib.command.TabBuilder;
-import me.croabeast.lib.file.ConfigurableFile;
-import me.croabeast.lib.util.ServerInfoUtils;
+import me.croabeast.command.BaseCommand;
+import me.croabeast.command.TabBuilder;
+import me.croabeast.file.ConfigurableFile;
+import me.croabeast.command.CommandPredicate;
+import me.croabeast.common.util.ServerInfoUtils;
 import me.croabeast.sir.plugin.SIRPlugin;
 import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.misc.Timer;
@@ -16,7 +17,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.Objects;
-import java.util.function.BiPredicate;
 
 final class MainCommand extends SIRCommand {
 
@@ -49,7 +49,7 @@ final class MainCommand extends SIRCommand {
                         "<P> &7Enable/disable modules in modules/modules.yml file"
                 );
 
-            plugin.getModuleManager().getMenu().showGUI(player);
+            plugin.getModuleManager().getMenu().showGui(player);
             return true;
         });
 
@@ -64,7 +64,7 @@ final class MainCommand extends SIRCommand {
                         "<P> &7Enable/disable commands in commands/commands.yml file"
                 );
 
-            plugin.getCommandManager().getMenu().showGUI(player);
+            plugin.getCommandManager().getMenu().showGui(player);
             return true;
         });
 
@@ -84,7 +84,7 @@ final class MainCommand extends SIRCommand {
                 senderPredicate("{link}", "https://discord.gg/s9YFGMrjyF", "support"));
     }
 
-    private BiPredicate<CommandSender, String[]> senderPredicate(String key, Object o, String path) {
+    private CommandPredicate senderPredicate(String key, Object o, String path) {
         return (s, strings) -> createSender(s).addPlaceholder(key, o).send(path);
     }
 

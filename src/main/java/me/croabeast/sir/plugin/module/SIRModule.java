@@ -2,8 +2,8 @@ package me.croabeast.sir.plugin.module;
 
 import com.github.stefvanschie.inventoryframework.pane.util.Slot;
 import lombok.Getter;
-import me.croabeast.lib.Registrable;
-import me.croabeast.lib.file.ConfigurableFile;
+import me.croabeast.common.Registrable;
+import me.croabeast.file.ConfigurableFile;
 import me.croabeast.sir.api.SIRExtension;
 import me.croabeast.sir.plugin.Commandable;
 import me.croabeast.sir.plugin.aspect.AspectButton;

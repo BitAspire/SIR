@@ -6,14 +6,14 @@ import github.scarsz.discordsrv.dependencies.jda.api.entities.Guild;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.MessageEmbed;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
 import github.scarsz.discordsrv.util.DiscordUtil;
-import me.croabeast.lib.applier.StringApplier;
-import me.croabeast.lib.file.Configurable;
-import me.croabeast.lib.util.ArrayUtils;
-import me.croabeast.lib.util.ReplaceUtils;
-import me.croabeast.lib.util.TextUtils;
+import me.croabeast.common.applier.StringApplier;
+import me.croabeast.file.Configurable;
+import me.croabeast.common.util.ArrayUtils;
+import me.croabeast.common.util.ReplaceUtils;
+import me.croabeast.common.util.TextUtils;
 import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.sir.plugin.FileData;
-import me.croabeast.sir.plugin.hook.HookChecker;
+import me.croabeast.sir.plugin.HookChecker;
 import me.croabeast.sir.plugin.misc.FileKey;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
@@ -276,6 +276,7 @@ final class DiscordHook extends SIRModule implements Actionable, HookLoadable {
                     StringApplier.simplified(string)
                             .apply(s -> ReplaceUtils.replaceEach(keys, values, s))
                             .apply(s -> replacePlaceholders(player, s))
+                            .apply(s -> TextUtils.PARSE_PLACEHOLDER_API.apply(player, s))
                             .apply(PrismaticAPI::stripAll)
                             .apply(DiscordUtil::translateEmotes).toString();
         }

@@ -1,0 +1,11 @@
+lang:
+  help:
+    - '&7'
+    - ' &6>> &eClearChat command Help'
+    - '  &7- &b/clearchat&7: Shows this help menu.'
+    - '  &7- &b/clearchat <@a/player>&7: Clears the chat to all or one player.'
+    - '&7'
+  not-player: '<P> &cThe player {target} does not exist.'
+  success:
+    all: "<P> The chat was cleared for all players."
+    player: "<P> The chat was cleared for &e{player}&7."

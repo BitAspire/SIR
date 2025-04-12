@@ -4,12 +4,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import me.croabeast.lib.CollectionBuilder;
-import me.croabeast.lib.command.TabBuilder;
-import me.croabeast.lib.file.ConfigurableFile;
+import me.croabeast.common.CollectionBuilder;
+import me.croabeast.command.TabBuilder;
+import me.croabeast.file.ConfigurableFile;
 import me.croabeast.sir.plugin.module.PlayerFormatter;
 import me.croabeast.sir.plugin.FileData;
-import me.croabeast.sir.plugin.hook.HookChecker;
 import me.croabeast.sir.plugin.manager.ModuleManager;
 import me.croabeast.sir.plugin.module.SIRModule;
 import me.croabeast.sir.plugin.misc.SIRUser;
@@ -107,7 +106,7 @@ final class PrintCommand extends SIRCommand {
                                 .filter(SIRUser::isVanished)
                                 .map(SIRUser::getName).toList());
 
-        if (HookChecker.VAULT_ENABLED)
+        if (plugin.getVaultHolder().isEnabled())
             builder.addArgument(1, "group:");
 
         builder

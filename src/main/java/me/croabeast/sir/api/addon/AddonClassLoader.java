@@ -1,6 +1,6 @@
 package me.croabeast.sir.api.addon;
 
-import me.croabeast.lib.util.Exceptions;
+import me.croabeast.common.util.Exceptions;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -69,7 +69,7 @@ final class AddonClassLoader extends URLClassLoader {
         );
 
         if (this.addon != null || addonInit != null)
-            throw new IllegalArgumentException("Plugin already initialized!");
+            throw new IllegalArgumentException("Addon already initialized!");
 
         this.addonInit = addon;
         addon.initialize(this, file, dataFolder, description);

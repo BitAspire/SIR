@@ -1,130 +1,63 @@
 package me.croabeast.sir.plugin.module;
 
-import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import me.croabeast.lib.CollectionBuilder;
-import me.croabeast.lib.Registrable;
-import me.croabeast.lib.file.ConfigurableFile;
-import me.croabeast.lib.util.ReplaceUtils;
-import me.croabeast.sir.api.CustomListener;
+import me.croabeast.common.CollectionBuilder;
+import me.croabeast.common.CustomListener;
+import me.croabeast.common.Registrable;
+import me.croabeast.common.util.TextUtils;
+import me.croabeast.file.Configurable;
+import me.croabeast.file.ConfigurableFile;
 import me.croabeast.sir.plugin.FileData;
-import me.croabeast.sir.plugin.manager.UserManager;
 import me.croabeast.sir.plugin.LangUtils;
-import org.apache.commons.lang.StringUtils;
+import me.croabeast.sir.plugin.manager.UserManager;
+import me.croabeast.takion.message.MessageSender;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
-import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 final class ModeratorHandler extends ListenerModule {
 
-    final Set<Registrable> modules = new HashSet<>();
+    @Getter
+    private final ConfigurableFile file = FileData.Module.Chat.MODERATION.getFile();
 
-    @NotNull
-    public ConfigurableFile getFile() {
-        return FileData.Module.Chat.MODERATION.getFile();
-    }
+    private final MainOptions options = new MainOptions();
+    private final Map<String, Registrable> modules = new HashMap<>();
 
-    interface Result<T> {
-
-        boolean isEnabled();
-
-        T get();
-    }
-
-    class MainOptions {
-
-        private final ConfigurableFile file = getFile();
-
-        private final Result<String> logOptions;
-        private final Result<String> notifyOptions;
-
-        MainOptions() {
-            logOptions = new Result<String>() {
-
-                private final String path = "options.log-violations.";
-
-                @Override
-                public boolean isEnabled() {
-                    return file.get(path + "enabled", true);
-                }
-
-                @Override
-                public String get() {
-                    return file.get(path + "format", "");
-                }
-            };
-            notifyOptions = new Result<String>() {
-
-                private final String path = "options.notify-staff.";
-
-                @Override
-                public boolean isEnabled() {
-                    return file.get(path + "enabled", true);
-                }
-
-                @Override
-                public String get() {
-                    return file.get(path + "permission", "sir.moderation.staff.notify");
-                }
-            };
-        }
-
-        String getName(String path) {
-            return file.get("options.lang-names." + path, path);
-        }
-    }
+    private final Random random = new Random();
 
     ModeratorHandler() {
         super(Key.MODERATION);
-        modules.add(new CustomListener() {
+
+        modules.put("format", new CustomListener() {
 
             private final String path = "modules.format.";
+            private final Options options = new Options(path, "bypass", "bypass.format");
 
-            @Getter @Setter
-            private boolean registered = false;
-
-            private final Result<String> base = new Result<String>() {
-                @Override
-                public boolean isEnabled() {
-                    return getFile().get(path + "enabled", false);
-                }
-
-                @Override
-                public String get() {
-                    return getFile().get(path + "bypass", "sir.moderation.bypass.format");
-                }
-            };
+            @Getter
+            private final Status status = new Status();
 
             @EventHandler(priority = EventPriority.LOWEST)
             private void onChatEvent(AsyncPlayerChatEvent event) {
-                if (!base.isEnabled() ||
-                        UserManager.hasPerm(event.getPlayer(), base.get()))
+                if (!options.isEnabled() ||
+                        UserManager.hasPerm(event.getPlayer(), options.getResult()))
                     return;
 
                 String message = event.getMessage();
 
-                if (getFile().get(path + "capitalize", false) &&
-                        !message.isEmpty())
-                    message = Character.toUpperCase(message.charAt(0)) +
-                            message.substring(1);
+                if (file.get(path + "capitalize", false) && !message.isEmpty())
+                    message = Character.toUpperCase(message.charAt(0)) + message.substring(1);
 
                 final String charPath = path + "characters.";
 
-                String prefix = getFile().get(charPath + "prefix", "");
-                String suffix = getFile().get(charPath + "suffix", "");
-
-                prefix = StringUtils.isBlank(prefix) ? "" : prefix;
-                suffix = StringUtils.isBlank(suffix) ? "" : suffix;
+                String prefix = file.get(charPath + "prefix", "");
+                String suffix = file.get(charPath + "suffix", "");
 
                 event.setMessage(prefix + message + suffix);
             }
@@ -135,207 +68,289 @@ final class ModeratorHandler extends ListenerModule {
             }
         });
 
-        modules.add(new BaseModule("swearing", "banned-words") {
+        modules.put("swearing", new Module("swearing") {
 
             @Override
-            boolean hasViolation(String message) {
-                return false;
+            boolean processCancellation(AsyncPlayerChatEvent event) {
+                String message = event.getMessage();
+                Player player = event.getPlayer();
+
+                List<RegexLine> lines = CollectionBuilder
+                        .of(file.toStringList(path + "banned-words"))
+                        .map(RegexLine::new).toList();
+
+                boolean foundAny = false;
+                boolean block = file.get(path + "control", "BLOCK").matches("(?i)block");
+
+                for (RegexLine line : lines) {
+                    Matcher matcher = line.matcher(message);
+                    if (block && matcher.find()) {
+                        foundAny = true;
+                        break;
+                    }
+
+                    while (matcher.find()) {
+                        List<String> list = file.toStringList(
+                                path + "replace-options.replacements");
+
+                        String group = matcher.group();
+                        String replace = getReplacement(list, group);
+
+                        if (!foundAny) foundAny = true;
+                        event.setMessage(
+                                message = message.replace(group, replace));
+                    }
+                }
+
+                return foundAny && validateAndExecuteActions(
+                        player, message,
+                        file.get(path + "actions.maximum-violations", 3)
+                );
+            }
+        });
+
+        modules.put("caps", new Module("caps") {
+
+            private int longestConsecutiveUppercase(String msg) {
+                int maxConsecutive = 0;
+                int currentCount = 0;
+
+                for (final char ch : msg.toCharArray()) {
+                    if (Character.isUpperCase(ch)) {
+                        currentCount++;
+                        if (currentCount > maxConsecutive)
+                            maxConsecutive = currentCount;
+
+                        continue;
+                    }
+                    currentCount = 0;
+                }
+
+                return maxConsecutive;
             }
 
             @Override
-            String applyReplacements(String message) {
-                return "";
+            boolean processCancellation(AsyncPlayerChatEvent event) {
+                String message = event.getMessage();
+                Player player = event.getPlayer();
+
+                int capsCount = longestConsecutiveUppercase(message);
+
+                int max = file.get(path + "maximum-caps", 10);
+                if (capsCount <= max) return false;
+
+                validateAndExecuteActions(player, message, max);
+                if (file.get(path + "control", "BLOCK").matches("(?i)block"))
+                    return true;
+
+                event.setMessage(message.toLowerCase(Locale.ENGLISH));
+                return false;
+            }
+        });
+
+        modules.put("links", new Module("links") {
+            @Override
+            boolean processCancellation(AsyncPlayerChatEvent event) {
+                String message = event.getMessage();
+                Player player = event.getPlayer();
+
+                List<String> links = file.toStringList(path + "allowed-links");
+                boolean foundAny = false;
+
+                Matcher matcher = TextUtils.URL_PATTERN.matcher(message);
+                List<String> restrictedLinks = new ArrayList<>();
+
+                while (matcher.find()) {
+                    String match = matcher.group();
+                    boolean allowed = false;
+
+                    for (String link : links)
+                        if (match.matches("(?i)" + Pattern.quote(link))) {
+                            allowed = true;
+                            break;
+                        }
+
+                    if (allowed) continue;
+
+                    restrictedLinks.add(match);
+                    foundAny = true;
+                }
+
+                if (foundAny) {
+                    validateAndExecuteActions(
+                            player, message,
+                            file.get(path + "actions.maximum-violations", 3)
+                    );
+
+                    if (file.get(path + "control", "BLOCK").matches("(?i)block"))
+                        return true;
+
+                    List<String> list = file.toStringList(
+                            path + "replace-options.replacements");
+
+                    for (String link : restrictedLinks) {
+                        String replace = getReplacement(list, link);
+                        message = message.replace(link, replace);
+                    }
+
+                    event.setMessage(message);
+                }
+
+                return false;
             }
         });
     }
 
-    @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-    class Replacer {
+    private final static class RegexLine {
 
-        private final Random random = new Random();
-        private int index = 0;
-
-        private final String main, inputs;
-
-        List<RegexLine> getInputs() {
-            return CollectionBuilder.of(getFile().toStringList(main + inputs)).map(RegexLine::new).toList();
-        }
-
-        boolean isCharacter() {
-            final String s = getFile().get(main + "replace-options.type", "");
-            return !s.matches("(?i)character|word") || s.matches("(?i)character");
-        }
-
-        boolean isOrder() {
-            return getFile().get(main + "replace-options.order", false);
-        }
-
-        List<String> getReplacements() {
-            return getFile().toStringList(main + "replace-options.replacements");
-        }
-    }
-
-    static class RegexLine {
-
-        private boolean regex = false;
-        private final String line;
+        private final Pattern pattern;
 
         private RegexLine(String line) {
-            Pattern pattern = Pattern.compile("(?i)^ *\\[regex] *");
+            Pattern regex = Pattern.compile("(?i)\\[regex] *");
+            Matcher matcher = regex.matcher(line);
 
-            Matcher matcher = pattern.matcher(line);
-            if (matcher.find()) {
-                line = line.replace(matcher.group(), "");
-                this.regex = true;
-            }
-
-            this.line = line;
+            pattern = Pattern.compile(matcher.find() ?
+                    line.replace(matcher.group(), "") : Pattern.quote(line));
         }
 
-        boolean find(String input) {
-            return regex ? Pattern.compile(line).matcher(input).find() : input.contains(line);
+        Matcher matcher(String string) {
+            return pattern.matcher(string);
         }
     }
 
-    @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-    class Actions {
+    private class Options {
 
-        private final String main;
+        private final String path, resultPath, defValue;
 
-        List<String> getMessages() {
-            return getFile().toStringList(main + "actions.messages");
+        private Options(String path, String resultPath, String perm) {
+            this.path = path;
+            this.resultPath = resultPath;
+            this.defValue = "sir.moderation." + perm;
         }
 
-        List<String> getCommands() {
-            return getFile().toStringList(main + "actions.commands");
-        }
-
-        int getMax() {
-            return getFile().get(main + "actions.maximum-violations", 3);
-        }
-    }
-
-    abstract class BaseModule implements Registrable {
-
-        private final String[] keys = {"{player}", "{type}", "{message}"};
-
-        private final CustomListener listener = new CustomListener() {
-            @Getter @Setter
-            private boolean registered = false;
-
-            @EventHandler(priority = EventPriority.LOWEST)
-            private void onChatViolation(AsyncPlayerChatEvent event) {
-                handleViolation(event);
-            }
-        };
-
-        private final String name, mainPath, inputPath;
-        private final Map<Player, Integer> violations = new HashMap<>();
-
-        private int index = 0;
-        private final Random random = new Random();
-
-        BaseModule(String name, String inputPath) {
-            this.name = name;
-            mainPath = "modules." + name + ".";
-            this.inputPath = inputPath;
+        private Options(String path, String resultPath) {
+            this.path = path;
+            this.resultPath = resultPath;
+            this.defValue = "";
         }
 
         boolean isEnabled() {
-            return getFile().get(mainPath + "enabled", false);
+            return file.get(path + "enabled", true);
         }
 
-        boolean isBlocking() {
-            final String s = getFile().get(mainPath + "control", "");
-            return !s.matches("(?i)block|replace") || s.matches("(?i)block");
+        String getResult() {
+            return file.get(path + resultPath, defValue);
+        }
+    }
+
+    private final class MainOptions {
+
+        final Options notifier = new Options("options.notify-staff.", "permission", "staff.notify");
+        final Options logger = new Options("options.log-violations.", "format");
+
+        String getName(String path) {
+            return file.get("options.lang-names." + path, path);
+        }
+    }
+
+    private abstract class Module implements Registrable {
+
+        final String moduleName, path, bypass;
+        final Map<UUID, Integer> violations = new HashMap<>();
+
+        private int replaceIndex = 0;
+
+        private final CustomListener listener = new CustomListener() {
+            @Getter
+            private final Status status = new Status();
+
+            @EventHandler(priority = EventPriority.LOWEST)
+            private void onChatViolation(AsyncPlayerChatEvent event) {
+                if (!file.get(path + "enabled", true)) return;
+                if (processCancellation(event)) event.setCancelled(true);
+            }
+        };
+
+        Module(String name) {
+            this.path = "modules." + (this.moduleName = name) + '.';
+            this.bypass = file.get(path + "bypass", "sir.moderation.bypass." + name);
         }
 
-        List<String> getWarnings() {
-            return getFile().toStringList(mainPath + "warnings");
-        }
+        String getReplacement(List<String> replacements, String word) {
+            if (replacements.isEmpty()) return word;
 
-        Actions getActions() {
-            return new Actions(this.mainPath);
-        }
+            final int size = replacements.size();
+            if (replaceIndex >= size) replaceIndex = 0;
 
-        private String getNextReplacement(Replacer replacer) {
-            List<String> replacements = replacer.getReplacements();
-            if (replacements.isEmpty()) return "";
+            String type = file.get(path + "replace-options.type", "CHARACTER");
 
-            if (replacer.isOrder()) {
-                String replacement = replacements.get(index);
-                index = (index + 1) % replacements.size();
-                return replacement;
+            boolean isCharacter = type.matches("(?i)character");
+            boolean order = file.get(path + "replace-options.order", true);
+
+            int index = order ? replaceIndex++ : random.nextInt(size);
+
+            if (isCharacter) {
+                final StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < word.length(); i++) {
+                    sb.append(replacements.get(index));
+                }
+                return sb.toString();
             }
 
-            return replacements.get(random.nextInt(replacements.size()));
+            return replacements.get(index);
         }
 
-        abstract boolean hasViolation(String message);
+        abstract boolean processCancellation(AsyncPlayerChatEvent event);
 
-        String applyReplacements(String message) {
-            Replacer replacer = new Replacer(mainPath, inputPath);
+        boolean validateAndExecuteActions(Player player, String message, int max) {
+            MessageSender sender = plugin.getLibrary().getLoadedSender()
+                    .addPlaceholder("{player}", player.getName())
+                    .addPlaceholder("{message}", message)
+                    .addPlaceholder("{type}", options.getName(moduleName))
+                    .setLogger(true);
 
-            return message;
-        }
+            String loggerResults = options.logger.getResult();
 
-        void verifyBlockAndReplace(AsyncPlayerChatEvent event) {
-            if (isBlocking()) {
-                event.setCancelled(true);
-                return;
-            }
+            if (options.notifier.isEnabled())
+                sender.copy().setTargets(
+                                CollectionBuilder.of(Bukkit.getOnlinePlayers())
+                                        .filter(p -> UserManager.hasPerm(
+                                                p,
+                                                options.notifier.getResult())
+                                        ).toSet()
+                        )
+                        .send(loggerResults);
 
-            if (inputPath != null)
-                event.setMessage(applyReplacements(event.getMessage()));
-        }
-
-        private void handleViolation(AsyncPlayerChatEvent event) {
-            if (!isEnabled() || !hasViolation(event.getMessage())) return;
-
-            Player player = event.getPlayer();
+            if (options.logger.isEnabled())
+                sender.copy().setTargets((Player) null)
+                        .send(loggerResults);
 
             plugin.getLibrary().getLoadedSender()
-                    .addPlaceholder("{player}", player)
                     .setTargets(player)
-                    .send(getWarnings());
+                    .send(file.toStringList(path + "warnings"));
 
-            int count = violations.getOrDefault(player, 0) + 1;
-            violations.put(player, count);
+            ConfigurationSection actions = file.getSection(path + "actions");
+            if (actions == null) return false;
 
-            verifyBlockAndReplace(event);
+            UUID uuid = player.getUniqueId();
 
-            final String message = event.getMessage();
-            MainOptions options = new MainOptions();
+            int count = violations.getOrDefault(uuid, 0) + 1;
+            violations.put(uuid, count);
 
-            Object[] objects = {player, options.getName(name), message};
+            if (count >= max) {
+                violations.put(uuid, 0);
+                plugin.getLibrary().getLoadedSender()
+                        .setTargets(player)
+                        .send(Configurable.toStringList(actions, "messages"));
 
-            UnaryOperator<String> operator = s ->
-                    ReplaceUtils.replaceEach(keys, objects, s);
-
-            Result<String> logs = options.logOptions;
-
-            String format = operator.apply(logs.get());
-            if (logs.isEnabled())
-                plugin.getLibrary().getServerLogger().log(format);
-
-            Result<String> staff = options.notifyOptions;
-
-            if (staff.isEnabled()) {
-                Set<? extends Player> set = CollectionBuilder
-                        .of(Bukkit.getOnlinePlayers())
-                        .filter(p -> UserManager.hasPerm(p, staff.get())).toSet();
-
-                plugin.getLibrary().getLoadedSender().setTargets(set).send(format);
+                LangUtils.executeCommands(
+                        player,
+                        Configurable.toStringList(actions, "commands")
+                );
+                return true;
             }
 
-            Actions actions = getActions();
-            if (count < actions.getMax()) return;
-
-            LangUtils.executeCommands(player, actions.getCommands());
-            plugin.getLibrary().getLoadedSender()
-                    .addPlaceholder("{player}", player)
-                    .setTargets(player)
-                    .send(actions.getMessages());
+            return false;
         }
 
         @Override
@@ -352,5 +367,17 @@ final class ModeratorHandler extends ListenerModule {
         public boolean unregister() {
             return listener.unregister();
         }
+    }
+
+    @Override
+    public boolean register() {
+        modules.values().forEach(Registrable::register);
+        return true;
+    }
+
+    @Override
+    public boolean unregister() {
+        modules.values().forEach(Registrable::unregister);
+        return true;
     }
 }

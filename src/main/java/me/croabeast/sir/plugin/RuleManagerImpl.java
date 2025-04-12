@@ -3,7 +3,7 @@ package me.croabeast.sir.plugin;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import me.croabeast.sir.plugin.manager.WorldRuleManager;
-import me.croabeast.sir.plugin.misc.WorldRule;
+import me.croabeast.common.WorldRule;
 import org.bukkit.World;
 import org.jetbrains.annotations.Nullable;
 

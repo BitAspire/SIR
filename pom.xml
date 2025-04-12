@@ -6,7 +6,7 @@
 
     <groupId>me.croabeast</groupId>
     <artifactId>SIR</artifactId>
-    <version>4.0-2025.SS17</version>
+    <version>4.0-2025.SS23</version>
     <packaging>jar</packaging>
 
     <name>SIR_Plugin</name> <!--Simple In-game Receptionist-->
@@ -45,23 +45,11 @@
                 </executions>
 
                 <configuration>
-                    <relocations>
-                        <relocation>
-                            <pattern>org.bstats</pattern>
-                            <shadedPattern>me.croabeast.metrics</shadedPattern>
-                        </relocation>
-                        <relocation>
-                            <pattern>com.github.stefvanschie.inventoryframework</pattern>
-                            <shadedPattern>me.croabeast.gui</shadedPattern>
-                        </relocation>
-                    </relocations>
-
                     <filters>
                         <filter>
                             <artifact>*:*</artifact>
                             <excludes>
                                 <exclude>META-INF/**</exclude>
-                                <exclude>fonts/**</exclude>
                                 <exclude>me/croabeast/sir/api/addon/**</exclude>
                                 <exclude>resources/plugin.yml</exclude>
                             </excludes>
@@ -75,21 +63,6 @@
                 <artifactId>maven-install-plugin</artifactId>
                 <version>2.5.2</version>
                 <executions>
-                    <execution>
-                        <id>Takion</id>
-                        <phase>initialize</phase>
-                        <goals>
-                            <goal>install-file</goal>
-                        </goals>
-                        <configuration>
-                            <groupId>me.croabeast</groupId>
-                            <artifactId>takion</artifactId>
-                            <version>1.0</version>
-                            <packaging>jar</packaging>
-                            <file>lib/takion.jar</file>
-                        </configuration>
-                    </execution>
-
                     <execution>
                         <id>UserLogin</id>
                         <phase>initialize</phase>
@@ -158,6 +131,11 @@
         </repository>
 
         <repository>
+            <id>croabeast-repo</id>
+            <url>https://croabeast.github.io/repo/</url>
+        </repository>
+
+        <repository>
             <id>placeholderapi</id>
             <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
         </repository>
@@ -197,11 +175,6 @@
             <id>nickuc-repo</id>
             <url>https://repo.nickuc.com/maven-releases/</url>
         </repository>
-
-        <repository>
-            <id>svenar</id>
-            <url>https://svenar.nl/repo/</url>
-        </repository>
     </repositories>
 
     <dependencies>
@@ -228,36 +201,44 @@
 
         <dependency>
             <groupId>me.croabeast</groupId>
-            <artifactId>takion</artifactId>
+            <artifactId>Takion</artifactId>
             <version>1.0</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
-            <groupId>com.github.CroaBeast</groupId>
+            <groupId>me.croabeast</groupId>
             <artifactId>AdvancementInfo</artifactId>
-            <version>c9d33fd7e7</version>
-            <scope>compile</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.bstats</groupId>
-            <artifactId>bstats-bukkit</artifactId>
-            <version>3.0.2</version>
-            <scope>compile</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.github.MilkBowl</groupId>
-            <artifactId>VaultAPI</artifactId>
-            <version>1.7</version>
+            <version>1.0</version>
             <scope>provided</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>me.croabeast</groupId>
+            <artifactId>PrismaticAPI</artifactId>
+            <version>1.0</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>me.croabeast</groupId>
+            <artifactId>CommandFramework</artifactId>
+            <version>1.0</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>me.croabeast</groupId>
+            <artifactId>YAML-API</artifactId>
+            <version>1.0</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.stefvanschie.inventoryframework</groupId>
+            <artifactId>IF</artifactId>
+            <version>0.10.19</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -271,13 +252,6 @@
                     <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>net.luckperms</groupId>
-            <artifactId>api</artifactId>
-            <version>5.4</version>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -384,13 +358,6 @@
             <artifactId>UserLogin</artifactId>
             <version>2.0</version>
             <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.github.stefvanschie.inventoryframework</groupId>
-            <artifactId>IF</artifactId>
-            <version>0.10.19</version>
-            <scope>compile</scope>
         </dependency>
     </dependencies>
 </project>

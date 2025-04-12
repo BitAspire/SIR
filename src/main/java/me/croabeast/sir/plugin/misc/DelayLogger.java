@@ -2,7 +2,7 @@ package me.croabeast.sir.plugin.misc;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import me.croabeast.lib.util.ArrayUtils;
+import me.croabeast.common.util.ArrayUtils;
 import me.croabeast.sir.plugin.SIRPlugin;
 import me.croabeast.takion.TakionLib;
 

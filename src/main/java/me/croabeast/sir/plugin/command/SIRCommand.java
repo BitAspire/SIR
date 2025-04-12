@@ -5,11 +5,11 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import me.croabeast.lib.CollectionBuilder;
-import me.croabeast.lib.command.*;
-import me.croabeast.lib.file.Configurable;
-import me.croabeast.lib.file.ConfigurableFile;
-import me.croabeast.lib.util.Exceptions;
+import me.croabeast.common.CollectionBuilder;
+import me.croabeast.command.*;
+import me.croabeast.file.Configurable;
+import me.croabeast.file.ConfigurableFile;
+import me.croabeast.common.util.Exceptions;
 import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.SIRPlugin;
 import me.croabeast.sir.plugin.aspect.AspectButton;
@@ -28,7 +28,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.function.BiPredicate;
 import java.util.function.Supplier;
 
 @Accessors(makeFinal = true)
@@ -245,7 +244,7 @@ public abstract class SIRCommand extends BukkitCommand {
 
     @NotNull
     public final Command setDescription(@NotNull String description) {
-        return super.setDescription(description);
+        return this;
     }
 
     @NotNull
@@ -339,7 +338,7 @@ public abstract class SIRCommand extends BukkitCommand {
         return new CommandDisplayer().setTargets(fromSender(sender));
     }
 
-    protected final boolean editSubCommand(String name, BiPredicate<CommandSender, String[]> predicate) {
+    protected final boolean editSubCommand(String name, CommandPredicate predicate) {
         if (StringUtils.isBlank(name) || predicate == null)
             return false;
 
@@ -387,8 +386,8 @@ public abstract class SIRCommand extends BukkitCommand {
                 "with color format, placeholders,",
                 "and more."),
         ANNOUNCER(5, 1,
-                "Handles the runnable status of",
-                "the Announcement module."
+                "Handles the announcements' preview",
+                "of the Announcement module."
         ),
         CHAT_VIEW(6, 1,
                 "Toggles any loaded local channel's",
@@ -408,11 +407,25 @@ public abstract class SIRCommand extends BukkitCommand {
                 "Ignores any player from private",
                 "messages or chat."
         ),
-        MSG_REPLY(3, 2,
+        CLEAR_CHAT(3, 2,
+                "Clear the chat of the server or for",
+                "a single player."
+        ) {
+            @NotNull
+            public String getName() {
+                return "clearchat";
+            }
+
+            @NotNull
+            public String getTitle() {
+                return "Clear Chat";
+            }
+        },
+        MSG_REPLY(4, 2,
                 "Handles the /msg & /reply commands.",
                 "Sent private message to players."
         ),
-        MUTE(4, 2,
+        MUTE(5, 2,
                 "Handles all mute-related commands",
                 "like /mute, /tempmute, /unmute and",
                 "/checkmute."

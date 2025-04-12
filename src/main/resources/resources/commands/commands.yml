@@ -26,9 +26,7 @@ commands:
       main: sir.announcer
       subcommands:
         - preview
-        - start
-        - cancel;stop
-        - reboot
+        - help
   chatview:
     permissions:
       main: sir.chatview
@@ -38,6 +36,12 @@ commands:
     aliases: [ ig ]
     permissions:
       main: sir.ignore
+  clearchat:
+    override-existing: true
+    enabled: true
+    aliases: [ cc ]
+    permissions:
+      main: sir.clearchat
   msg:
     override-existing: true
     enabled: true
@@ -66,6 +70,8 @@ commands:
     parent: mute # Do not edit this
     permissions:
       main: sir.checkmute
+
+update: true
 
 lang:
   no-permission: '<P> You do not have the permission &c{perm} &7to use this.'

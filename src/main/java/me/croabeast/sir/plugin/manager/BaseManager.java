@@ -1,9 +1,9 @@
 package me.croabeast.sir.plugin.manager;
 
-import me.croabeast.lib.CollectionBuilder;
-import me.croabeast.lib.Loadable;
-import me.croabeast.lib.Registrable;
-import me.croabeast.sir.plugin.gui.MenuCreator;
+import me.croabeast.common.CollectionBuilder;
+import me.croabeast.common.Loadable;
+import me.croabeast.common.Registrable;
+import me.croabeast.common.gui.ChestBuilder;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Set;
@@ -25,5 +25,5 @@ public interface BaseManager<T> extends Loadable, Registrable {
     T fromName(String name);
 
     @NotNull
-    MenuCreator getMenu();
+    ChestBuilder getMenu();
 }

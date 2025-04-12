@@ -3,13 +3,13 @@ package me.croabeast.sir.plugin.module;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import me.croabeast.sir.api.CustomListener;
+import me.croabeast.common.CustomListener;
 
-@Setter @Getter
+@Accessors(makeFinal = true)
+@Getter
 abstract class ListenerModule extends SIRModule implements CustomListener {
 
-    @Accessors(makeFinal = true)
-    private boolean registered = false;
+    private final Status status = new Status();
 
     ListenerModule(Key key) {
         super(key);

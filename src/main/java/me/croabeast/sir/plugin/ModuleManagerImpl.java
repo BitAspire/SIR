@@ -3,17 +3,17 @@ package me.croabeast.sir.plugin;
 import com.github.stefvanschie.inventoryframework.pane.Pane;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import me.croabeast.lib.CollectionBuilder;
-import me.croabeast.lib.Registrable;
-import me.croabeast.lib.reflect.Reflector;
+import me.croabeast.common.CollectionBuilder;
+import me.croabeast.common.Registrable;
+import me.croabeast.common.reflect.Reflector;
 import me.croabeast.sir.plugin.command.SIRCommand;
-import me.croabeast.sir.plugin.gui.MenuCreator;
+import me.croabeast.common.gui.ChestBuilder;
 import me.croabeast.sir.plugin.manager.ModuleManager;
 import me.croabeast.sir.plugin.module.*;
 import me.croabeast.sir.plugin.aspect.AspectButton;
 import me.croabeast.sir.plugin.aspect.AspectKey;
-import me.croabeast.sir.plugin.gui.ButtonCreator;
-import me.croabeast.sir.plugin.gui.ItemCreator;
+import me.croabeast.common.gui.ButtonBuilder;
+import me.croabeast.common.gui.ItemCreator;
 import me.croabeast.takion.character.SmallCaps;
 import org.bukkit.Material;
 import org.jetbrains.annotations.NotNull;
@@ -29,7 +29,7 @@ final class ModuleManagerImpl implements ModuleManager {
     private final ModuleMap moduleMap = new ModuleMap();
 
     @Getter
-    private final MenuCreator menu;
+    private final ChestBuilder menu;
     @Getter
     private boolean loaded = false;
 
@@ -114,23 +114,27 @@ final class ModuleManagerImpl implements ModuleManager {
                         classes.add((Class<SIRModule>) c);
                 });
 
-        menu = MenuCreator
+        menu = ChestBuilder
                 .of(5, "&8" + SmallCaps.toSmallCaps("Loaded SIR Modules:"))
                 .addSingleItem(
-                        0, 1, 1, ItemCreator.of(Material.BARREL)
+                        0, 1, 1,
+                        ItemCreator.of(Material.BARREL)
                                 .modifyLore(
                                         "&7Opens a new menu with all the available",
                                         "&7options from each module.",
                                         "&eComing soon in SIR+. &8" +
                                                 SmallCaps.toSmallCaps("[Paid Version]")
                                 )
-                                .modifyName("&f&lModules Options:").setActionToEmpty(),
+                                .modifyName("&f&lModules Options:")
+                                .setActionToEmpty().create(),
                         b -> b.setPriority(Pane.Priority.LOW)
                 )
                 .addSingleItem(
-                        0, 6, 3, ItemCreator.of(Material.BARRIER)
+                        0, 6, 3,
+                        ItemCreator.of(Material.BARRIER)
                                 .modifyLore("&8More modules will be added soon.")
-                                .modifyName("&c&lCOMING SOON...").setActionToEmpty(),
+                                .modifyName("&c&lCOMING SOON...")
+                                .setActionToEmpty().create(),
                         b -> b.setPriority(Pane.Priority.LOW)
                 );
     }
@@ -148,20 +152,22 @@ final class ModuleManagerImpl implements ModuleManager {
         }
 
         final String message = "able all available modules.";
-        menu.addPane(0, ButtonCreator
+        menu.addPane(0, ButtonBuilder
                 .of(1, 2, false)
                 .setItem(
                         ItemCreator.of(Material.LIME_DYE)
                                 .modifyLore("&f➤ &7En" + message)
-                                .modifyName("&a&lENABLE ALL:"),
+                                .modifyName("&a&lENABLE ALL:")
+                                .create(),
                         true
                 )
                 .setItem(ItemCreator.of(Material.RED_DYE)
                                 .modifyLore("&f➤ &7Dis" + message)
-                                .modifyName("&c&lDISABLE ALL:"),
+                                .modifyName("&c&lDISABLE ALL:")
+                                .create(),
                         false
                 )
-                .modifyPane(b -> b.setPriority(Pane.Priority.LOW))
+                .modify(b -> b.setPriority(Pane.Priority.LOW))
                 .setAction(b -> event -> {
                     for (AspectButton button : CollectionBuilder
                             .of(moduleMap.getModules())
@@ -173,7 +179,7 @@ final class ModuleManagerImpl implements ModuleManager {
                         button.toggleAll();
                         button.getAction().accept(event);
                     }
-                }));
+                }).getValue());
 
         moduleMap.asType(Type.LOADABLE).forEach(loadable -> {
             loadable.load();

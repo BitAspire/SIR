@@ -1,10 +1,10 @@
 package me.croabeast.sir.plugin.module;
 
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
-import me.croabeast.lib.file.Configurable;
+import me.croabeast.file.Configurable;
 import me.croabeast.sir.api.file.PermissibleUnit;
 import me.croabeast.sir.plugin.FileData;
-import me.croabeast.sir.plugin.hook.HookChecker;
+import me.croabeast.sir.plugin.HookChecker;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;

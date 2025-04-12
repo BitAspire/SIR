@@ -1,11 +1,11 @@
 package me.croabeast.sir.plugin.module;
 
 import lombok.Getter;
-import me.croabeast.lib.CollectionBuilder;
-import me.croabeast.lib.command.BaseCommand;
-import me.croabeast.lib.command.TabBuilder;
-import me.croabeast.lib.file.Configurable;
-import me.croabeast.lib.file.ConfigurableFile;
+import me.croabeast.common.CollectionBuilder;
+import me.croabeast.command.BaseCommand;
+import me.croabeast.command.TabBuilder;
+import me.croabeast.file.Configurable;
+import me.croabeast.file.ConfigurableFile;
 import me.croabeast.sir.plugin.Commandable;
 import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.command.SIRCommand;
@@ -41,29 +41,7 @@ final class Announcements extends SIRModule implements Actionable, Commandable {
                     if (args.length > 0)
                         return isWrongArgument(sender, args[args.length - 1]);
 
-                    return createSender(sender).send(start() ? "started" : "cant-start");
-                });
-
-                editSubCommand("start", (sender, args) -> {
-                    if (args.length > 0)
-                        return isWrongArgument(sender, args[args.length - 1]);
-
-                    return createSender(sender).send(start() ? "started" : "cant-start");
-                });
-
-                editSubCommand("cancel", (sender, args) -> {
-                    if (args.length > 0)
-                        return isWrongArgument(sender, args[args.length - 1]);
-
-                    return createSender(sender).send(stop() ? "stopped" : "cant-stop");
-                });
-
-                editSubCommand("reboot", (sender, args) -> {
-                    if (args.length > 0)
-                        return isWrongArgument(sender, args[args.length - 1]);
-
-                    start();
-                    return createSender(sender).send("rebooted");
+                    return createSender(sender).send("help");
                 });
 
                 editSubCommand("preview", (sender, args) -> {
@@ -162,7 +140,7 @@ final class Announcements extends SIRModule implements Actionable, Commandable {
     }
 
     private boolean stop() {
-        if (!running) return false;
+        if (isEnabled() || !running) return false;
 
         Bukkit.getScheduler().cancelTask(taskId);
         running = false;
@@ -193,7 +171,7 @@ final class Announcements extends SIRModule implements Actionable, Commandable {
     @Override
     public void act(Object... objects) {
         if (Actionable.failsCheck(objects, String.class))
-            throw new IllegalStateException();
+            return;
 
         boolean done = false;
         for (Announce a : announcesMap.values()) {

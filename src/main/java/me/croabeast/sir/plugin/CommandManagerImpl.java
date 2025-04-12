@@ -2,12 +2,12 @@ package me.croabeast.sir.plugin;
 
 import com.github.stefvanschie.inventoryframework.pane.Pane;
 import lombok.Getter;
-import me.croabeast.lib.reflect.Reflector;
+import me.croabeast.common.reflect.Reflector;
 import me.croabeast.sir.plugin.aspect.AspectButton;
-import me.croabeast.sir.plugin.gui.ItemCreator;
+import me.croabeast.common.gui.ItemCreator;
 import me.croabeast.sir.plugin.manager.CommandManager;
 import me.croabeast.sir.plugin.command.SIRCommand;
-import me.croabeast.sir.plugin.gui.MenuCreator;
+import me.croabeast.common.gui.ChestBuilder;
 import me.croabeast.takion.character.SmallCaps;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Material;
@@ -23,7 +23,7 @@ final class CommandManagerImpl implements CommandManager {
     private final Set<Class<?>> classes = new HashSet<>();
 
     @Getter
-    private final MenuCreator menu;
+    private final ChestBuilder menu;
     private final SIRPlugin plugin;
 
     @Getter
@@ -50,23 +50,27 @@ final class CommandManagerImpl implements CommandManager {
                     if (Modifier.isFinal(c.getModifiers())) classes.add(c);
                 });
 
-        menu = MenuCreator
+        menu = ChestBuilder
                 .of(4, "&8" + SmallCaps.toSmallCaps("Loaded SIR Commands:"))
                 .addSingleItem(
-                        0, 1, 1, ItemCreator.of(Material.BARREL)
+                        0, 1, 1,
+                        ItemCreator.of(Material.BARREL)
                                 .modifyLore(
                                         "&7Opens a new menu with all the available",
                                         "&7options from each command.",
                                         "&eComing soon in SIR+. &8" +
                                                 SmallCaps.toSmallCaps("[Paid Version]")
                                 )
-                                .modifyName("&f&lCommands Options:").setActionToEmpty(),
+                                .modifyName("&f&lCommands Options:")
+                                .setActionToEmpty().create(),
                         b -> b.setPriority(Pane.Priority.LOW)
                 )
                 .addSingleItem(
-                        0, 5, 2, ItemCreator.of(Material.BARRIER)
+                        0, 6, 2,
+                        ItemCreator.of(Material.BARRIER)
                                 .modifyLore("&8More commands will be added soon.")
-                                .modifyName("&c&lCOMING SOON...").setActionToEmpty(),
+                                .modifyName("&c&lCOMING SOON...")
+                                .setActionToEmpty().create(),
                         b -> b.setPriority(Pane.Priority.LOW)
                 );
     }
@@ -76,7 +80,13 @@ final class CommandManagerImpl implements CommandManager {
         if (loaded) return;
 
         for (final Class<?> clazz : classes) {
-            final Object init = Reflector.of(clazz).create();
+            final Object init;
+            try {
+                init = Reflector.of(clazz).create();
+            } catch (Exception e) {
+                e.printStackTrace();
+                continue;
+            }
 
             if (SIRCommand.class.isAssignableFrom(clazz)) {
                 SIRCommand command = (SIRCommand) init;

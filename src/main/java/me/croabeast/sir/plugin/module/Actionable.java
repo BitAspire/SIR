@@ -1,6 +1,6 @@
 package me.croabeast.sir.plugin.module;
 
-import me.croabeast.lib.util.ReplaceUtils;
+import me.croabeast.common.util.ReplaceUtils;
 
 @FunctionalInterface
 public interface Actionable {

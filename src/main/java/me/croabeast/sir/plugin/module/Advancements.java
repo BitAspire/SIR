@@ -1,17 +1,17 @@
 package me.croabeast.sir.plugin.module;
 
-import me.croabeast.lib.CollectionBuilder;
-import me.croabeast.lib.advancement.AdvancementInfo;
-import me.croabeast.lib.file.ConfigurableFile;
-import me.croabeast.lib.util.ServerInfoUtils;
-import me.croabeast.lib.util.TextUtils;
+import me.croabeast.common.CollectionBuilder;
+import me.croabeast.advancement.AdvancementInfo;
+import me.croabeast.file.ConfigurableFile;
+import me.croabeast.common.util.ServerInfoUtils;
+import me.croabeast.common.util.TextUtils;
 import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.misc.FileKey;
 import me.croabeast.sir.plugin.misc.DelayLogger;
 import me.croabeast.sir.plugin.misc.SIRUser;
 import me.croabeast.sir.plugin.LangUtils;
 import me.croabeast.sir.plugin.misc.Timer;
-import me.croabeast.sir.plugin.misc.WorldRule;
+import me.croabeast.common.WorldRule;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.Bukkit;
@@ -177,7 +177,7 @@ final class Advancements extends ListenerModule {
                         AdvancementInfo info = null;
 
                         try {
-                            info = AdvancementInfo.from(a);
+                            info = AdvancementInfo.create(a);
                         } catch (Exception ignored) {}
 
                         if (info == null) return;
@@ -230,9 +230,9 @@ final class Advancements extends ListenerModule {
                 loaded = true;
                 final DelayLogger logger = new DelayLogger()
                         .add(true,
-                                "===================================",
-                                "Starting SIR Advancement Loader",
-                                "===================================",
+                                "===========================",
+                                "SIR Advancement Loader",
+                                "===========================",
                                 "&e[Advancements]"
                         );
 
@@ -285,7 +285,7 @@ final class Advancements extends ListenerModule {
                 logger.add(true, "&e[Status]",
                         "- Loaded " + infoMap.size() + " advancements.",
                         "- Completed in " + time.result() + " ms.",
-                        "==================================="
+                        "==========================="
                 ).sendLines();
             });
         }

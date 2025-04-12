@@ -1,19 +1,17 @@
-package me.croabeast.sir.plugin.hook;
+package me.croabeast.sir.plugin;
 
 import lombok.experimental.UtilityClass;
-import me.croabeast.lib.util.Exceptions;
+import me.croabeast.common.util.Exceptions;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 
 @UtilityClass
 public class HookChecker {
 
-    public final boolean VAULT_ENABLED;
     public final boolean PAPI_ENABLED;
     public final boolean DISCORD_ENABLED;
 
     static {
-        VAULT_ENABLED = Exceptions.isPluginEnabled("Vault");
         PAPI_ENABLED = Exceptions.isPluginEnabled("PlaceholderAPI");
         DISCORD_ENABLED = Exceptions.isPluginEnabled("DiscordSRV");
     }

@@ -1,6 +1,6 @@
 package me.croabeast.sir.plugin.module;
 
-import me.croabeast.lib.Loadable;
+import me.croabeast.common.Loadable;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 

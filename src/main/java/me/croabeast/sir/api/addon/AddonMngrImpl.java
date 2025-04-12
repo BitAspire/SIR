@@ -2,7 +2,7 @@ package me.croabeast.sir.api.addon;
 
 import lombok.RequiredArgsConstructor;
 import me.croabeast.sir.plugin.SIRPlugin;
-import me.croabeast.lib.CollectionBuilder;
+import me.croabeast.common.CollectionBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -144,7 +144,7 @@ final class AddonMngrImpl implements AddonManager {
     }
 
     void loadAllAddons() {
-        File folder = plugin.fileFrom("addons");
+        final File folder = plugin.fileFrom("addons");
         if (!folder.exists()) {
             folder.mkdirs();
             return;

@@ -3,10 +3,10 @@ package me.croabeast.sir.plugin.aspect;
 import com.github.stefvanschie.inventoryframework.gui.GuiItem;
 import com.github.stefvanschie.inventoryframework.pane.component.ToggleButton;
 import lombok.Getter;
-import me.croabeast.lib.CollectionBuilder;
-import me.croabeast.lib.Registrable;
+import me.croabeast.common.CollectionBuilder;
+import me.croabeast.common.Registrable;
 import me.croabeast.prismatic.PrismaticAPI;
-import me.croabeast.sir.plugin.gui.ItemCreator;
+import me.croabeast.common.gui.ItemCreator;
 import me.croabeast.takion.character.SmallCaps;
 import org.bukkit.Material;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -36,11 +36,6 @@ public final class AspectButton extends ToggleButton {
     @NotNull
     public Consumer<InventoryClickEvent> getAction() {
         return Objects.requireNonNull(onClick);
-    }
-
-    @Override
-    public void setOnClick(Consumer<InventoryClickEvent> consumer) {
-        super.setOnClick(Objects.requireNonNull(consumer));
     }
 
     public void setOnClick(Function<AspectButton, Consumer<InventoryClickEvent>> function) {
