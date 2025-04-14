@@ -1,8 +1,45 @@
-# If a login plugin is installed, this file will be activated.
-# Compatible login plugins: [ AuthMe, UserLogin, nLogin, OpeNLogin, NexAuth ]
+# Login Plugin Integration Configuration
+
+# Login Plugin Support
 update: true
 
-# Enabling this will teleport the player before log-in/register if
-# a message group has a "spawn:" section.
-# Disabling it will teleport AFTER the player log-in/register.
-spawn-before: true
+# Supported Login Plugins:
+# - AuthMe
+# - UserLogin
+# - nLogin
+# - OpeNLogin
+# - NexAuth
+
+# Spawn Teleport Timing
+spawn-before: true    # When to teleport players
+
+# Teleport Behavior:
+# spawn-before: true
+#   ✓ Teleport BEFORE login/register
+#   ✓ Immediate spawn location update
+#   ✓ Prevents location leaking
+#   ✓ More secure for spawn protection
+#
+# spawn-before: false
+#   × Teleport AFTER login/register
+#   × Allows original spawn until auth
+#   × May expose spawn location
+#   × Less secure but more flexible
+
+# Message Group Integration:
+# - Requires "spawn:" section in message groups
+# - Spawn location defined per message group
+# - Only works if login plugin is detected
+# - Respects spawn-before setting
+
+# Important Notes:
+# 1. Login plugin must be installed
+# 2. Spawn locations per message group
+# 3. Security implications of timing
+# 4. Compatible with all listed plugins
+
+# Security Recommendations:
+# 1. Keep spawn-before: true
+# 2. Define secure spawn points
+# 3. Test with each login plugin
+# 4. Monitor for unauthorized access

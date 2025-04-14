@@ -1,18 +1,63 @@
+# SIR Plugin Module Configuration
+
+# Enable/disable automatic updates
 update: true
 
+# Module activation settings
+# true = enabled, false = disabled
 modules:
+  # Player Connection Messages
+  # Controls join/quit/first join notifications
   join-quit: true
+
+  # Automated Announcements System
+  # Manages scheduled server broadcasts
   announcements: true
+
+  # Server List Display (MOTD)
+  # Customizes server listing appearance
   motd: true
+
+  # Achievement Notifications
+  # Controls advancement broadcasts and rewards
   advancements: true
+
+  # Chat System Components
   chat:
+    # Chat Channel Management
+    # Handles local/global chat channels
     channels: true
+
+    # Chat Tag System
+    # Manages prefix/suffix displays
     tags: true
+
+    # Chat Moderation
+    # Filters inappropriate content
     moderation: true
+
+    # Chat Emoji Support
+    # Handles custom emotes/reactions
     emojis: true
+
+    # Anti-Spam System
+    # Controls message frequency
     cooldowns: true
+
+    # Player Mentions
+    # Handles @player notifications
     mentions: true
+
+  # External Plugin Integration
   hook:
+    # Discord Integration
+    # Manages Discord-Minecraft chat bridge
     discord: true
+
+    # Login Plugin Support
+    # Handles authentication plugin compatibility
     login: true
+
+    # Vanish Integration
+    # Manages visibility plugin compatibility
     vanish: true

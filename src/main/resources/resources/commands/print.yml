@@ -1,5 +1,7 @@
 lang:
   help:
+    # Main command help menu, displayed when using /print without arguments
+    # Shows all available subcommands and their basic usage
     main:
       - '&7'
       - ' &6>> &ePrint Help Menu'
@@ -9,6 +11,9 @@ lang:
       - '  &7- &b/print chat&7: Help for Chat messages.'
       - '  &7- &b/print TITLE&7: Help for titles messages.'
       - '&7'
+
+    # Detailed information about target selection options
+    # Explains all available target selectors and their formats
     targets:
       - '&7'
       - ' &6>> &ePrint Targets Info'
@@ -18,11 +23,25 @@ lang:
       - '  &7-&b perm:my.perm&7: Selects all players that has that permission'
       - '  &7-&b group:myGroup&7: Selects all players in a perms group (Only with Vault)'
       - '&7'
+
+    # Usage instructions for the action bar subcommand
+    # Format: /print action-bar <target> <message>
     action-bar: '<P> Usage: &b/print action-bar <target> <my message>'
+
+    # Usage instructions for the chat message subcommand
+    # Format: /print chat <target> <type:default|centered|mixed> <message>
     chat: '<P> Usage: &b/print chat <target> <type> <my message>'
+
+    # Usage instructions for the title subcommand
+    # Format: /print title <target> <fade-in,stay,fade-out> <message>
     title: '<P> Usage: &b/print title <target> <times> <my message>'
+
+  # Error message when trying to send an empty or null message
   empty-message: '<P> &cYou can not send an empty message.'
-  # To remind if the sender sends a message via /print command.
+
+  # Feedback messages for target selection results
   reminder:
+    # Shown when no valid targets are found or when target selector is invalid
     empty: '<P> This target or group of targets is/are invalid or empty.'
+    # Success message after sending the message, {TARGET} shows recipient(s)
     success: '<P> The message was send correctly to {TARGET}!'

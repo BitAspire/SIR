@@ -1,19 +1,53 @@
-# If a vanish plugin is installed, this section will be activated.
-# Compatible vanish plugins: [ CMI, EssentialsX, SuperVanish, etc ]
+# Vanish Plugin Integration Configuration
+
+# Vanish Plugin Support
 update: true
 
-# This option will allow vanished players to chat (or not) when enabled.
-# This feature is EXPERIMENTAL, so errors might occur using this feature
-# along with other chat-related modules.
+# Supported Vanish Plugins:
+# - CMI
+# - EssentialsX
+# - SuperVanish
+# - And more compatible plugins
+
+# Vanish Chat Control (EXPERIMENTAL)
 chat-key:
-  enabled: false
-  # The key to check in the chat message.
-  key: '?'
-  # If the key is a regex one.
-  regex: false
-  # If not regex, will check if the key is a prefix or suffix.
-  # Default: PREFIX
-  place: PREFIX
-  # The message to send when players are not allowed to chat.
-  # Disable these messages setting it like this: []
-  not-allowed: '<P> &cYou are not allowed to chat when you are vanished.'
+  enabled: false              # Master toggle for vanish chat
+  key: '?'                   # Chat trigger character/pattern
+  regex: false              # Use regex pattern matching
+  place: PREFIX             # Key position (PREFIX or SUFFIX)
+  not-allowed:             # Error message when chat blocked
+    - '<P> &cYou are not allowed to chat when you are vanished.'
+    # Use empty list [] to disable messages
+
+# Chat Key Behavior:
+# When enabled:
+# PREFIX example: ?message  (key before message)
+# SUFFIX example: message?  (key after message)
+#
+# Regex enabled:  Uses key as pattern
+# Regex disabled: Uses exact key match
+
+# Position Options:
+# PREFIX: Check key at start
+# SUFFIX: Check key at end
+# Default: PREFIX
+
+# Warning:
+# ⚠️ The chat-key feature is EXPERIMENTAL
+# - May conflict with other chat modules
+# - Test thoroughly before production use
+# - Monitor for unexpected behavior
+# - Keep logs for troubleshooting
+
+# Important Notes:
+# 1. Requires compatible vanish plugin
+# 2. Chat control is optional feature
+# 3. Empty message list disables notifications
+# 4. Test with specific vanish plugin
+
+# Best Practices:
+# 1. Start with feature disabled
+# 2. Test in controlled environment
+# 3. Choose unique chat key
+# 4. Monitor for conflicts
+# 5. Keep error messages informative

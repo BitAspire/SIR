@@ -34,9 +34,7 @@ final class MuteHandler implements Commandable {
         commands.add(new BaseCommand("checkmute") {
             @Override
             protected boolean execute(CommandSender sender, String[] args) {
-                if (!isPermitted(sender)) return true;
-
-
+                return isPermitted(sender);
             }
         });
 

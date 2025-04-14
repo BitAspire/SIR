@@ -1,7 +1,26 @@
-# The interval between each announcement in server ticks.
-# Want to disable the announcements feature? Set it to 0.
-# Every 20 server ticks is a second.
-interval: 2400
-# Send announcements in random order. I don't like this,
-# but if you want to use it, set it to true.
-random: false
+# Announcements Configuration
+
+# Announcement Timing
+interval: 2400  # Time between announcements in ticks
+# Tick to Time Conversion:
+# - 20 ticks = 1 second
+# - 2400 ticks = 120 seconds = 2 minutes
+#
+# Common intervals:
+# 1200 ticks  = 1 minute
+# 2400 ticks  = 2 minutes
+# 6000 ticks  = 5 minutes
+# 12000 ticks = 10 minutes
+#
+# Special values:
+# 0 = Disable announcements completely
+
+# Announcement Order
+random: false   # Controls message sequence
+# false = Sequential order (1 -> 2 -> 3 -> 1)
+# true  = Random selection each time
+
+# Notes:
+# - Minimum recommended interval: 1200 ticks (1 minute)
+# - Short intervals may cause chat spam
+# - Messages defined in announces.yml

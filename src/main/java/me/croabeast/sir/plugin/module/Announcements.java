@@ -173,18 +173,14 @@ final class Announcements extends SIRModule implements Actionable, Commandable {
         if (Actionable.failsCheck(objects, String.class))
             return;
 
-        boolean done = false;
         for (Announce a : announcesMap.values()) {
             ConfigurationSection c = a.id;
             if (!c.getName().equals(objects[0]))
                 continue;
 
             a.display(getUsers(c));
-            done = true;
             break;
         }
-
-        if (!done) throw new IllegalStateException();
     }
 
     private class Announce {

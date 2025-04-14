@@ -1,21 +1,38 @@
+# Announcements Messages Configuration
+
 announces:
-  # a random number or a custom name
+  # Announcement Entry 1
+  # Basic centered chat message with sound
   1:
-    # if you want to play a sound
+    # Sound played when announcement shows
+    # Uses Minecraft sound names
     sound: ENTITY_PLAYER_LEVELUP
-    # the messages you want to send
+    
+    # Message lines
     lines:
-      - '&7'
-      - '<C>&aThis is a S.I.R announcement'
-      - '<C>&7Disable announcements in&e modules.yml'
-      - '&7'
+      - '&7'                                      # Empty gray line
+      - '<C>&aThis is a S.I.R announcement'       # Centered green text
+      - '<C>&7Disable announcements in&e modules.yml'  # Centered gray/yellow text
+      - '&7'                                      # Empty gray line
+
+  # Announcement Entry 2
+  # Mixed format announcement (action-bar, title) with command
   2:
     lines:
+      # Action bar message (above hotbar)
       - '[ACTION-BAR] &7Look, an action-bar S.I.R. announcement'
+      
+      # Title and subtitle with hex colors
+      # Format: [TITLE] main_title<n>subtitle
       - '[TITLE] {#321ABA}A S.I.R. title<n>&#869021A S.I.R. subtitle'
-    # if you want to use server commands in your announces
+    
+    # Commands executed with announcement
+    # Executes as console by default
     commands:
       - 'say hi server this is a command'
+
+  # Announcement Entry 3
+  # Another centered chat message with different sound
   3:
     sound: ENTITY_PLAYER_BURP
     lines:
@@ -23,3 +40,8 @@ announces:
       - '<C>&eThis is another S.I.R. announcement'
       - '<C>&7Disable announcements in&e modules.yml'
       - '&7'
+
+# Note:
+# - Sound names must be valid Minecraft sounds
+# - Commands run as console unless specified
+# - Empty lines use &7 for consistency

@@ -1,12 +1,44 @@
+# Advancement Type Configuration
+
 type:
+  # Task Advancements (Basic achievements)
   task:
-    - ' &e{player}&7 has got the {low-type} <hover:"&7{description}">&a{adv}</text>'
-    - '[cmd] minecraft:experience add {player} 100 points'
+    # Display format and rewards
+    - ' &e{player}&7 has got the {low-type} <hover:"&7{description}">&a{adv}</text>'  # Notification message
+    - '[cmd] minecraft:experience add {player} 100 points'                             # 100 XP reward
+
+  # Goal Advancements (Intermediate achievements)
   goal:
-    - ' &e{player}&7 has reached the {type} <hover:"&7{description}">&b{adv}</text>'
-    - '[cmd] minecraft:experience add {player} 500 points'
+    # Display format and rewards
+    - ' &e{player}&7 has reached the {type} <hover:"&7{description}">&b{adv}</text>'  # Notification message
+    - '[cmd] minecraft:experience add {player} 500 points'                             # 500 XP reward
+
+  # Challenge Advancements (Difficult achievements)
   challenge:
-    - ' &e{player}&7 has finished the &d{cap-type}&7: <hover:"&7{description}">&5{adv}</text>'
-    - '[cmd] minecraft:experience add {player} 1000 points'
+    # Display format and rewards
+    - ' &e{player}&7 has finished the &d{cap-type}&7: <hover:"&7{description}">&5{adv}</text>'  # Notification message
+    - '[cmd] minecraft:experience add {player} 1000 points'                                       # 1000 XP reward
+
+  # Custom Advancements (Data pack achievements)
   custom:
-    - ' &e{player} &7has made the {low-type} <hover:"&7{description}">&b{adv}</text>'
+    # Display format only (no default reward)
+    - ' &e{player} &7has made the {low-type} <hover:"&7{description}">&b{adv}</text>'  # Notification message
+
+# Available Placeholders:
+# {player}      - Player name
+# {type}        - Advancement type as is
+# {low-type}    - Lowercase type
+# {cap-type}    - Capitalized type
+# {adv}         - Advancement name
+# {description} - Advancement description
+
+# Command Execution Format:
+# Default: Command runs from console
+# [player] command   - Executes as player
+# [console] command  - Explicitly runs as console
+# [global] command   - Alternative for console execution
+# 
+# Examples:
+# [player] help     - Player executes /help
+# [console] kill @p - Console executes kill command
+# give @p diamond   - Console gives diamond (default)

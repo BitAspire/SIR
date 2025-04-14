@@ -1,33 +1,42 @@
-# The default server ID for the DiscordSRV Hook.
-# If not set, will catch the default one on DiscordSRV configuration.
-default-server: SERVER_ID
-# Put every channel you want to receive a message type.
-# Or just put the same channel for every message type
+# DiscordSRV Integration Configuration
+
+# Server Configuration
+default-server: SERVER_ID    # Default DiscordSRV server ID
+# Falls back to DiscordSRV config if not set
+
+# Channel Routing Configuration
 ids:
+  # First Time Join Notifications
   first-join:
-    - CHANNEL_ID
-    - OTHER_SERVER_ID:CHANNEL_ID
+    - CHANNEL_ID                       # Primary channel
+    - OTHER_SERVER_ID:CHANNEL_ID      # Cross-server channel
+
+  # Regular Join Notifications
   join:
     - CHANNEL_ID
     - OTHER_SERVER_ID:CHANNEL_ID
+
+  # Quit Notifications
   quit:
     - CHANNEL_ID
     - OTHER_SERVER_ID:CHANNEL_ID
+
+  # Global Chat Messages
   global-chat:
     - CHANNEL_ID
     - OTHER_SERVER_ID:CHANNEL_ID
+
+  # Advancement Notifications
   advances:
     - CHANNEL_ID
     - OTHER_SERVER_ID:CHANNEL_ID
 
-# see modules.yml discord section to check all the available channels
+# Message Format Configuration
 channels:
+  # First Join Message
   first-join:
-    # plain text, if empty or null, will be set an embed message
-    text: ''
-    # the embed builder
+    text: ''    # Empty for embed-only
     embed:
-      # color, can be a main color or hex
       color: YELLOW
       author:
         name: 'Made by CroaBeast'
@@ -39,8 +48,10 @@ channels:
         url: ''
       description: ':bell: `{player} has join the server for the first time`'
       timeStamp: true
+
+  # Regular Join Message
   join:
-    text: ''
+    text: ''    # Empty for embed-only
     embed:
       color: GREEN
       author:
@@ -51,6 +62,8 @@ channels:
       title: 'S.I.R. - Chat Plugin'
       description: ':white_check_mark: `{player} has join the server`:bangbang:'
       timeStamp: true
+
+  # Quit Message
   quit:
     text: ':x: `{player} has left the server` :broken_heart:'
     embed:
@@ -63,7 +76,42 @@ channels:
       title: ''
       description: ''
       timeStamp: true
+
+  # Global Chat Message
   global-chat:
     text: '**{prefix}** {player} `{suffix}` :white_small_square: {message}'
+
+  # Advancement Message
   advances:
     text: '**{player}** has complete the {low-type}: **{adv}**'
+
+# Available Placeholders:
+# {UUID}     - Player UUID
+# {player}   - Player name
+# {prefix}   - Player prefix
+# {suffix}   - Player suffix
+# {message}  - Chat message
+# {low-type} - Lowercase type
+# {adv}      - Advancement name
+
+# Message Types:
+# 1. Plain Text: Use 'text' field
+# 2. Embed: Use 'embed' structure
+#    - Empty/null text = embed only
+#    - Both can be used together
+
+# Embed Colors:
+# - Named colors (RED, GREEN, BLUE, etc.)
+# - Hex codes (#FF0000, #00FF00, etc.)
+
+# Cross-Server Format:
+# OTHER_SERVER_ID:CHANNEL_ID
+# Example: 123456789:987654321
+
+# Important Notes:
+# 1. Channel IDs must be valid Discord channels
+# 2. Server IDs must be configured in DiscordSRV
+# 3. Multiple channels supported per event
+# 4. Empty embed fields are ignored
+# 5. Timestamps are in UTC
+# 6. Crafatar URLs require valid UUIDs

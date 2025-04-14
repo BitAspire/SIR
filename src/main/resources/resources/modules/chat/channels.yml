@@ -1,90 +1,104 @@
-# This section is for the default channel that applies to all custom
-# global and local channels.
-# This can be helpful and more efficient if you want to apply default
-# changes instead of doing it one by one.
-default-channel:
-  enabled: true
-  # prefix: ''
-  # suffix: ''
-  color-options:
-    normal: false
-    special: false
-    rgb: false
-  radius: 0
-  cooldown:
-    time: 5
-    message: '<P> &cYou can not send another message in {time} seconds.'
-  format: ' &7{player} &8: &7{message}'
+# Chat Channels Configuration
 
-# example of a chat channel
+# Default Channel Settings
+# Applied to channels ONLY when a specific setting is not defined
+default-channel:
+  enabled: true                # Master toggle
+  color-options:              # Default color permissions
+    normal: false            # &a, &b, etc.
+    special: false          # &l, &n, etc.
+    rgb: false             # Hex colors
+  radius: 0                # 0 = global, >0 = local radius
+  cooldown:
+    time: 5               # Seconds between messages
+    message: '<P> &cYou can not send another message in {time} seconds.'
+  format: ' &7{player} &8: &7{message}'  # Default message format
+
+# Complete Channel Example (Template)
 example-channel:
-  permission: custom.permission
-  priority: 3
-  group: CUSTOM_GROUP
-  global: true # or false
-  radius: 0
-  worlds:
+  permission: custom.permission     # Access permission
+  priority: 3                      # Channel priority (higher = more important)
+  group: CUSTOM_GROUP              # Player group association
+  global: true                     # true = server-wide, false = local
+  radius: 0                        # Chat radius (if local)
+  worlds:                          # Allowed worlds
     - defaultWorldLoL
     - example-world
-  prefix: "&a&l USER &7"
-  suffix: " &8&l• &7"
-  color: "{#c0c0c0}"
-  color-options:
-    normal: true # or false
-    special: true # or false
-    rgb: true # or false
-  click-action: "SUGGEST:/msg {player} hello"
-  hover:
+  prefix: "&a&l USER &7"          # Channel prefix
+  suffix: " &8&l• &7"            # Channel suffix
+  color: "{#c0c0c0}"            # Default text color
+  color-options:                 # Color permissions
+    normal: true                # Standard colors
+    special: true              # Formatting codes
+    rgb: true                 # Hex colors
+  click-action: "SUGGEST:/msg {player} hello"  # Click interaction
+  hover:                      # Hover text
     - "Click here to contact this player"
-  # These access options are ONLY for local channels "global: false".
-  access:
-    # This prefix needs to be BEFORE the chat message. It identifies
-    # what local channel will receive the message.
-    # Example: @this message is only for the sir private channel
-    prefix: "@"
-    # These commands work exactly like prefixes, but in commands.
-    # Example: /custom a local msg
-    commands:
-      - /admin
-      - /admin-chat
   format: "{prefix} {player} {suffix}: {color}{message}"
+  # Local subchannel configuration
+  local:                      # Creates a local version of this channel
+    permission: custom.permission.local  # Local channel permission
+    radius: 100                         # Chat radius in blocks
+    worlds:                             # Specific worlds for local chat
+      - world
+      - world_nether
+    access:                             # Required for local channels
+      prefix: "@"                       # Message prefix identifier
+      commands:                         # Command alternatives
+        - /localchat
+        - /lc
+    format: "[LOCAL] {prefix} {player}: {message}"  # Local format
 
+# Active Channel Configurations
 channels:
-  # a random number or custom name
+  # Default Public Channel
   default:
     format: '&7 {player}&8: {#C0C0C0}{message}'
+
+  # VIP Channel with Local Subchannel
   vip:
-    # can be DEFAULT, null or custom
     permission: chat.vip
-    # the prefix
     prefix: '&e&l VIP'
-    # if you want to use colors in this format
     color-options:
-      # minecraft colors
       normal: true
     format: '{prefix} &7{player}&8: &#FFFF99{message}'
-  # this is an example local channel for staff
+    # Local VIP chat configuration
+    local:
+      permission: chat.vip.local
+      radius: 50
+      access:
+        prefix: "@"
+        commands:
+          - /viplocal
+      format: '[VIP-LOCAL] {prefix} {player}: {message}'
+
+  # Staff Local Channel
   local-staff-channel:
-    global: false
+    global: false               # Dedicated local channel
     permission: chat.staff
     priority: 100
     prefix: '&c&l STAFF'
     color-options:
-      # minecraft colors
       normal: true
-      # special formatting (bold, underlined, etc)
       special: true
-      # rgb, gradient, etc
       rgb: true
-    # These access options are ONLY for local channels.
-    access:
-      # This prefix needs to be BEFORE the chat message. It identifies
-      # what local channel will receive the message.
-      # Example: @this message is only for the sir private channel
+    access:                    # Required for all local channels
       prefix: "@"
-      # These commands work exactly like prefixes, but in commands.
-      # Example: /custom a local msg
       commands:
         - /admin
         - /admin-chat
     format: '[STAFF] {prefix} &7{player}&8: #FF9999{message}'
+
+# Inheritance Notes:
+# 1. Channel settings missing from a custom channel use default-channel values
+# 2. Local subchannels inherit from their parent global channel
+# 3. If parent channel lacks a value, defaults are used
+# 4. Access section only works in local channels or local subchannels
+# 5. Local subchannels retain parent's settings unless overridden
+
+# Format Placeholders:
+# {player}  - Player name
+# {message} - Chat message
+# {prefix}  - Channel prefix
+# {suffix}  - Channel suffix
+# {color}   - Default color

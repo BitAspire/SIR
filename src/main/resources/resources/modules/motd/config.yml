@@ -1,24 +1,71 @@
-# Sets the maximum player size. It doesn't modify the actual
-# capacity, just changes the number on the Server List.
+# Server List Display Configuration
+
+# Max Player Display Settings
 max-players:
-  # You can choose between:
-  # - MAXIMUM: shows the count for all online players + 1
-  # - CUSTOM: shows a custom value from 'count:'
-  # - DEFAULT: shows the max players from server.properties
-  type: DEFAULT
-  # Only valid if you're using the CUSTOM type
-  count: 69420
-# Sets the server icon with a custom one you can define.
-# You can set all your images inside on the SIR/misc/icons folder.
-# The icon(s) MUST BE 64 x 64 PIXELS and in the .png format.
+  # Display Type Options:
+  type: DEFAULT    # Current setting: DEFAULT
+
+  # Available Types:
+  # MAXIMUM: Shows online players + 1
+  # CUSTOM:  Shows fixed value from 'count'
+  # DEFAULT: Uses server.properties value
+
+  count: 69420    # Custom player count
+  # Only used when you type: CUSTOM
+
+# Server Icon Configuration
 server-icon:
-  # - DISABLED: It just disables this feature.
-  # You can also disable it deleting 'usage:' line.
-  # - SINGLE: Uses only one image from 'image:'
-  # - RANDOM: Uses all images stored randomly.
-  # - LIST: Uses all images in alphabetic order.
-  usage: SINGLE
-  # This option can only be used with the SINGLE usage type.
-  image: server-icon.png
-# If enabled, it will set up all the MOTDs randomly.
-random-motds: false
+  # Display Mode
+  usage: SINGLE    # Current setting: SINGLE
+
+  # Available Modes:
+  # DISABLED: No custom icon
+  # SINGLE:   One static image
+  # RANDOM:   Random from folder
+  # LIST:     Sequential from folder
+
+  image: server-icon.png    # Icon filename
+  # Only for SINGLE mode
+
+# Icon Requirements:
+# - Must be 64x64 pixels
+# - Must be PNG format
+# - Store in modules/motd/icons/
+# - Filename must match config
+
+# MOTD Randomization
+random-motds: false    # Enable random MOTDs
+
+# Display Type Examples:
+# MAXIMUM:
+#   10 players online → shows "11/11"
+#   5 players online → shows "6/6"
+#
+# CUSTOM:
+#   count: 100 → always shows "X/100"
+#   (X = current players)
+#
+# DEFAULT:
+#   Uses max-players from server.properties
+
+# Icon Mode Details:
+# SINGLE:
+#   - One static icon
+#   - Specified in 'image:'
+#   - Must exist in icons folder
+#
+# RANDOM:
+#   - Picks random icon
+#   - Uses all icons in folder
+#   - Changes each refresh
+#
+# LIST:
+#   - Uses all icons
+#   - Alphabetical order
+#   - Cycles through list
+
+# Important Notes:
+# 1. Icon path: SIR/misc/icons/
+# 2. Icons must be 64x64 PNG
+# 3. Invalid icons = default icon
+# 4. Check file permissions

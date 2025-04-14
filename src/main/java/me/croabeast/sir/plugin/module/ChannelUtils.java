@@ -39,7 +39,7 @@ class ChannelUtils {
 
     @SuppressWarnings({"ConstantConditions", "unchecked"})
     @Getter
-    static abstract class BaseChannel implements ChatChannel {
+    abstract class BaseChannel implements ChatChannel {
 
         private final SIRPlugin plugin = SIRPlugin.getInstance();
 
@@ -225,13 +225,21 @@ class ChannelUtils {
             return isChatEventless() ? applier.toString() :
                     applier.apply(TextUtils.STRIP_JSON).toString();
         }
+
+        @Override
+        public String toString() {
+            return "BaseChannel{path=" + section.getCurrentPath() +
+                    ", permission='" + permission + '\'' +
+                    ", priority=" + priority + ", global=" + global +
+                    ", format='" + chatFormat + '\'' + '}';
+        }
     }
 
-    static Configurable config() {
+    Configurable config() {
         return FileData.Module.Chat.CHANNELS.getFile();
     }
 
-    static ChatChannel loadDefaults() {
+    ChatChannel loadDefaults() {
         ConfigurationSection def = config().getSection("default-channel");
 
         return def == null ? null : (defaults = new BaseChannel(def, null) {
@@ -247,7 +255,7 @@ class ChannelUtils {
         });
     }
 
-    static ChatChannel getDefaults() {
+    ChatChannel getDefaults() {
         if (!config().get("default-channel.enabled", true))
             return null;
 
@@ -258,12 +266,12 @@ class ChannelUtils {
         }
     }
 
-    static ChatChannel of(ConfigurationSection section) {
+    ChatChannel of(ConfigurationSection section) {
         return new ChannelImpl(section);
     }
 
     @Getter
-    static class ChannelImpl extends BaseChannel {
+    final class ChannelImpl extends BaseChannel {
 
         private final ChatChannel subChannel;
 
@@ -286,7 +294,7 @@ class ChannelUtils {
     }
 
     @Getter
-    static class ClickImpl implements ChatChannel.Click {
+    class ClickImpl implements ChatChannel.Click {
 
         private final ChatClick.Action action;
         private final String input;
@@ -303,10 +311,15 @@ class ChannelUtils {
             action = ChatClick.Action.from(array[0]);
             input = array[1];
         }
+
+        @Override
+        public String toString() {
+            return "Click{action=" + action + ", input='" + input + '\'' + '}';
+        }
     }
 
     @Getter
-    static class AccessImpl implements ChatChannel.Access {
+    class AccessImpl implements ChatChannel.Access {
 
         private final String prefix;
         private final List<String> commands;
@@ -315,10 +328,15 @@ class ChannelUtils {
             this.prefix = section.getString("prefix");
             this.commands = Configurable.toStringList(section, "commands");
         }
+
+        @Override
+        public String toString() {
+            return "Access{prefix='" + prefix + '\'' + ", commands=" + commands + '}';
+        }
     }
 
     @RequiredArgsConstructor
-    static class ColorChecker {
+    class ColorChecker {
 
         static final String PERM = "sir.color.chat.";
         final boolean normal, special, rgb;
@@ -350,6 +368,11 @@ class ChannelUtils {
                 applier.apply(PrismaticAPI::stripSpecial);
 
             return applier.toString();
+        }
+
+        @Override
+        public String toString() {
+            return "ColorChecker{normal=" + normal + ", special=" + special + ", rgb=" + rgb + '}';
         }
     }
 }

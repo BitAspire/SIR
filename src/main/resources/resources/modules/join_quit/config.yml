@@ -1,18 +1,55 @@
-# This option handles if you want to disable the default join-quit messages.
-# WARNING: This option DOES NOT disable the custom join-quit SIR messages,
-#          only manages the default messages if those should appear or not.
-default-messages:
-  # Disables the default join message. Enabled by default
-  disable-join: true
-  # Disables the default quit message. Enabled by default
-  disable-quit: true
+# Join/Quit Message Configuration
 
-# Manages the cooldown between join-quit messages to not show those
-# messages if the players joins/leaves the server really quick.
+# Default Message Control
+default-messages:
+  disable-join: true     # Disable vanilla join messages
+  disable-quit: true     # Disable vanilla quit messages
+
+# ⚠️ IMPORTANT WARNING ⚠️
+# These settings ONLY affect vanilla Minecraft messages
+# S.I.R. custom join/quit messages are controlled separately
+# This will NOT disable custom messages configured in S.I.R.
+
+# Anti-Spam Cooldowns
 cooldown:
-  # Cooldown between join messages.
-  join: 0
-  # Cooldown between join and quit message.
-  between: 0 # Not enabled by default
-  # Cooldown between quit messages.
-  quit: 0
+  join: 0       # Delay between join messages (seconds)
+    # 0 = No delay
+
+  between: 0    # Delay between join/quit messages
+    # 0 = No delay (default)
+  # Prevents quick join/quit spam
+
+  quit: 0       # Delay between quit messages
+  # 0 = No delay
+
+# Cooldown System Explained:
+# 1. Join Cooldown:
+#    - Affects consecutive join messages
+#    - Player A joins → wait → Player B joins
+#
+# 2. Between Cooldown:
+#    - Controls join→quit message timing
+#    - Player joins → wait → Player quits
+#
+# 3. Quit Cooldown:
+#    - Manages consecutive quit messages
+#    - Player A quits → wait → Player B quits
+
+# Use Cases:
+# - Prevent chat spam from rapid joins/quits
+# - Control message flow in high-traffic servers
+# - Reduce visual clutter in chat
+# - Manage connection spam attempts
+
+# Important Notes:
+# 1. Cooldowns are in seconds
+# 2. 0 means no cooldown
+# 3. Affects ALL players
+# 4. Independent of S.I.R. messages
+
+# Best Practices:
+# 1. Set reasonable cooldowns based on server size
+# 2. Monitor for message suppression
+# 3. Adjust based on user feedback
+# 4. Consider peak hours
+# 5. Balance spam prevention vs information

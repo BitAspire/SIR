@@ -150,14 +150,12 @@ public abstract class SIRCommand extends BukkitCommand {
 
         button.setOnClick(b -> e -> {
             if (parent != null) {
+                final String pName = parent.getName();
                 plugin.getLibrary().getLoadedSender()
                         .setLogger(false)
-                        .setTargets((Player) e.getView().getPlayer())
+                        .setTargets(e.getView().getPlayer())
                         .send(
-                                "<P> &a" + parent.getName() +
-                                        "&7 should be toggled instead " +
-                                        "of this command."
-                        );
+                                "<P> The module &a" + pName + "&7 should be toggled instead of this command.");
 
                 e.setCancelled(true);
                 return;
@@ -166,12 +164,9 @@ public abstract class SIRCommand extends BukkitCommand {
             if (!modifiable) {
                 plugin.getLibrary().getLoadedSender()
                         .setLogger(false)
-                        .setTargets((Player) e.getView().getPlayer())
+                        .setTargets(e.getView().getPlayer())
                         .send(
-                                "<P> This command was marked " +
-                                        "as not modifiable. " +
-                                        "It can't be disabled."
-                        );
+                                "<P> This command was marked as not modifiable. It can't be disabled.");
 
                 e.setCancelled(true);
                 return;
@@ -302,7 +297,7 @@ public abstract class SIRCommand extends BukkitCommand {
             super(plugin.getLibrary().getLoadedSender());
         }
 
-        @Override
+        @NotNull
         public MessageSender copy() {
             return new CommandDisplayer(this);
         }
@@ -335,7 +330,7 @@ public abstract class SIRCommand extends BukkitCommand {
     }
 
     protected final MessageSender createSender(CommandSender sender) {
-        return new CommandDisplayer().setTargets(fromSender(sender));
+        return new CommandDisplayer().setLogger(fromSender(sender) == null).setTargets(sender);
     }
 
     protected final boolean editSubCommand(String name, CommandPredicate predicate) {

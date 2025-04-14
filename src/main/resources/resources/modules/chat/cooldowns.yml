@@ -1,13 +1,48 @@
+# Chat Cooldowns Configuration
+
 cooldowns:
+  # Default Cooldown Settings
   default:
-    permission: DEFAULT
-    priority: 0
+    # Permission and Priority
+    permission: DEFAULT            # No special permission needed
+    priority: 0                   # Lowest priority level
+
+    # Spam Check System
     check:
-      enabled: false
-      count: 5
-      time-limit: 10
-      commands:
-        - "kick {player}"
-    time: 5
+      enabled: false              # Spam detection toggle
+      count: 5                    # Maximum messages allowed
+      time-limit: 10             # Time window in seconds
+      commands:                   # Actions when limit reached
+        - "kick {player}"        # Example: Kicks spammer
+
+    # Basic Cooldown
+    time: 5                       # Seconds between messages
+
+    # Notification Messages
     messages:
       - '<P> &cYou can not send another message in {time} seconds.'
+
+# How Cooldowns Work:
+# 1. Basic Cooldown (time):
+#    - Players must wait 'time' seconds between messages
+#    - Applies to all messages
+#
+# 2. Spam Check System (when enabled):
+#    - Monitors 'count' messages within 'time-limit' seconds
+#    - If exceeded, executes specified commands
+#    - Example: 5 messages in 10 seconds = kick
+
+# Priority System:
+# - Higher priority overrides lower
+# - 0 = lowest priority (default)
+# - Multiple cooldowns use the highest priority
+
+# Placeholders:
+# {player} - Player's name
+# {time}   - Remaining cooldown time
+
+# Important Notes:
+# - DEFAULT permission applies to everyone
+# - Spam check is separate from basic cooldown
+# - Commands execute as console
+# - Multiple messages supported

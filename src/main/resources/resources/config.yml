@@ -2,45 +2,82 @@
 #   SIR by CroaBeast   #
 # Depressed since 2004 #
 ########################
-# Want to use Unicode characters? Check this site: https://coolsymbol.com
 
-# The Updater Checker for new plugin updates and new file settings.
+# 🔄 Updater Configuration
 updater:
-  # Sends a reminder when the plugin is completely enabled.
-  # Disabling won't send any reminder.
+  # Controls the startup update notification
+  # When true, sends a notification about available updates when the server starts
+  # When false, no update checks will be performed at startup
   on-start: true
-  # Sends a reminder to OP's or players with 'sir.admin.update'
-  # permission. Disabling won't send any reminder.
+
+  # Controls update notifications for administrators
+  # When true, sends update notifications to:
+  # - Players with OP status
+  # - Players with 'sir.admin.update' permission
+  # When false, administrators won't receive update notifications
   send-op: true
 
-# Some useful options for this plugin if you want to change them.
+# ⚙️ Core Plugin Options
 options:
+  # Language setting for plugin messages
+  # Available options: 'en' (English)
+  # More languages coming soon!
   lang: en
-  # Use color in the console, you can disable it if any color issue
-  # is present in the logger.
+
+  # Console Output Formatting
+  # Controls whether ANSI color codes are used in console output
+  # Disable if you experience console formatting issues
   colored-console: true
-  # if enabled, it will show the prefix of the message type in
-  # the console. Example:
-  # [ACTION-BAR] My action bar message.
+
+  # Message Type Prefix Display
+  # When true, shows the message type in console logs
+  # Example outputs:
+  # [CHAT] Hello World
+  # [ACTION-BAR] Welcome!
+  # [TITLE] Server Announcement
+  # [BOSSBAR] Event Starting
   show-prefix: true
-  # Custom check that deny OP permission system and check if that OP
-  # player has a certain permission.
-  # False by default to replicate vanilla behaviour.
+
+  # Permission System Override
+  # Advanced permission control for OP players
+  # false: Uses vanilla OP system (recommended)
+  # true: Requires specific permissions even for OP players
+  # Example: An OP player would need 'sir.admin.reload' to use /sir reload
   override-op: false
-  # Custom check that will verify first SIR mute feature player status
-  # before any mute-plugin checks for mute.
+
+  # Mute System Priority
+  # Controls the order of mute checks
+  # true: SIR's mute system is checked before other plugins
+  # false: Other plugins' mute systems take priority
+  # Useful when using multiple mute systems
   check-mute: true
 
-# You can delete the values' section if you want to use the hard-coded values.
+# 🎨 Message Formatting Values
 values:
-  # Every message that start with this string, will have the main-prefix.
+  # Prefix Key Configuration
+  # Defines the trigger for the main plugin prefix
+  # Default: '<P>'
+  # Example: '<P> Welcome!' becomes ' &e&lSIR &8>&7 Welcome!'
   lang-prefix-key: '<P>'
-  # The main prefix will be inserted in lines with <P> or "lang-prefix-key" string.
+
+  # Main Plugin Prefix
+  # The prefix added when lang-prefix-key is detected
+  # Default: ' &e&lSIR &8>&7'
+  # Supports color codes and formatting
   lang-prefix: ' &e&lSIR &8>&7'
-  # Valid only in SIR files and inputs that accept centered messages.
-  # Put this first on those chat messages you want to center.
+
+  # Center Text Marker
+  # Used to center messages in chat
+  # Place at the start of any message you want centered
+  # Example: '<C>This will be centered'
+  # Works in SIR configuration files and supported inputs
   center-prefix: '<C>'
-  # Can be used in most of the plugin files and the /print command.
-  # If you want to add more than one line in your CHAT type message,
-  # or you want title AND subtitle, use it to split the message.
+
+  # Line Break Character
+  # Used to create multi-line messages
+  # Applications:
+  # - Multiple chat lines in one config entry
+  # - Title and subtitle separation
+  # - Multiple lines in /print command
+  # Example: 'Line 1<n>Line 2<n>Line 3'
   line-separator: '<n>'

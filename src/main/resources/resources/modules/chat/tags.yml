@@ -1,9 +1,49 @@
+# Tags Configuration
+
 tags:
+  # Example VIP Tag
   custom-tag:
-    tag: "[I'M GOD]"
-    permission: "tag.god"
-    priority: 20
-    group: vip
-    description:
+    tag: "[I'M GOD]"           # Display text
+    permission: "tag.god"      # Required permission
+    priority: 20              # Tag priority (higher = more important)
+    group: vip               # Required player group
+    description:            # Hover text/description
       - "This tag can only be obtained having VIP"
       - "Buy one in walmart.com"
+
+# Tag System:
+# - Tags can be displayed in chat formats using {TAG}
+# - Multiple tags use the highest priority available
+# - Players need both permission and group (if specified)
+# - Description shows on hover (if supported)
+
+# Properties:
+# tag: The displayed text
+#   - Supports color codes (&a, &b, etc.)
+#   - Can include spaces and special characters
+#   - Formatting codes allowed (&l, &o, etc.)
+#
+# permission: Required permission node
+#   - Optional, remove to make public
+#   - Can use wildcards (tag.*)
+#
+# priority: Processing order
+#   - Higher number = higher priority
+#   - Default = 0 if not specified
+#   - Used when player has multiple tags
+#
+# group: Required player group
+#   - Optional, remove for no group requirement
+#   - Case-sensitive group name
+#
+# description: Hover text
+#   - Multiple lines supported
+#   - Supports color codes
+#   - Shows when hovering over tag
+
+# Important Notes:
+# 1. Tags require permission if specified
+# 2. Group membership checked if group is set
+# 3. Both permission AND group required if both set
+# 4. Priority determines which tag shows if multiple available
+# 5. Description is optional but adds informative hover text

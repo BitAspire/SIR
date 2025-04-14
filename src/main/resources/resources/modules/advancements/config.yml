@@ -1,17 +1,33 @@
-# The worlds list that will not show any advancement messages.
-# Disable this using [].
+# Advancements Configuration
+
+# Worlds where advancement notifications are disabled
+# Set to [] to enable notifications in all worlds
+# Format: List of world names (case-sensitive)
 disabled-worlds:
-  - custom_world
-# The game-modes list that will not show any advancement messages.
-# Disable this using [].
+  - custom_world    # Example: Notifications disabled in custom_world
+
+# Game modes where advancement notifications are disabled
+# Set to [] to enable notifications in all game modes
+# Valid modes: SURVIVAL, CREATIVE, ADVENTURE, SPECTATOR
 disabled-modes:
-  - SPECTATOR
-# The world's list that will not show any advancement messages.
-# THESE ARE JUST EXAMPLES FROM OTHER DATA PACKS!!
-# Disable this using []
+  - SPECTATOR      # Example: No notifications in spectator mode
+
+# Specific advancements to disable notifications for
+# Set to [] to enable all advancement notifications
+# Format: namespace:advancement_path
+# EXAMPLE ENTRIES FROM COMMON DATA PACKS:
 disabled-advs:
+  # FusionMC Data Pack
   - fusionmc:bastion_advancement_fix
+  - global:fusion_mc
+
+  # VanillaTweaks Data Pack
   - vanillatweaks:classic_fishing_loot
   - vanillatweaks:double_shulker_shells
-  - global:fusion_mc
   - vanillatweaks:wandering_trades
+
+# Notes:
+# - World names are case-sensitive
+# - Game modes must be uppercase
+# - Advancement paths must include namespace
+# - Invalid entries will be ignored

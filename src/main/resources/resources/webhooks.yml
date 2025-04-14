@@ -1,36 +1,60 @@
+# Discord Webhook Configuration
+
 webhooks:
-  # You should pass in a configuration section like the
-  # one below into the constructor of DiscordWebhook.
-  #
-  # Each section MUST have data fully filled out or the
-  # webhook will throw an IllegalArgumentException!!!
+  # Example webhook configuration
+  # Each webhook section requires complete data to function
+  # Missing or invalid data will throw IllegalArgumentException
   webhook-1:
+    # Master toggle for this webhook
     enabled: false
+
+    # Discord webhook URL
+    # Format: https://discord.com/api/webhooks/{webhook.id}/{webhook.token}
     url: 'https://discord.com/api/webhooks/000000000000000000/I5VrzXGjEudoezM3pTfFri6kS87Ryt3e6rZBzFdOUA4DGUBUJfF1Zv0qaaS4p7IH142v'
-    content: ''
-    username: 'CyberWorldReset'
-    avatar-url: 'https://dev.zerotoil.net/images/cwr_premium_borderless.png'
-    tts: false
+
+    # Basic webhook settings
+    content: ''              # Plain text content
+    username: 'CyberWorldReset'  # Display name for webhook
+    avatar-url: 'https://dev.zerotoil.net/images/cwr_premium_borderless.png'  # Webhook avatar
+    tts: false              # Text-to-speech setting
+
+    # Embed configurations
     embeds:
       embed-1:
-        title: 'Come get some fresh resources!'
-        description: '{message}'
-        url: ''
+        # Main embed content
+        title: 'Come get some fresh resources!'  # Embed title
+        description: '{message}'  # Supports placeholders
+        url: ''  # Clickable title URL
+
+        # Footer configuration
         footer:
           text: 'ZeroToil Development'
           icon-url: 'https://dev.zerotoil.net/images/ZeroToil_BLUE.PNG'
-        thumbnail-url: ''
-        image-url: ''
+
+        # Media URLs
+        thumbnail-url: ''  # Small image in top right
+        image-url: ''     # Large image in embed
+
+        # Author section
         author:
           name: 'Example CyberWorldReset Webhook'
           url: 'https://www.spigotmc.org/resources/99431/'
           icon-url: 'https://dev.zerotoil.net/images/cwr_premium_borderless.png'
-        fields: [ ]
-        #  field-1:
-        #    name: 'Subheading'
-        #    value: 'Message goes here'
-        #    inline: true
 
-  # This would be a new configuration section and thus,
-  # the start of a new DiscordWebhook constructor.
+        # Additional fields
+        # Format:
+        #  field-1:
+        #    name: 'Subheading'     # Field title
+        #    value: 'Message text'   # Field content
+        #    inline: true           # Display format
+        fields: [ ]
+
+  # Template for additional webhooks
+  # Must be configured with complete data before use
   another-webhook: [ ]
+
+# Required webhook components:
+# - Valid webhook URL
+# - At least one of: content, embeds
+# - All configured sections must be complete
+# - Embedded images must use HTTPS URLs

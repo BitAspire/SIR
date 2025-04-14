@@ -1,49 +1,81 @@
+# Join/Quit Messages Configuration
+
+# First Join Messages (New Players)
 first-join:
-  # a random number or a custom name
   1:
-    # if you want to play a sound
-    sound: ENTITY_PLAYER_LEVELUP
-    # public messages to send to all players
-    public:
+    sound: ENTITY_PLAYER_LEVELUP     # Sound effect
+    public:                          # Global messages
       - '&8[&6NEW&8] &7Welcome &e{player} &7to the server for the first time!'
-    # if you want to set invulnerability for some time
-    invulnerable: 3
-    # teleports a player when join
-    spawn:
+    invulnerable: 3                 # Invulnerability duration (seconds)
+    spawn:                          # Spawn location
       enabled: false
       world: world
+
+# Regular Join Messages
 join:
-  # a random number or custom name
+  # Default Join Message
   1:
-    permission: DEFAULT
-    sound: ENTITY_PLAYER_LEVELUP
+    permission: DEFAULT             # No special permission needed
+    sound: ENTITY_PLAYER_LEVELUP    # Sound effect
     public:
       - '&8[&a+&8] &7Welcome &e{player} &7to the server!'
-    invulnerable: 3
-    spawn-location:
+    invulnerable: 3                # Invulnerability time
+    spawn-location:                # Precise spawn coordinates
       enabled: false
-      # the world
       world: world
-      # the coordinates
-      coordinates: 0,80,0
-      # the direction
-      rotation: 0,-90
+      coordinates: 0,80,0          # X,Y,Z
+      rotation: 0,-90             # Yaw,Pitch
+
+  # VIP Join Message
   2:
-    permission: join.vip
+    permission: join.vip          # VIP permission node
     public:
       - '&8[&a+&8] &7Welcome &b&lVIP &e{player} &7to the server!'
-    # private messages to send to the player
-    private:
+    private:                      # Messages only player sees
       - '<R:1>Thanks for playing here :D</R>'
+
+  # PRO Join Message
   3:
-    permission: join.pro
-    # the priority if you have more custom permission formats
-    priority: 2
+    permission: join.pro         # PRO permission node
+    priority: 2                  # Higher priority (overrides lower)
     public:
       - '&8[&a+&8] &7Welcome &d&lPRO &e{player} &7to the server!'
     private:
       - '[TITLE] <G:2C08BA>Hello PRO {PLAYER}</G:028A97><n><G:2C08BA>from world {WORLD}.</G:028A97>'
+
+# Quit Messages
 quit:
   1:
     public:
       - '&8[&c-&8] &e{player} &7has left the server.'
+
+# Message Types:
+# public: Shown to all players
+# private: Only shown to joining player
+
+# Features Available:
+# - Sound effects
+# - Invulnerability period
+# - Custom spawn locations
+# - Permission-based messages
+# - Priority system
+
+# Placeholders:
+# {player}  - Player name
+# {world}   - World name
+
+# Spawn Location Format:
+# coordinates: X,Y,Z
+# rotation: Yaw,Pitch
+
+# Priority System:
+# - Higher number = Higher priority
+# - Default = 0 if not specified
+# - Highest matching priority used
+
+# Important Notes:
+# 1. Permissions are optional
+# 2. Sound names must be valid
+# 3. Invulnerability in seconds
+# 4. Coordinates use decimal point
+# 5. World names must exist

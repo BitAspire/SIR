@@ -12,7 +12,6 @@ import me.croabeast.sir.plugin.aspect.SIRAspect;
 import me.croabeast.sir.plugin.SIRPlugin;
 import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.command.SIRCommand;
-import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -42,13 +41,17 @@ public abstract class SIRModule implements SIRAspect, SIRExtension, Registrable 
         button.setDefaultItems();
 
         button.setOnClick(b -> event -> {
-            HookLoadable loadable = !(SIRModule.this instanceof HookLoadable) ?
-                    null : (HookLoadable) SIRModule.this;
+            HookLoadable loadable =
+                    !(SIRModule.this instanceof HookLoadable) ?
+                            null :
+                            (HookLoadable) SIRModule.this;
 
-            if (loadable != null && loadable.isPluginEnabled()) {
+            if (loadable != null && !loadable.isPluginEnabled()) {
+                final String[] plugins = loadable.getSupportedPlugins();
+
                 plugin.getLibrary().getLoadedSender().
                         setLogger(false).
-                        setTargets((Player) event.getView().getPlayer()).
+                        setTargets(event.getView().getPlayer()).
                         send("<P> &7Module can't be enabled since " +
                                 ((Function<String[], String>) strings -> {
                                     final int length = strings.length;
@@ -60,11 +63,12 @@ public abstract class SIRModule implements SIRAspect, SIRExtension, Registrable 
                                         br.append(strings[i]);
 
                                         if (i < length - 1)
-                                            br.append(i == length - 2 ? " or " : ", ");
+                                            br.append(i == length - 2 ?
+                                                    " or " : ", ");
                                     }
 
                                     return br.append(" are").toString();
-                                }).apply(loadable.getSupportedPlugins()) +
+                                }).apply(plugins) +
                                 "n't installed in the server."
                         );
 
@@ -73,18 +77,18 @@ public abstract class SIRModule implements SIRAspect, SIRExtension, Registrable 
                     file.set(path, false);
                     file.save();
                 }
-            }
-            else {
-                file.set(path, b.isEnabled());
-                file.save();
 
-                if (SIRModule.this instanceof Commandable) {
-                    Set<SIRCommand> set = ((Commandable) SIRModule.this).getCommands();
-                    set.forEach(c -> c.getButton().toggleAll());
-                }
-
-                String.valueOf(b.isEnabled() ? register() : unregister());
+                return;
             }
+
+            if (SIRModule.this instanceof Commandable) {
+                Set<SIRCommand> set = ((Commandable) SIRModule.this).getCommands();
+                set.forEach(c -> c.getButton().toggleAll());
+            }
+
+            file.set(path, b.isEnabled());
+            file.save();
+            String.valueOf(b.isEnabled() ? register() : unregister());
 
             String s = "Module '" + getName() + "' active: " + b.isEnabled();
             plugin.getLibrary().getLogger().log(s);
@@ -102,12 +106,12 @@ public abstract class SIRModule implements SIRAspect, SIRExtension, Registrable 
     }
 
     @Override
-    public boolean isRegistered() {
+    public final boolean isRegistered() {
         return isEnabled();
     }
 
     @Override
-    public boolean isEnabled() {
+    public final boolean isEnabled() {
         return button.isEnabled();
     }
 
@@ -123,11 +127,10 @@ public abstract class SIRModule implements SIRAspect, SIRExtension, Registrable 
     @Getter
     public enum Key implements AspectKey {
         ADVANCEMENTS(3, 1,
-                "Handles if custom advancement",
-                "messages and/or rewards should",
-                "be enabled.",
-                "Each advancement can be in a",
-                "different category."
+                "Handles if custom advancement messages",
+                "and/or rewards should be enabled.",
+                "Each advancement can be in a different",
+                "category."
         ),
         ANNOUNCEMENTS(4, 1,
                 "Handles if custom scheduled and",
@@ -185,7 +188,7 @@ public abstract class SIRModule implements SIRAspect, SIRExtension, Registrable 
         DISCORD(Type.HOOK, 3, 3,
                 "Handles if DiscordSRV will work",
                 "with SIR to display join-quit",
-                " messages, chat messages, and more."
+                "messages, chat messages, and more."
         ),
         LOGIN(Type.HOOK, 4, 3,
                 "Handles if any login plugin can",

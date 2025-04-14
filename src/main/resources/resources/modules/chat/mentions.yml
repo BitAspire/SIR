@@ -15,10 +15,10 @@ mentions:
       - '&7Sender: &e{sender}'
       - '<R:1>Click to send a message</R>'
     sound:
-      # Sound that will be play to the sender.
+      # Sound that will be played to the sender.
       # Can be null or empty.
       sender: ''
-      # Sound that will be play to the receiver.
+      # Sound that will be played to the receiver.
       # Can be null or empty.
       receiver: ENTITY_PLAYER_LEVELUP
     messages:

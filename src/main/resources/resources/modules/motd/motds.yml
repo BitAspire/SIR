@@ -1,10 +1,39 @@
+# MOTD (Message of the Day) Configuration
+# Last updated: 2025-04-14 04:39:08 by CroaBeast
+
 motds:
-  # a random number or a custom name
+  # First MOTD Style
   first:
-    # first line
-    1: '<R:1>Check out my server!</R>'
-    # second line
-    2: '&7IP:&e play.my-server.com'
+    1: '<R:1>Check out my server!</R>'     # Rainbow color effect
+    2: '&7IP:&e play.my-server.com'        # Gray and yellow colors
+
+  # Custom Named MOTD Style
   custom-name:
-    1: '               &7A Minecraft Server'
-    2: '              &4Here is another line'
+    1: '               &7A Minecraft Server'      # Centered text
+    2: '              &4Here is another line'     # Centered red text
+
+# MOTD Structure:
+# - Two lines maximum
+# - Line 1 appears above Line 2
+# - Each style can be named anything
+# - Multiple styles supported
+
+# Centering Text:
+# - Use spaces before text
+# - Count includes color codes
+# - Test in-game for accuracy
+# Example:
+# '               text'    # 15 spaces
+
+# Important Notes:
+# 1. Maximum 2 lines per MOTD
+# 2. Color codes use & symbol
+# 3. Test centering in-game
+# 4. Rainbow effects need plugin support
+
+# Best Practices:
+# 1. Keep text concise
+# 2. Test all color combinations
+# 3. Verify centering in-game
+# 4. Use consistent styling
+# 5. Backup working configurations

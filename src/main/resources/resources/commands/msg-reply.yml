@@ -1,19 +1,57 @@
 lang:
+  # Error shown when muted players attempt to send messages
+  # Prevents muted players from bypassing chat restrictions
   is-muted: '<P> &cYou are muted, and not allowed to send private messages.'
+
+  # Error for empty message attempts
+  # Prevents sending blank or whitespace-only messages
   empty-message: '<P> &cYou can not send an empty message.'
+
+  # Error when no target player is specified
+  # Shown when using /msg without a player name
   need-player: '<P> &cYou need a player to use this command.'
+
+  # Error for invalid/offline player targets
+  # {target} shows the invalid player name attempted
   not-player: '<P> &cThe player {target} does not exist.'
+
+  # Error when using /reply without previous conversation
+  # Requires a prior /msg command to work
   not-replied: '<P> &cYou did not send a message to a player before.'
+
+  # Prevention of self-messaging
+  # Stops players from messaging themselves
   not-yourself: '<P> &cYou can not send a message to yourself.'
+
+  # Format for message sender's view
   for-sender:
+    # How the message appears to the sender
+    # {receiver} = recipient's name, {message} = sent text
     message: ' &eME &8> &6{receiver}&7: &f{message}'
-    sound: ENTITY_PLAYER_LEVELUP # Disable the sound setting it like this: ''
+    # Sound played when sending a message
+    # Set to '' to disable the sound
+    sound: ENTITY_PLAYER_LEVELUP
+
+  # Format for message receiver's view
   for-receiver:
+    # How the message appears to the recipient
+    # {sender} = sender's name, {message} = received text
     message: ' &6{sender} &8> &eME&7: &f{message}'
-    sound: ENTITY_PLAYER_LEVELUP # Disable the sound setting it like this: ''
+    # Sound played when receiving a message
+    # Set to '' to disable the sound
+    sound: ENTITY_PLAYER_LEVELUP
+
+  # Console message formatting
   console-formatting:
+    # Display name for console in messages
     name: '&cConsole'
+    # Format for console log entries
+    # {sender}, {receiver}, {message} placeholders
     format: ' &6{sender} &8> &e{receiver}&7: &f{message}'
+
+  # Vanished player messaging settings
   vanish-messages:
+    # Whether to allow messaging vanished players
     enabled: false
+    # Error shown when attempting to message vanished players
     message: '<P> &cYou can not send a message to a vanished player.'

@@ -105,6 +105,7 @@ final class ChatHandler extends ListenerModule implements Commandable {
     @Override
     public boolean register() {
         ChannelUtils.loadDefaults();
+
         UnitMappable.Set<ChatChannel> channels = file.asUnitMap("channels", ChannelUtils::of);
 
         locals = channels.copy().filter(ChatChannel::isLocal);

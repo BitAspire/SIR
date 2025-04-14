@@ -1,78 +1,112 @@
+# Core command configuration for SIR Plugin
 commands:
+  # Main administrative command configuration
   sir:
     permissions:
-      main: sir.admin
+      main: sir.admin  # Main permission node for /sir command
+      # List of available subcommands and their implicit permissions
+      # Each subcommand inherits the main permission
       subcommands:
-        - modules
-        - about
-        - reload
-        - help
-        - commands
-        - support
+        - modules    # Access to module management
+        - about      # View plugin information
+        - reload     # Reload plugin configurations
+        - help       # View help menu
+        - commands   # List available commands
+        - support    # Access support information
+
+  # Raw message broadcasting command
   print:
-    override-existing: true
-    enabled: true
-    aliases: [ rawmsg, rm ]
+    override-existing: true  # Override existing command if present
+    enabled: true           # Enable/disable the command
+    aliases: [ rawmsg, rm ] # Alternative command names
     permissions:
-      main: sir.print
+      main: sir.print      # Base permission for /print
+      # Available message types and their permissions
       subcommands:
-        - targets
-        - chat
-        - action-bar;action_bar
-        - title
-        - webhook
+        - targets          # Send to specific players
+        - chat            # Regular chat messages
+        - action-bar;action_bar  # Action bar messages
+        - title           # Title messages
+        - webhook         # Discord webhook messages
+
+  # Announcement management command
   announcer:
     permissions:
-      main: sir.announcer
+      main: sir.announcer  # Base announcer permission
       subcommands:
-        - preview
-        - help
+        - preview         # Preview announcements
+        - help           # View announcer help
+
+  # Chat channel visibility command
   chatview:
     permissions:
-      main: sir.chatview
-  ignore:
-    override-existing: true
-    enabled: true
-    aliases: [ ig ]
-    permissions:
-      main: sir.ignore
-  clearchat:
-    override-existing: true
-    enabled: true
-    aliases: [ cc ]
-    permissions:
-      main: sir.clearchat
-  msg:
-    override-existing: true
-    enabled: true
-    aliases: [ m, message, tell ]
-    permissions:
-      main: sir.message
-  reply:
-    parent: msg # Do not edit this
-    aliases: [ r ]
-    permissions:
-      main: sir.reply
-  mute:
-    override-existing: true
-    enabled: true
-    permissions:
-      main: sir.mute.perm
-  tempmute:
-    parent: mute # Do not edit this
-    permissions:
-      main: sir.mute.temp
-  unmute:
-    parent: mute # Do not edit this
-    permissions:
-      main: sir.unmute
-  checkmute:
-    parent: mute # Do not edit this
-    permissions:
-      main: sir.checkmute
+      main: sir.chatview  # Permission to toggle channel visibility
 
+  # Player ignore system command
+  ignore:
+    override-existing: true    # Override existing command
+    enabled: true             # Enable/disable functionality
+    aliases: [ ig ]           # Short command alias
+    permissions:
+      main: sir.ignore       # Permission to ignore players
+
+  # Chat clearing command
+  clearchat:
+    override-existing: true    # Override existing clear commands
+    enabled: true             # Enable/disable functionality
+    aliases: [ cc ]           # Short command alias
+    permissions:
+      main: sir.clearchat    # Permission to clear chat
+
+  # Private messaging command
+  msg:
+    override-existing: true    # Override existing message commands
+    enabled: true             # Enable/disable messaging
+    aliases: [ m, message, tell ]  # Alternative command names
+    permissions:
+      main: sir.message      # Permission to send private messages
+
+  # Message reply command
+  reply:
+    parent: msg              # Links to msg command (DO NOT EDIT)
+    aliases: [ r ]           # Short reply alias
+    permissions:
+      main: sir.reply       # Permission to reply to messages
+
+  # Permanent mute command
+  mute:
+    override-existing: true   # Override existing mute commands
+    enabled: true            # Enable/disable mute system
+    permissions:
+      main: sir.mute.perm   # Permission for permanent mutes
+
+  # Temporary mute command
+  tempmute:
+    parent: mute             # Links to mute command (DO NOT EDIT)
+    permissions:
+      main: sir.mute.temp   # Permission for temporary mutes
+
+  # Unmute command
+  unmute:
+    parent: mute             # Links to mute command (DO NOT EDIT)
+    permissions:
+      main: sir.unmute      # Permission to remove mutes
+
+  # Mute status check command
+  checkmute:
+    parent: mute             # Links to mute command (DO NOT EDIT)
+    permissions:
+      main: sir.checkmute   # Permission to check mute status
+
+# Enable/disable automatic updates
 update: true
 
+# Global language configuration
 lang:
+  # No permission message
+  # {perm} shows the missing permission node
   no-permission: '<P> You do not have the permission &c{perm} &7to use this.'
+  
+  # Invalid argument message
+  # {arg} shows the incorrect argument provided
   wrong-arg: '<P> The argument &c{arg} &7is invalid or does not exist.'

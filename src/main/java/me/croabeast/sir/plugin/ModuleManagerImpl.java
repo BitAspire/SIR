@@ -156,23 +156,28 @@ final class ModuleManagerImpl implements ModuleManager {
                 .of(1, 2, false)
                 .setItem(
                         ItemCreator.of(Material.LIME_DYE)
-                                .modifyLore("&f➤ &7En" + message)
-                                .modifyName("&a&lENABLE ALL:")
-                                .create(),
+                                .modifyName("&a&l" +
+                                       SmallCaps.toSmallCaps("ENABLE ALL") +
+                                        ":")
+                                .modifyLore("&f➤ &7En" + message).create(),
                         true
                 )
-                .setItem(ItemCreator.of(Material.RED_DYE)
-                                .modifyLore("&f➤ &7Dis" + message)
-                                .modifyName("&c&lDISABLE ALL:")
-                                .create(),
+                .setItem(
+                        ItemCreator.of(Material.RED_DYE)
+                                .modifyName("&c&l" +
+                                        SmallCaps.toSmallCaps("DISABLE ALL") +
+                                        ":")
+                                .modifyLore("&f➤ &7Dis" + message).create(),
                         false
                 )
                 .modify(b -> b.setPriority(Pane.Priority.LOW))
                 .setAction(b -> event -> {
-                    for (AspectButton button : CollectionBuilder
-                            .of(moduleMap.getModules())
-                            .map(SIRModule::getButton).toList())
+                    for (SIRModule module : moduleMap.getModules())
                     {
+                        if (module instanceof HookLoadable)
+                            continue;
+
+                        AspectButton button = module.getButton();
                         if (b.isEnabled() != button.isEnabled())
                             continue;
 

@@ -1,4 +1,24 @@
 lang:
+  # Help message for the ChatView command
+  # Shown when:
+  # - No arguments are provided
+  # - Invalid arguments are used
+  # - Player lacks permissions
+  # Format explanation:
+  # <local format name> - Name of chat channel to toggle
   help: "<P> &7Correct usage: &b/chat-view &3<local format name>"
+
+  # Visibility toggle confirmation messages
+  # {channel} placeholder shows the affected chat channel name
+
+  # Success message when enabling channel visibility
+  # Displayed when:
+  # - Channel is successfully unhidden
+  # - Player gains access to previously hidden channel
   'true': "<P> &7The messages of the channel &e{channel}&7 are&a visible&7."
+
+  # Success message when disabling channel visibility
+  # Displayed when:
+  # - Channel is successfully hidden
+  # - Player removes access to a visible channel
   'false': "<P> &7The messages of the channel &e{channel}&7 are&c not visible&7."

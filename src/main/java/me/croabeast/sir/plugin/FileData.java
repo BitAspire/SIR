@@ -35,7 +35,7 @@ public class FileData {
                 .toList();
     }
 
-    private static class Counter {
+    private class Counter {
 
         private int loaded = 0;
         private int updated = 0;
@@ -70,7 +70,7 @@ public class FileData {
         return FILE_MAP.get(builder.toString());
     }
 
-    private static class SIRFile extends ConfigurableFile {
+    private class SIRFile extends ConfigurableFile {
 
         SIRFile(String folder, String name) throws IOException {
             super(SIRPlugin.getInstance(), folder, name);
@@ -91,6 +91,7 @@ public class FileData {
 
         if (areFilesLoaded) {
             for (YAMLFile file : FILE_MAP.values()) {
+                file.reload();
                 file.reload();
                 FILES_COUNTER.loaded++;
 
