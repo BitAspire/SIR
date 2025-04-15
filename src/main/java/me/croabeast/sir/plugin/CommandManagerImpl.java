@@ -126,13 +126,15 @@ final class CommandManagerImpl implements CommandManager {
 
     @Override
     public boolean register() {
-        commands.values().forEach(SIRCommand::register);
+        commands.values().forEach(c -> c.register(false));
+        SIRCommand.syncCommands();
         return true;
     }
 
     @Override
     public boolean unregister() {
-        commands.values().forEach(SIRCommand::unregister);
+        commands.values().forEach(c -> c.unregister(false));
+        SIRCommand.syncCommands();
         return true;
     }
 

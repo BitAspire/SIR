@@ -110,11 +110,14 @@ final class UserManagerImpl implements UserManager, Registrable {
 
     void saveData(OfflinePlayer player) {
         BaseUser user = userMap.remove(player.getUniqueId());
+        if (user.dataSaved) return;
+
         user.giveImmunity(0);
 
         user.getIgnoreData().save();
         user.getMuteData().save();
         user.getChatData().save();
+        user.dataSaved = true;
     }
 
     void saveAllData() {
@@ -126,8 +129,9 @@ final class UserManagerImpl implements UserManager, Registrable {
 
         for (OfflinePlayer player : plugin.getServer().getOfflinePlayers()) {
             BaseUser user = userMap.remove(player.getUniqueId());
-            String key = user.getUuid().toString();
+            if (user == null || user.dataSaved) continue;
 
+            String key = user.getUuid().toString();
             user.giveImmunity(0);
 
             try {
@@ -171,6 +175,8 @@ final class UserManagerImpl implements UserManager, Registrable {
         if (ignoreSaves > 0) ignore.save();
         if (muteSaves > 0) mute.save();
         if (chatSaves > 0) chat.save();
+
+        userMap.clear();
     }
 
     @Override
@@ -449,6 +455,7 @@ final class UserManagerImpl implements UserManager, Registrable {
     @Getter
     abstract class BaseUser implements SIRUser {
 
+        private boolean dataSaved = false;
         private final UUID uuid;
 
         private final IgnoreData ignoreData;

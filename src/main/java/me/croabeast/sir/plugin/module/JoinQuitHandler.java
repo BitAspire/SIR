@@ -102,7 +102,9 @@ final class JoinQuitHandler extends ListenerModule {
     @EventHandler
     private void onQuitConnectionEvent(PlayerQuitEvent event) {
         Player player = event.getPlayer();
+
         SIRUser user = plugin.getUserManager().getUser(player);
+        if (!user.isLogged()) return;
 
         user.giveImmunity(0);
         if (!this.isEnabled()) return;
@@ -130,7 +132,7 @@ final class JoinQuitHandler extends ListenerModule {
 
         if (user.isVanished()) return;
 
-        user.setLogged(true);
+        user.setLogged(false);
         unit.performAllActions(user);
 
         if (quitTime > 0) timeMap.put(Time.QUIT, uuid);

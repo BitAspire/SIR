@@ -3,6 +3,7 @@ package me.croabeast.sir.plugin;
 import lombok.AccessLevel;
 import lombok.Getter;
 import me.croabeast.common.CollectionBuilder;
+import me.croabeast.common.util.Exceptions;
 import me.croabeast.file.ResourceUtils;
 import me.croabeast.common.MetricsLoader;
 import me.croabeast.common.util.ServerInfoUtils;
@@ -168,20 +169,18 @@ public final class SIRPlugin extends JavaPlugin {
         MetricsLoader.initialize(this, 25264)
                 .addSimplePie("hasDiscord", HookChecker.DISCORD_ENABLED)
                 .addSimplePie("hasPAPI", HookChecker.PAPI_ENABLED)
+                .addSimplePie("hasInteractive", Exceptions.isPluginEnabled("InteractiveChat"))
                 .addDrillDownPie(
                         "permissionPlugins", "Permission Plugins",
-                        permission != null ? permission.getName() : null,
-                        "None/Other"
+                        permission != null ? permission.getName() : "None/Other"
                 )
                 .addDrillDownPie(
                         "loginPlugins", "Login Plugins",
-                        login != null ? login.getName() : null,
-                        "None/Other"
+                        login != null ? login.getName() : "None/Other"
                 )
                 .addDrillDownPie(
                         "vanishPlugins", "Vanish Plugins",
-                        vanish != null ? vanish.getName() : null,
-                        "None/Other"
+                        vanish != null ? vanish.getName() : "None/Other"
                 );
 
         for (OfflinePlayer o : Bukkit.getOfflinePlayers())
