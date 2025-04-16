@@ -49,6 +49,9 @@ public final class SIRPlugin extends JavaPlugin {
         JAR_PATH = path;
     }
 
+    @Getter(AccessLevel.NONE)
+    final boolean allowTakionMetrics = true;
+
     @Getter
     private static SIRPlugin instance;
     @Getter
