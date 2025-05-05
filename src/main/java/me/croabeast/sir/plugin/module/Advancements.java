@@ -4,7 +4,6 @@ import me.croabeast.common.CollectionBuilder;
 import me.croabeast.advancement.AdvancementInfo;
 import me.croabeast.file.ConfigurableFile;
 import me.croabeast.common.util.ServerInfoUtils;
-import me.croabeast.common.util.TextUtils;
 import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.misc.FileKey;
 import me.croabeast.sir.plugin.misc.DelayLogger;
@@ -12,6 +11,7 @@ import me.croabeast.sir.plugin.misc.SIRUser;
 import me.croabeast.sir.plugin.LangUtils;
 import me.croabeast.sir.plugin.misc.Timer;
 import me.croabeast.common.WorldRule;
+import me.croabeast.takion.format.PlainFormat;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.Bukkit;
@@ -110,7 +110,7 @@ final class Advancements extends ListenerModule {
             Matcher m = Pattern.compile("(?i)^\\[cmd]").matcher(s);
 
             if (m.find()) {
-                cList.add(TextUtils.STRIP_FIRST_SPACES.apply(s.substring(5)));
+                cList.add(PlainFormat.TRIM_START_SPACES.accept(s.substring(5)));
                 continue;
             }
             mList.add(s);

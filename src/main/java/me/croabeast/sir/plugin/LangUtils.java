@@ -2,11 +2,11 @@ package me.croabeast.sir.plugin;
 
 import me.croabeast.common.applier.StringApplier;
 import me.croabeast.file.Configurable;
-import me.croabeast.common.util.TextUtils;
 import me.croabeast.sir.plugin.manager.ModuleManager;
 import me.croabeast.sir.plugin.module.PlayerFormatter;
 import me.croabeast.sir.plugin.module.SIRModule;
 import me.croabeast.takion.TakionLib;
+import me.croabeast.takion.format.PlainFormat;
 import me.croabeast.takion.logger.TakionLogger;
 import me.croabeast.takion.message.MessageSender;
 import org.apache.commons.lang.StringUtils;
@@ -144,7 +144,7 @@ public final class LangUtils extends TakionLib {
 
             StringApplier applier = StringApplier.simplified(c)
                     .apply(s -> getLib().getPlaceholderManager().replace(player, s))
-                    .apply(TextUtils.STRIP_FIRST_SPACES);
+                    .apply(PlainFormat.TRIM_START_SPACES::accept);
 
             if (pm.find() && player != null) {
                 String text = applier.toString().replace(pm.group(), "");

@@ -5,6 +5,7 @@ import com.Zrips.CMI.events.CMIPlayerVanishEvent;
 import de.myzelyam.api.vanish.PlayerVanishStateChangeEvent;
 import lombok.Getter;
 import me.croabeast.common.CollectionBuilder;
+import me.croabeast.common.util.ArrayUtils;
 import me.croabeast.file.Configurable;
 import me.croabeast.common.util.Exceptions;
 import me.croabeast.common.CustomListener;
@@ -72,7 +73,7 @@ final class VanishManager extends ListenerModule implements HookLoadable {
             }.register();
         }
 
-        if (Exceptions.arePluginsEnabled(false, "SuperVanish", "PremiumVanish"))
+        if (Exceptions.anyPluginEnabled(ArrayUtils.toList("SuperVanish", "PremiumVanish")))
             new LoadedListener() {
                 @EventHandler
                 private void onVanish(PlayerVanishStateChangeEvent event) {

@@ -10,11 +10,12 @@ import me.croabeast.common.applier.StringApplier;
 import me.croabeast.file.Configurable;
 import me.croabeast.common.util.ArrayUtils;
 import me.croabeast.common.util.ReplaceUtils;
-import me.croabeast.common.util.TextUtils;
 import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.HookChecker;
 import me.croabeast.sir.plugin.misc.FileKey;
+import me.croabeast.takion.chat.MultiComponent;
+import me.croabeast.takion.format.PlainFormat;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
@@ -276,7 +277,7 @@ final class DiscordHook extends SIRModule implements Actionable, HookLoadable {
                     StringApplier.simplified(string)
                             .apply(s -> ReplaceUtils.replaceEach(keys, values, s))
                             .apply(s -> replacePlaceholders(player, s))
-                            .apply(s -> TextUtils.PARSE_PLACEHOLDER_API.apply(player, s))
+                            .apply(s -> PlainFormat.PLACEHOLDER_API.accept(player, s))
                             .apply(PrismaticAPI::stripAll)
                             .apply(DiscordUtil::translateEmotes).toString();
         }
@@ -289,7 +290,7 @@ final class DiscordHook extends SIRModule implements Actionable, HookLoadable {
 
             List<String> list = ArrayUtils.toList(values);
 
-            list.replaceAll(TextUtils.STRIP_JSON);
+            list.replaceAll(MultiComponent.DEFAULT_FORMAT::removeFormat);
             list.replaceAll(operator);
 
             this.values = list.toArray(new String[0]);

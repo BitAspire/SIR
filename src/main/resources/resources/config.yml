@@ -19,11 +19,6 @@ updater:
 
 # ⚙️ Core Plugin Options
 options:
-  # Language setting for plugin messages
-  # Available options: 'en' (English)
-  # More languages coming soon!
-  lang: en
-
   # Console Output Formatting
   # Controls whether ANSI color codes are used in console output
   # Disable if you experience console formatting issues

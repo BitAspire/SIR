@@ -6,7 +6,6 @@ import me.croabeast.common.CollectionBuilder;
 import me.croabeast.common.applier.StringApplier;
 import me.croabeast.file.Configurable;
 import me.croabeast.common.util.ReplaceUtils;
-import me.croabeast.common.util.TextUtils;
 import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.sir.plugin.misc.ChatChannel;
 import me.croabeast.sir.plugin.aspect.AspectKey;
@@ -14,7 +13,11 @@ import me.croabeast.sir.plugin.SIRPlugin;
 import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.misc.SIRUser;
 import me.croabeast.sir.plugin.manager.UserManager;
-import me.croabeast.takion.message.chat.ChatClick;
+import me.croabeast.takion.chat.ChatComponent;
+import me.croabeast.takion.chat.MultiComponent;
+import me.croabeast.takion.format.Format;
+import me.croabeast.takion.format.PlainFormat;
+import me.croabeast.takion.format.StringFormat;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
@@ -127,7 +130,7 @@ class ChannelUtils {
             Configurable config = FileData.Module.Chat.getMain();
             String logPath = "simple-logger.";
 
-            this.logFormat = TextUtils.STRIP_FIRST_SPACES.apply(
+            this.logFormat = PlainFormat.TRIM_START_SPACES.accept(
                     !config.get(logPath + "enabled", false) ?
                             chatFormat :
                             config.get(logPath + "format", DEF_FORMAT)
@@ -215,15 +218,19 @@ class ChannelUtils {
                     .apply(s -> fromKey(SIRModule.Key.TAGS).format(parser, s))
                     .apply(s -> fromKey(SIRModule.Key.MENTIONS).format(parser, s, this));
 
-            if (chat) applier.apply(SIRPlugin.getLib().getSmallCapsAction()::act);
+            if (chat) applier.apply(s -> {
+                StringFormat f = SIRPlugin.getLib().getFormatManager().get("SMALL_CAPS");
+                return f.accept(s);
+            });
 
-            if (isDefault() && !TextUtils.IS_JSON.test(applier.toString()))
+            Format<ChatComponent<?>> f = MultiComponent.DEFAULT_FORMAT;
+            if (isDefault() && !f.isFormatted(applier.toString()))
                 return applier
                         .apply(s -> SIRPlugin.getLib().colorize(target, parser, s))
                         .apply(plugin.getLibrary().getCharacterManager()::align).toString();
 
             return isChatEventless() ? applier.toString() :
-                    applier.apply(TextUtils.STRIP_JSON).toString();
+                    applier.apply(f::removeFormat).toString();
         }
 
         @Override
@@ -296,11 +303,11 @@ class ChannelUtils {
     @Getter
     class ClickImpl implements ChatChannel.Click {
 
-        private final ChatClick.Action action;
+        private final ChatComponent.Click action;
         private final String input;
 
         private ClickImpl(ConfigurationSection section) {
-            action = ChatClick.Action.from(section.getString("action"));
+            action = ChatComponent.Click.fromName(section.getString("action"));
             input = section.getString("input");
         }
 
@@ -308,7 +315,7 @@ class ChannelUtils {
             String[] array = string
                     .replace("\"", "").split(":", 2);
 
-            action = ChatClick.Action.from(array[0]);
+            action = ChatComponent.Click.fromName(array[0]);
             input = array[1];
         }
 

@@ -199,7 +199,7 @@ public class FileData {
 
         @NotNull
         public ConfigurableFile getFile(String name) {
-            return folderPath("modules", folder, Exceptions.validate(StringUtils::isNotBlank, name));
+            return folderPath("modules", folder, Exceptions.validate(name, StringUtils::isNotBlank));
         }
 
         @NotNull

@@ -8,7 +8,7 @@ import me.croabeast.sir.api.file.PermissibleUnit;
 import me.croabeast.sir.plugin.misc.ChatChannel;
 import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.misc.SIRUser;
-import me.croabeast.takion.message.chat.ChatComponent;
+import me.croabeast.takion.chat.MultiComponent;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -83,7 +83,7 @@ final class MentionFormatter extends SIRModule implements PlayerFormatter<ChatCh
                 String finder = string.substring(start, end);
                 start = matcher.end();
 
-                String color = PrismaticAPI.getLastColor(finder);
+                String color = PrismaticAPI.getEndColor(finder);
                 String[] values =
                         {prefix, player.getName(), user.getName()};
 
@@ -114,10 +114,12 @@ final class MentionFormatter extends SIRModule implements PlayerFormatter<ChatCh
 
                 String result = op.apply(mention.value);
 
-                ChatComponent b = ChatComponent.create(plugin.getLibrary(), result)
-                        .setHover(hover).setClick(click);
+                result = MultiComponent.fromString(plugin.getLibrary(), result)
+                        .setHover(hover)
+                        .setClick(click)
+                        .toFormattedString();
 
-                String replace = b.toPatternString();
+                String replace = plugin.getLibrary().colorize(player, result);
                 if (color != null) replace += color;
 
                 string = string.replace(matcher.group(), replace);

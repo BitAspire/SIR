@@ -8,7 +8,6 @@ import me.croabeast.file.ConfigurableFile;
 import me.croabeast.file.ConfigurableUnit;
 import me.croabeast.file.UnitMappable;
 import me.croabeast.common.util.ReplaceUtils;
-import me.croabeast.common.util.TextUtils;
 import me.croabeast.sir.plugin.Commandable;
 import me.croabeast.sir.plugin.command.SIRCommand;
 import me.croabeast.sir.plugin.misc.ChatChannel;
@@ -18,8 +17,7 @@ import me.croabeast.sir.plugin.misc.SIRUser;
 import me.croabeast.sir.plugin.LangUtils;
 import me.croabeast.takion.TakionLib;
 import me.croabeast.takion.channel.Channel;
-import me.croabeast.takion.message.chat.ChatClick;
-import me.croabeast.takion.message.chat.ChatComponent;
+import me.croabeast.takion.chat.MultiComponent;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -205,7 +203,7 @@ final class ChatHandler extends ListenerModule implements Commandable {
         String output = channel.formatString(user.getPlayer(), message, true);
 
         if (file.get("default-format", false)) {
-            event.setFormat(TextUtils.STRIP_JSON.apply(output).replace("%", "%%"));
+            event.setFormat(MultiComponent.DEFAULT_FORMAT.removeFormat(output).replace("%", "%%"));
             return;
         }
 
@@ -272,14 +270,14 @@ final class ChatHandler extends ListenerModule implements Commandable {
         for (final SIRUser user : users) {
             Player p = user.getPlayer();
             String temp = channel.formatString(p, player, message, true);
+            temp = chat.formatString(p, player, temp);
 
-            ChatComponent component = ChatComponent.create(lib, temp);
-
-            if (click != null)
-                component.setClickToAll(new ChatClick(lib, click.getAction(), input));
+            MultiComponent component = MultiComponent.fromString(lib, temp);
             if (hover != null) component.setHoverToAll(hover);
+            if (click != null)
+                component.setClickToAll(click.getAction(), input);
 
-            chat.send(p, player, component.toPatternString());
+            p.spigot().sendMessage(component.compile(player));
         }
     }
 

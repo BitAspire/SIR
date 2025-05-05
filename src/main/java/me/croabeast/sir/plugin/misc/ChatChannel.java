@@ -2,7 +2,7 @@ package me.croabeast.sir.plugin.misc;
 
 import me.croabeast.common.CollectionBuilder;
 import me.croabeast.sir.api.file.PermissibleUnit;
-import me.croabeast.takion.message.chat.ChatClick;
+import me.croabeast.takion.chat.ChatComponent;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -136,7 +136,7 @@ public interface ChatChannel extends PermissibleUnit {
     interface Click {
 
         @NotNull
-        ChatClick.Action getAction();
+        ChatComponent.Click getAction();
 
         @Nullable
         String getInput();

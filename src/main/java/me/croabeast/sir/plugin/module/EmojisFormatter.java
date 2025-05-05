@@ -82,7 +82,7 @@ final class EmojisFormatter extends SIRModule implements PlayerFormatter<Object>
         }
 
         String convertValue(String line) {
-            return (value == null ? "" : value) + PrismaticAPI.getLastColor(line);
+            return (value == null ? "" : value) + PrismaticAPI.getEndColor(line);
         }
 
         Matcher getMatcher(String line, boolean add) {

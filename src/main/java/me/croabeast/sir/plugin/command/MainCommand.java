@@ -90,9 +90,7 @@ final class MainCommand extends SIRCommand {
 
     @Override
     protected boolean execute(CommandSender sender, String[] args) {
-        return Objects.requireNonNull(getSubCommand("help"))
-                .getExecutable()
-                .executeAction(sender, args).asBoolean();
+        return Objects.requireNonNull(getSubCommand("help")).getPredicate().test(sender, args);
     }
 
     @NotNull

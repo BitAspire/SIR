@@ -70,7 +70,7 @@ public abstract class SIRCommand extends BukkitCommand {
             Objects.requireNonNull(s);
 
             permission = s.getString("permissions.main", "");
-            Exceptions.validate(StringUtils::isNotBlank, permission);
+            Exceptions.validate(permission, StringUtils::isNotBlank);
 
             parent = s.getString("parent");
 
@@ -275,8 +275,8 @@ public abstract class SIRCommand extends BukkitCommand {
     protected abstract boolean execute(CommandSender sender, String[] args);
 
     @NotNull
-    public final Executable getExecutable() {
-        return (sender, args) -> execute(sender, args) ? Executable.State.TRUE : Executable.State.FALSE;
+    public final CommandPredicate getPredicate() {
+        return this::execute;
     }
 
     public abstract TabBuilder getCompletionBuilder();
@@ -340,20 +340,30 @@ public abstract class SIRCommand extends BukkitCommand {
         final BaseCommand subCommand = getSubCommand(name);
         if (subCommand == null) return false;
 
-        ((SubCommand) subCommand).setExecutable(Executable.from(predicate));
+        ((SubCommand) subCommand).setPredicate(predicate);
         return true;
     }
 
     @Override
-    public final boolean register() {
+    public final boolean register(boolean sync) {
         loadOptionsFromFile();
-        return super.register();
+        return super.register(sync);
     }
 
     @Override
-    public final boolean unregister() {
+    public final boolean unregister(boolean sync) {
         loadOptionsFromFile();
-        return super.unregister();
+        return super.unregister(sync);
+    }
+
+    @Override
+    public final boolean register() {
+        return register(true);
+    }
+
+    @Override
+    public boolean unregister() {
+        return unregister(true);
     }
 
     @Override

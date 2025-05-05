@@ -4,12 +4,12 @@ import lombok.Getter;
 import me.croabeast.common.CollectionBuilder;
 import me.croabeast.common.CustomListener;
 import me.croabeast.common.Registrable;
-import me.croabeast.common.util.TextUtils;
 import me.croabeast.file.Configurable;
 import me.croabeast.file.ConfigurableFile;
 import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.LangUtils;
 import me.croabeast.sir.plugin.manager.UserManager;
+import me.croabeast.takion.chat.ChatComponent;
 import me.croabeast.takion.message.MessageSender;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
@@ -157,7 +157,7 @@ final class ModeratorHandler extends ListenerModule {
                 List<String> links = file.toStringList(path + "allowed-links");
                 boolean foundAny = false;
 
-                Matcher matcher = TextUtils.URL_PATTERN.matcher(message);
+                Matcher matcher = ChatComponent.URL_PATTERN.matcher(message);
                 List<String> restrictedLinks = new ArrayList<>();
 
                 while (matcher.find()) {
