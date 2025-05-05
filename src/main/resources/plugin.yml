@@ -44,7 +44,7 @@ permissions:
       sir.admin.modules: true
       sir.admin.help: true
       sir.admin.reload: true
-      sir.admin.updater: true
+      sir.admin.update: true
 
   sir.print.*:
     default: op
@@ -71,7 +71,7 @@ permissions:
     default: op
   sir.admin.reload:
     default: op
-  sir.admin.updater:
+  sir.admin.update:
     default: op
 
   sir.print.targets:

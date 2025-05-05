@@ -6,7 +6,7 @@
 
     <groupId>me.croabeast</groupId>
     <artifactId>SIR</artifactId>
-    <version>1.0-RC.1</version>
+    <version>1.0</version>
     <packaging>jar</packaging>
 
     <name>SIR</name> <!--Simple In-game Receptionist-->

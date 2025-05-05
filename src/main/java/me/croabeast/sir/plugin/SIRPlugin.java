@@ -3,6 +3,11 @@ package me.croabeast.sir.plugin;
 import lombok.AccessLevel;
 import lombok.Getter;
 import me.croabeast.common.CollectionBuilder;
+import me.croabeast.common.CustomListener;
+import me.croabeast.common.updater.Platform;
+import me.croabeast.common.updater.UpdateChecker;
+import me.croabeast.common.updater.UpdateResult;
+import me.croabeast.common.updater.VersionScheme;
 import me.croabeast.common.util.Exceptions;
 import me.croabeast.file.ResourceUtils;
 import me.croabeast.common.MetricsLoader;
@@ -14,12 +19,18 @@ import me.croabeast.sir.plugin.misc.Timer;
 import me.croabeast.sir.plugin.module.*;
 import me.croabeast.takion.TakionLib;
 import me.croabeast.takion.VaultHolder;
+import me.croabeast.takion.character.SmallCaps;
 import me.croabeast.takion.message.AnimatedBossbar;
+import org.apache.commons.lang.math.NumberUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -27,9 +38,12 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.net.URLDecoder;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.jar.JarFile;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 
 @Getter
@@ -197,6 +211,104 @@ public final class SIRPlugin extends JavaPlugin {
                 "- Loading time: " + initializer.result() + " ms",
                 "==================================="
         ).sendLines();
+
+        startUpdaterChecks();
+    }
+
+    interface UpdateDisplay {
+        void display(String... strings);
+    }
+
+    static final VersionScheme SIR_SCHEME = new VersionScheme() {
+
+        String[] splitVersionInfo(String version) {
+            Matcher matcher = Pattern.compile("\\d+(?:\\.\\d+)*").matcher(version);
+            return matcher.find() ? matcher.group().split("[.]") : new String[] {"0"};
+        }
+
+        @Override
+        public String compare(@NotNull String first, @NotNull String second) {
+            String[] firstSplit = splitVersionInfo(first);
+            String[] secondSplit = splitVersionInfo(second);
+
+            for (int i = 0; i < Math.min(firstSplit.length, secondSplit.length); i++) {
+                int currentValue = NumberUtils.toInt(firstSplit[i]),
+                        newestValue = NumberUtils.toInt(secondSplit[i]);
+
+                if (newestValue > currentValue) return second;
+                else if (newestValue < currentValue) return first;
+            }
+
+            return (secondSplit.length > firstSplit.length) ? second : first;
+        }
+    };
+
+    void startUpdaterChecks() {
+        final UpdateChecker updater = UpdateChecker.of(this, SIR_SCHEME);
+
+        BiConsumer<Player, UpdateResult> consumer = (player, result) -> {
+            String latest = result.getLatest(), current = result.getLocal();
+            String prefix = SmallCaps.toSmallCaps("[updater]");
+
+            UpdateDisplay display = player == null ? lib.getLogger()::log :
+                    strings -> {
+                        if (UserManager.hasPerm(player, "sir.admin.update"))
+                            lib.getLoadedSender()
+                                    .setTargets(player).setLogger(false).send(strings);
+                    };
+
+            switch (result.getReason()) {
+                case NEW_UPDATE:
+                    display.display(
+                            prefix + " &8» &eUpdate Available!",
+                            prefix + " &7A new version of SIR was found, please download it.",
+                            prefix + " &7Remember, old versions won't receive any support.",
+                            prefix + " &7New version:" +
+                                    " &6" + latest + "&7, Current version: " + current,
+                            prefix + " &7Link:&b https://www.spigotmc.org/resources/96378/"
+                    );
+                    break;
+                case UP_TO_DATE:
+                    break;
+                case UNRELEASED_VERSION:
+                    display.display(
+                            prefix + " &8» &aDevelopment build found!",
+                            prefix + " &7This version of SIR seems to be on development.",
+                            prefix + " &7Errors, bugs and/or inconsistencies might occur.",
+                            prefix + " &7Current version:" +
+                                    " &6" + current + "&7, Latest version: " + latest
+                    );
+                    break;
+                default:
+                    final Throwable throwable = result.getThrowable();
+                    display.display(
+                            prefix + " &7Not able to verify any checks for updates from Takion.",
+                            prefix + " &7Reason: &c" + result.getReason()
+                    );
+                    if (throwable != null) throwable.printStackTrace();
+                    break;
+            }
+        };
+        getServer().getScheduler().scheduleSyncDelayedTask(this, () -> {
+            if (FileData.Main.CONFIG.getFile().get("updater.on-start", true))
+                updater.requestCheck(96378, Platform.SPIGOT)
+                        .whenComplete((result, e) -> consumer.accept(null, result));
+        }, 5);
+
+        new CustomListener() {
+            @Getter
+            private final Status status = new Status();
+
+            @EventHandler(priority = EventPriority.HIGHEST)
+            private void onJoin(PlayerJoinEvent event) {
+                if (!FileData.Main.CONFIG.getFile().get("updater.send-op", true))
+                    return;
+
+                updater.requestCheck(96378, Platform.SPIGOT)
+                        .whenComplete((r, e) ->
+                                consumer.accept(event.getPlayer(), r));
+            }
+        }.register(this);
     }
 
     @Override
