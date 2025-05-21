@@ -13,7 +13,8 @@ import me.croabeast.sir.plugin.command.SIRCommand;
 import me.croabeast.sir.plugin.misc.ChatChannel;
 import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.misc.FileKey;
-import me.croabeast.sir.plugin.misc.SIRUser;
+import me.croabeast.sir.plugin.user.ChannelData;
+import me.croabeast.sir.plugin.user.SIRUser;
 import me.croabeast.sir.plugin.LangUtils;
 import me.croabeast.takion.TakionLib;
 import me.croabeast.takion.channel.Channel;
@@ -71,7 +72,8 @@ final class ChatHandler extends ListenerModule implements Commandable {
                 if (args.length != 1)
                     return isWrongArgument(sender, args[args.length - 1]);
 
-                final SIRUser user = plugin.getUserManager().getUser(sender);
+                SIRUser user = plugin.getUserManager().getUser(sender);
+                if (user == null) return createSender(sender).send("help");
 
                 String key = null;
                 for (String k : keys(user))
@@ -82,10 +84,11 @@ final class ChatHandler extends ListenerModule implements Commandable {
 
                 if (key == null) return isWrongArgument(sender, args[0]);
 
-                plugin.getUserManager().toggleLocalChannelView(user, key);
+                ChannelData data = user.getChannelData();
+                data.toggle(key);
 
                 return createSender(sender).addPlaceholder("{channel}", key)
-                        .send((user.isLocalChannelToggled(key)) + "");
+                        .send((data.isToggled(key)) + "");
             }
 
             @Override
@@ -115,7 +118,7 @@ final class ChatHandler extends ListenerModule implements Commandable {
     ChatChannel localFromPrefix(SIRUser user, String message) {
         for (Set<ChatChannel> set : locals.values())
             for (ChatChannel channel : set)
-                if (user.hasPerm(channel.getPermission()) &&
+                if (user.hasPermission(channel.getPermission()) &&
                         channel.isAccessibleByPrefix(message))
                     return channel;
 
@@ -125,7 +128,7 @@ final class ChatHandler extends ListenerModule implements Commandable {
     ChatChannel localFromCommand(SIRUser user, String command) {
         for (Set<ChatChannel> set : locals.values())
             for (ChatChannel channel : set)
-                if (user.hasPerm(channel.getPermission()) &&
+                if (user.hasPermission(channel.getPermission()) &&
                         channel.isAccessibleByCommand(command))
                     return channel;
 
@@ -135,7 +138,7 @@ final class ChatHandler extends ListenerModule implements Commandable {
     ChatChannel getGlobal(SIRUser user) {
         for (Set<ChatChannel> set : globals.values()) {
             for (ChatChannel channel : set) {
-                if (user.hasPerm(channel.getPermission()))
+                if (user.hasPermission(channel.getPermission()))
                     return channel;
             }
         }
@@ -159,7 +162,7 @@ final class ChatHandler extends ListenerModule implements Commandable {
         if (event.isCancelled() || !isEnabled()) return;
 
         SIRUser user = plugin.getUserManager().getUser(event.getPlayer());
-        if (user.isMuted() || !user.isLogged()) {
+        if (user.getMuteData().isMuted() || !user.isLogged()) {
             event.setCancelled(true);
             return;
         }
@@ -246,7 +249,7 @@ final class ChatHandler extends ListenerModule implements Commandable {
 
             Actionable act = plugin.getModuleManager().getActionable(Key.DISCORD);
             if (act != null)
-                act.act(name, player, keys, channel.getChatValues(m));
+                act.accept(name, player, keys, channel.getChatValues(m));
         }
 
         lib.getLogger().log(channel.formatString(player, message, false));

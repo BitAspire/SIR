@@ -10,7 +10,7 @@ import me.croabeast.sir.plugin.Commandable;
 import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.command.SIRCommand;
 import me.croabeast.sir.plugin.misc.FileKey;
-import me.croabeast.sir.plugin.misc.SIRUser;
+import me.croabeast.sir.plugin.user.SIRUser;
 import me.croabeast.sir.plugin.LangUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -52,7 +52,7 @@ final class Announcements extends SIRModule implements Actionable, Commandable {
                     }
 
                     if (args.length == 1) {
-                        act(args[0]);
+                        accept(args[0]);
                         return true;
                     }
                     return createSender(sender).send("select");
@@ -103,7 +103,7 @@ final class Announcements extends SIRModule implements Actionable, Commandable {
                 continue;
 
             SIRUser user = plugin.getUserManager().getUser(p);
-            if (!user.isVanished() && user.hasPerm(perm))
+            if (!user.isVanished() && user.hasPermission(perm))
                 users.add(user);
         }
 
@@ -169,7 +169,7 @@ final class Announcements extends SIRModule implements Actionable, Commandable {
     }
 
     @Override
-    public void act(Object... objects) {
+    public void accept(Object... objects) {
         if (Actionable.failsCheck(objects, String.class))
             return;
 

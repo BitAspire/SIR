@@ -4,15 +4,17 @@ import com.Zrips.CMI.Containers.CMIUser;
 import com.earth2me.essentials.Essentials;
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import me.croabeast.common.CollectionBuilder;
-import me.croabeast.common.Registrable;
-import me.croabeast.file.ConfigurableFile;
-import me.croabeast.common.util.Exceptions;
 import me.croabeast.common.CustomListener;
+import me.croabeast.common.Registrable;
+import me.croabeast.common.util.Exceptions;
+import me.croabeast.file.ConfigurableFile;
 import me.croabeast.sir.plugin.manager.UserManager;
+import me.croabeast.sir.plugin.user.SIRUser;
 import me.croabeast.sir.plugin.module.SIRModule;
-import me.croabeast.sir.plugin.misc.SIRUser;
+import me.croabeast.sir.plugin.user.*;
 import me.leoko.advancedban.manager.PunishmentManager;
 import me.leoko.advancedban.manager.UUIDManager;
 import org.apache.commons.lang.StringUtils;
@@ -37,6 +39,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.regex.Pattern;
 
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 final class UserManagerImpl implements UserManager, Registrable {
 
     private final Map<UUID, BaseUser> userMap = new HashMap<>();
@@ -58,13 +61,13 @@ final class UserManagerImpl implements UserManager, Registrable {
 
             @EventHandler(priority = EventPriority.HIGHEST)
             void onQuit(PlayerQuitEvent event) {
-                saveData(event.getPlayer());
+                BaseUser user = userMap.remove(event.getPlayer().getUniqueId());
+                if (user == null) return;
+
+                user.getImmuneData().giveImmunity(0);
+                user.save(true);
             }
         };
-    }
-
-    BaseUser asBase(SIRUser user) {
-        return (BaseUser) user;
     }
 
     @Override
@@ -86,11 +89,7 @@ final class UserManagerImpl implements UserManager, Registrable {
         BaseUser user = new OfflineUser(offline);
 
         userMap.put(user.getUuid(), user);
-        user = userMap.get(user.getUuid());
-
-        user.getIgnoreData().load();
-        user.getMuteData().load();
-        user.getChatData().load();
+        userMap.get(user.getUuid()).load();
     }
 
     void loadData(Player player) {
@@ -103,80 +102,26 @@ final class UserManagerImpl implements UserManager, Registrable {
             user = userMap.get(uuid);
         }
 
-        user.getIgnoreData().load();
-        user.getMuteData().load();
-        user.getChatData().load();
-    }
-
-    void saveData(OfflinePlayer player) {
-        BaseUser user = userMap.remove(player.getUniqueId());
-        if (user.dataSaved) return;
-
-        user.giveImmunity(0);
-
-        user.getIgnoreData().save();
-        user.getMuteData().save();
-        user.getChatData().save();
-        user.dataSaved = true;
+        user.load();
     }
 
     void saveAllData() {
-        ConfigurableFile ignore = FileData.Command.Multi.IGNORE.getFile(false);
-        ConfigurableFile mute = FileData.Command.Multi.MUTE.getFile(false);
-        ConfigurableFile chat = FileData.Command.Multi.CHAT_VIEW.getFile(false);
+        Set<ConfigurableFile> files = new HashSet<>();
 
-        int ignoreSaves = 0, muteSaves = 0, chatSaves = 0;
+        for (OfflinePlayer o : plugin.getServer().getOfflinePlayers()) {
+            BaseUser user = userMap.remove(o.getUniqueId());
+            if (user == null) continue;
 
-        for (OfflinePlayer player : plugin.getServer().getOfflinePlayers()) {
-            BaseUser user = userMap.remove(player.getUniqueId());
-            if (user == null || user.dataSaved) continue;
+            user.getImmuneData().giveImmunity(0);
+            user.save(false);
 
-            String key = user.getUuid().toString();
-            user.giveImmunity(0);
-
-            try {
-                chat.set(key, new ArrayList<>(user.chatData.disabled));
-                chatSaves++;
-            } catch (Exception ignored) {}
-
-            try {
-                ignore.set(key + ".chat", user.ignoreData.getIgnored(true));
-                ignore.set(key + ".msg", user.ignoreData.getIgnored(false));
-
-                ignore.set(key + ".ignoreAllChat", user.ignoreData.chatAll);
-                ignore.set(key + ".ignoreAllMsg", user.ignoreData.msgAll);
-
-                ignoreSaves++;
+            for (BaseData data : user.map.map.values()) {
+                ConfigurableFile file = data.file;
+                if (file != null) files.add(file);
             }
-            catch (Exception ignored) {}
-
-            if (user.muteData.taskId != -1) {
-                plugin.getServer().getScheduler().cancelTask(user.muteData.taskId);
-                user.muteData.taskId = -1;
-            }
-
-            try {
-                if (!user.muteData.muted) {
-                    if (mute.contains(key)) {
-                        mute.set(key, null);
-                        muteSaves++;
-                    }
-                } else {
-                    mute.set(key + ".muted", true);
-                    mute.set(key + ".remaining", (user.muteData.expiresAt > 0) ?
-                            user.muteData.expiresAt - System.currentTimeMillis() : -1);
-                    mute.set(key + ".expiresAt", user.muteData.expiresAt);
-                    muteSaves++;
-                }
-            }
-            catch (Exception ignored) {}
         }
 
-        if (ignoreSaves > 0) ignore.save();
-        if (muteSaves > 0) mute.save();
-        if (chatSaves > 0) chat.save();
-
-        userMap.clear();
+        files.forEach(ConfigurableFile::save);
     }
 
     @Override
@@ -206,22 +151,6 @@ final class UserManagerImpl implements UserManager, Registrable {
     }
 
     @Override
-    public void mute(SIRUser user, int seconds, String admin, String reason) {
-        if (user != null)
-            asBase(user).getMuteData().mute(seconds, admin, reason);
-    }
-
-    @Override
-    public void unmute(SIRUser user) {
-        if (user != null) asBase(user).getMuteData().unmute();
-    }
-
-    @Override
-    public void toggleLocalChannelView(SIRUser user, String channel) {
-        asBase(user).getChatData().toggleView(channel);
-    }
-
-    @Override
     public Set<SIRUser> getOfflineUsers() {
         return Collections.unmodifiableSet(new HashSet<>(userMap.values()));
     }
@@ -235,144 +164,190 @@ final class UserManagerImpl implements UserManager, Registrable {
                         .toSet());
     }
 
-    static class IgnoreData {
+    final static class DataMap {
 
-        private final String uuidKey;
+        final Map<String, BaseData> map = new HashMap<>();
 
-        final Set<UUID> chatIgnored = new HashSet<>();
-        final Set<UUID> msgIgnored = new HashSet<>();
+        @SuppressWarnings("unchecked")
+        <D extends BaseData> D get(String name) {
+            return (D) map.get(name);
+        }
+    }
 
-        boolean msgAll = false;
-        boolean chatAll = false;
+    @RequiredArgsConstructor
+    abstract static class BaseData {
 
-        private final ConfigurableFile file;
+        final ConfigurableFile file;
+        final String uuid;
 
-        IgnoreData(UUID uuid) {
-            file = FileData.Command.Multi.IGNORE.getFile(false);
-            uuidKey = uuid.toString();
+        abstract void load();
+
+        abstract void save(boolean save);
+    }
+
+    static class UuidSet {
+
+        final Set<UUID> set = new HashSet<>();
+
+        void setAll(Collection<String> collection) {
+            if (collection == null) return;
+
+            set.clear();
+            set.addAll(CollectionBuilder.of(collection).map(UUID::fromString).toSet());
         }
 
-        List<String> getIgnored(boolean isChat) {
-            final Set<UUID> set = isChat ? chatIgnored : msgIgnored;
+        List<String> asStrings() {
             return CollectionBuilder.of(set).map(UUID::toString).toList();
-        }
-
-        Set<UUID> setFromData(List<String> list) {
-            return CollectionBuilder.of(list).map(UUID::fromString).collect(HashSet::new);
-        }
-
-        void load() {
-            msgIgnored.clear();
-            chatIgnored.clear();
-
-            msgIgnored.addAll(setFromData(file.toStringList(uuidKey + ".msg")));
-            chatIgnored.addAll(setFromData(file.toStringList(uuidKey + ".chat")));
-
-            msgAll = file.get(uuidKey + "ignoreAllMsg", false);
-            chatAll = file.get(uuidKey + "ignoreAllChat", false);
-        }
-
-        void save() {
-            file.set(uuidKey + ".chat", getIgnored(true));
-            file.set(uuidKey + ".msg", getIgnored(false));
-
-            file.set(uuidKey + ".ignoreAllChat", chatAll);
-            file.set(uuidKey + ".ignoreAllMsg", msgAll);
-
-            file.save();
         }
 
         @Override
         public String toString() {
-            return "IgnoreData{uuid='" + uuidKey + "', chatIgnored=" + chatIgnored +
-                    ", msgIgnored=" + msgIgnored +
-                    ", chatAll=" + chatAll + ", msgAll=" + msgAll + '}';
+            return set.toString();
         }
     }
 
-    class MuteData {
+    final class IgnoreImpl extends BaseData implements IgnoreData {
 
-        private final String uuidKey;
+        final UuidSet chatSet = new UuidSet(), msgSet = new UuidSet();
+        boolean chatAll = false, msgAll = false;
+
+        IgnoreImpl(UUID uuid) {
+            super(FileData.Command.Multi.IGNORE.getFile(false), uuid.toString());
+        }
+
+        @Override
+        public boolean isIgnoring(SIRUser player, boolean chat) {
+            return (chat ? chatSet : msgSet).set.contains(player.getUuid());
+        }
+
+        @Override
+        public boolean isIgnoring(Player player, boolean chat) {
+            return isIgnoring(getUser(player), chat);
+        }
+
+        @Override
+        public boolean isIgnoringAll(boolean chat) {
+            return chat ? chatAll : msgAll;
+        }
+
+        @Override
+        public void ignore(SIRUser user, boolean chat) {
+            if (user != null)
+                (chat ? chatSet : msgSet).set.add(user.getUuid());
+        }
+
+        @Override
+        public void ignore(Player player, boolean chat) {
+            if (player != null)
+                ignore(getUser(player), chat);
+        }
+
+        @Override
+        public void ignoreAll(boolean chat) {
+            if (chat) {
+                chatAll = true;
+                return;
+            }
+
+            msgAll = true;
+        }
+
+        @Override
+        public void unignore(SIRUser user, boolean chat) {
+            if (user != null)
+                (chat ? chatSet : msgSet).set.remove(user.getUuid());
+        }
+
+        @Override
+        public void unignore(Player player, boolean chat) {
+            if (player != null)
+                unignore(getUser(player), chat);
+        }
+
+        @Override
+        public void unignoreAll(boolean chat) {
+            if (chat) {
+                chatAll = false;
+                return;
+            }
+
+            msgAll = false;
+        }
+
+        @Override
+        void load() {
+            chatSet.setAll(file.toStringList(uuid + ".chat.single"));
+            msgSet.setAll(file.toStringList(uuid + ".msg.single"));
+            chatAll = file.get(uuid + ".chat.all", false);
+            msgAll = file.get(uuid + ".msg.all", false);
+        }
+
+        @Override
+        void save(boolean save) {
+            file.set(uuid + ".chat.single", chatSet.asStrings());
+            file.set(uuid + ".msg.single", msgSet.asStrings());
+            file.set(uuid + ".chat.all", chatAll);
+            file.set(uuid + ".msg.all", msgAll);
+
+            if (save) file.save();
+        }
+    }
+
+    final class MuteImpl extends BaseData implements MuteData {
+
+        private final SIRUser user;
 
         private int taskId = -1;
         private long remaining = 0, expiresAt = 0;
 
         private boolean muted = false;
-        private String admin, reason;
+        @Getter
+        private String muteBy, reason;
 
-        private final ConfigurableFile file;
+        MuteImpl(SIRUser user) {
+            super(FileData.Command.Multi.MUTE.getFile(false), user.getUuid().toString());
+            this.user = user;
 
-        MuteData(UUID uuid) {
-            file = FileData.Command.Multi.MUTE.getFile(true);
-            uuidKey = uuid.toString();
-
-            admin = file.get("default.admin", "Unknown");
+            muteBy = file.get("default.admin", "Unknown");
             reason = file.get("default.mute-reason", "Not following server rules.");
         }
 
-        void load() {
-            muted = file.get(uuidKey + ".muted", false);
-            expiresAt = file.get(uuidKey + ".expiresAt", -1L);
-            remaining = file.get(uuidKey + ".remaining", -1L);
+        @Override
+        public boolean isMuted() {
+            if (FileData.Main.CONFIG.getFile().get("options.check-mute", false)
+                    && plugin.getCommandManager().isEnabled("mute"))
+                return muted;
 
-            admin = file.get(uuidKey + ".admin", admin);
-            reason = file.get(uuidKey + ".reason", reason);
-
-            if (!muted) return;
-
-            if (expiresAt == -1) {
-                remaining = -1;
-            } else if (System.currentTimeMillis() > expiresAt) {
-                muted = false;
-                remaining = 0;
-            } else {
-                remaining = expiresAt - System.currentTimeMillis();
-                scheduleUnmute(remaining);
+            if (Exceptions.isPluginEnabled("Essentials")) {
+                Essentials e = JavaPlugin.getPlugin(Essentials.class);
+                return e.getUser(user.getPlayer()).isMuted();
             }
+
+            if (Exceptions.isPluginEnabled("AdvancedBan")) {
+                final String id = UUIDManager.get().getUUID(user.getName());
+                return PunishmentManager.get().isMuted(id);
+            }
+
+            return Exceptions.isPluginEnabled("CMI") &&
+                    CMIUser.getUser(user.getPlayer()).isMuted();
         }
 
-        void save() {
-            if (taskId != -1) {
-                plugin.getServer().getScheduler().cancelTask(taskId);
-                taskId = -1;
-            }
-
-            boolean saved = false;
-
-            if (!muted) {
-                if (file.contains(uuidKey)) {
-                    file.set(uuidKey, null);
-                    saved = true;
-                }
-            } else {
-                file.set(uuidKey + ".muted", true);
-                file.set(uuidKey + ".remaining",
-                        (expiresAt > 0) ? expiresAt - System.currentTimeMillis() : -1);
-
-                file.set(uuidKey + ".expiresAt", expiresAt);
-                file.set(uuidKey + ".admin", admin);
-                file.set(uuidKey + ".reason", reason);
-                saved = true;
-            }
-
-            if (saved) file.save();
-        }
-
-        void mute(int seconds, String admin, String reason) {
-            if (seconds == 0) {
+        @Override
+        public void mute(long time, String reason, String by) {
+            if (time == 0) {
                 unmute();
                 return;
             }
 
-            if (StringUtils.isNotBlank(admin))
-                this.admin = admin;
+            if (StringUtils.isNotBlank(by) && !by.equals(muteBy))
+                this.muteBy = by;
 
-            if (StringUtils.isNotBlank(reason))
+            if (StringUtils.isNotBlank(reason) && !reason.equals(this.reason))
                 this.reason = reason;
 
-            if (seconds > 0) {
+            if (time > 0) {
                 muted = true;
-                remaining = seconds * 1000L;
+                remaining = time * 1000L;
 
                 if (expiresAt < 1)
                     expiresAt = System.currentTimeMillis() + remaining;
@@ -386,7 +361,13 @@ final class UserManagerImpl implements UserManager, Registrable {
             expiresAt = -1;
         }
 
-        void unmute() {
+        @Override
+        public void mute(long time) {
+            mute(time, reason, muteBy);
+        }
+
+        @Override
+        public void unmute() {
             if (taskId != -1) {
                 plugin.getServer().getScheduler().cancelTask(taskId);
                 taskId = -1;
@@ -394,6 +375,11 @@ final class UserManagerImpl implements UserManager, Registrable {
 
             muted = false;
             remaining = 0;
+        }
+
+        @Override
+        public long getRemaining() {
+            return (expiresAt - System.currentTimeMillis()) / 1000;
         }
 
         void scheduleUnmute(long remaining) {
@@ -410,71 +396,170 @@ final class UserManagerImpl implements UserManager, Registrable {
                 expiresAt = -1;
             }, remaining / 50L).getTaskId();
         }
-    }
 
-    static class ChatViewData {
+        @Override
+        void load() {
+            muted = file.get(uuid + ".muted", false);
+            expiresAt = file.get(uuid + ".expiresAt", -1L);
+            remaining = file.get(uuid + ".remaining", -1L);
 
-        private final Set<String> disabled = new HashSet<>();
-        private final String uuidKey;
+            muteBy = file.get(uuid + ".admin", muteBy);
+            reason = file.get(uuid + ".reason", reason);
 
-        private final ConfigurableFile channels;
-        private final ConfigurableFile data;
+            if (!muted) return;
 
-        ChatViewData(UUID uuid) {
-            uuidKey = uuid.toString();
-
-            channels = FileData.Module.Chat.CHANNELS.getFile();
-            data = FileData.Command.Multi.CHAT_VIEW.getFile(false);
+            if (expiresAt == -1) {
+                remaining = -1;
+            } else if (System.currentTimeMillis() > expiresAt) {
+                muted = false;
+                remaining = 0;
+            } else {
+                remaining = expiresAt - System.currentTimeMillis();
+                scheduleUnmute(remaining);
+            }
         }
 
-        void toggleView(String name) {
-            if (StringUtils.isBlank(name)) return;
-
-            ConfigurationSection section = channels.getSection("channels." + name);
-            if (section == null || section.getBoolean("global", true)) return;
-
-            if (disabled.contains(name)) {
-                disabled.remove(name);
-                return;
+        @Override
+        void save(boolean save) {
+            if (taskId != -1) {
+                plugin.getServer().getScheduler().cancelTask(taskId);
+                taskId = -1;
             }
 
-            disabled.add(name);
+            boolean saved = false;
+
+            if (!muted) {
+                if (file.contains(uuid)) {
+                    file.set(uuid, null);
+                    saved = true;
+                }
+            } else {
+                file.set(uuid + ".muted", true);
+                file.set(uuid + ".remaining",
+                        (expiresAt > 0) ? expiresAt - System.currentTimeMillis() : -1);
+
+                file.set(uuid + ".expiresAt", expiresAt);
+                file.set(uuid + ".admin", muteBy);
+                file.set(uuid + ".reason", reason);
+                saved = true;
+            }
+
+            if (saved && save) file.save();
+        }
+    }
+
+    static final class ChannelImpl extends BaseData implements ChannelData {
+
+        private final Set<String> toggledChannels = new HashSet<>();
+        private final ConfigurableFile channels;
+
+        ChannelImpl(UUID uuid) {
+            super(FileData.Command.Multi.CHAT_VIEW.getFile(false), uuid.toString());
+            channels = FileData.Module.Chat.CHANNELS.getFile();
         }
 
         void load() {
-            disabled.clear();
-            disabled.addAll(data.toStringList(uuidKey));
+            toggledChannels.clear();
+            toggledChannels.addAll(file.toStringList(uuid));
         }
 
-        void save() {
-            data.set(uuidKey, new ArrayList<>(disabled));
-            data.save();
+        void save(boolean save) {
+            file.set(uuid, new ArrayList<>(toggledChannels));
+            if (save) file.save();
+        }
+
+        @Override
+        public void toggle(String channel) {
+            if (StringUtils.isBlank(channel)) return;
+
+            ConfigurationSection section = channels.getSection("channels." + channel);
+            if (section == null || section.getBoolean("global", true)) return;
+
+            if (toggledChannels.contains(channel)) {
+                toggledChannels.remove(channel);
+                return;
+            }
+
+            toggledChannels.add(channel);
+        }
+
+        @Override
+        public boolean isToggled(String channel) {
+            return toggledChannels.contains(channel);
         }
     }
 
-    @Getter
+    final class ImmuneImpl extends BaseData implements ImmuneData {
+
+        private final SIRUser user;
+
+        @Getter
+        private boolean immune = false;
+        private int taskId = -1;
+
+        ImmuneImpl(SIRUser user) {
+            super(null, user.getUuid().toString());
+            this.user = user;
+        }
+
+        private void cancelTask() {
+            if (taskId != -1)
+                plugin.getServer().getScheduler().cancelTask(taskId);
+        }
+
+        void setImmune(boolean immune) {
+            user.getPlayer().setInvulnerable(this.immune = immune);
+        }
+
+        @Override
+        public void giveImmunity(int seconds) {
+            if (seconds == 0) {
+                if (immune) {
+                    cancelTask();
+                    setImmune(false);
+                }
+                return;
+            }
+
+            if (seconds < 0) {
+                cancelTask();
+                if (!immune) setImmune(true);
+                return;
+            }
+
+            setImmune(true);
+            taskId = plugin.getServer().getScheduler()
+                    .runTaskLater(
+                            plugin, () -> setImmune(false),
+                            seconds * 20L
+                    ).getTaskId();
+        }
+
+        @Override
+        void load() {}
+
+        @Override
+        void save(boolean save) {}
+    }
+
     abstract class BaseUser implements SIRUser {
 
-        private boolean dataSaved = false;
-        private final UUID uuid;
+        private final DataMap map = new DataMap();
 
-        private final IgnoreData ignoreData;
-        private final MuteData muteData;
-        private final ChatViewData chatData;
+        @Getter
+        private final UUID uuid;
 
         @Getter(AccessLevel.NONE)
         @Setter
         private boolean logged = false;
 
-        private boolean immune = false;
-        private int immuneTask = -1;
-
         BaseUser(UUID uuid) {
             this.uuid = uuid;
 
-            ignoreData = new IgnoreData(uuid);
-            muteData = new MuteData(uuid);
-            chatData = new ChatViewData(uuid);
+            map.map.put("ignore", new IgnoreImpl(uuid));
+            map.map.put("mute", new MuteImpl(this));
+            map.map.put("channel", new ChannelImpl(uuid));
+            map.map.put("immune", new ImmuneImpl(this));
         }
 
         @Nullable
@@ -511,128 +596,24 @@ final class UserManagerImpl implements UserManager, Registrable {
             return false;
         }
 
-        @Override
-        public void ignore(SIRUser user, boolean isChat) {
-            if (user != null)
-                (isChat ? ignoreData.chatIgnored : ignoreData.msgIgnored).add(user.getUuid());
+        @NotNull
+        public IgnoreData getIgnoreData() {
+            return map.get("ignore");
         }
 
-        @Override
-        public void ignore(Player player, boolean isChat) {
-            ignore(getUser(player), isChat);
+        @NotNull
+        public MuteData getMuteData() {
+            return map.get("mute");
         }
 
-        @Override
-        public void ignoreAll(boolean isChat) {
-            if (isChat) {
-                ignoreData.chatAll = true;
-                return;
-            }
-
-            ignoreData.msgAll = true;
+        @NotNull
+        public ChannelData getChannelData() {
+            return map.get("channel");
         }
 
-        @Override
-        public void unignore(SIRUser user, boolean isChat) {
-            if (user != null)
-                (isChat ? ignoreData.chatIgnored : ignoreData.msgIgnored).remove(user.getUuid());
-        }
-
-        @Override
-        public void unignore(Player player, boolean isChat) {
-            unignore(getUser(player), isChat);
-        }
-
-        @Override
-        public void unignoreAll(boolean isChat) {
-            if (isChat) {
-                ignoreData.chatAll = false;
-                return;
-            }
-
-            ignoreData.msgAll = false;
-        }
-
-        @Override
-        public boolean isIgnoring(SIRUser user, boolean isChat) {
-            if (user == null) return false;
-
-            return isChat ?
-                    (ignoreData.chatAll || ignoreData.chatIgnored.contains(user.getUuid())) :
-                    (ignoreData.msgAll || ignoreData.msgIgnored.contains(user.getUuid()));
-        }
-
-        @Override
-        public boolean isIgnoring(Player player, boolean isChat) {
-            return isIgnoring(getUser(player), isChat);
-        }
-
-        @Override
-        public boolean isIgnoringAll(boolean isChat) {
-            return isChat ? ignoreData.chatAll : ignoreData.msgAll;
-        }
-
-        @Override
-        public boolean isLocalChannelToggled(String channel) {
-            return chatData.disabled.contains(channel);
-        }
-
-        @Override
-        public boolean isMuted() {
-            if (FileData.Main.CONFIG.getFile().get("options.check-mute", false) &&
-                    plugin.getCommandManager().isEnabled("mute"))
-                return muteData.muted;
-
-            if (Exceptions.isPluginEnabled("AdvancedBan")) {
-                final String id = UUIDManager.get().getUUID(getName());
-                return PunishmentManager.get().isMuted(id);
-            }
-
-            if (Exceptions.isPluginEnabled("Essentials")) {
-                Essentials e = JavaPlugin.getPlugin(Essentials.class);
-                return e.getUser(getPlayer()).isMuted();
-            }
-
-            return Exceptions.isPluginEnabled("CMI") &&
-                    CMIUser.getUser(getPlayer()).isMuted();
-        }
-
-        @Override
-        public long getRemainingMute() {
-            return (muteData.expiresAt - System.currentTimeMillis()) / 1000;
-        }
-
-        void setImmune(boolean immune) {
-            getPlayer().setInvulnerable(this.immune = immune);
-        }
-
-        private void cancelTask() {
-            if (immuneTask != -1)
-                plugin.getServer().getScheduler().cancelTask(immuneTask);
-        }
-
-        @Override
-        public void giveImmunity(int seconds) {
-            if (seconds == 0) {
-                if (immune) {
-                    cancelTask();
-                    setImmune(false);
-                }
-                return;
-            }
-
-            if (seconds < 0) {
-                cancelTask();
-                if (!immune) setImmune(true);
-                return;
-            }
-
-            setImmune(true);
-            immuneTask = plugin.getServer().getScheduler()
-                    .runTaskLater(
-                            plugin, () -> setImmune(false),
-                            seconds * 20L
-                    ).getTaskId();
+        @NotNull
+        public ImmuneData getImmuneData() {
+            return map.get("immune");
         }
 
         @NotNull
@@ -650,12 +631,19 @@ final class UserManagerImpl implements UserManager, Registrable {
 
             return users;
         }
+
+        void load() {
+            map.map.values().forEach(BaseData::load);
+        }
+
+        void save(boolean save) {
+            map.map.values().forEach(data -> data.save(save));
+        }
     }
 
     @Getter
     final class OnlineUser extends BaseUser {
 
-        @Getter(AccessLevel.NONE)
         @NotNull
         private final OfflinePlayer offline;
         @NotNull
@@ -666,17 +654,10 @@ final class UserManagerImpl implements UserManager, Registrable {
 
         OnlineUser(Player player) {
             super(player.getUniqueId());
-            this.uuid = player.getUniqueId();
-
-            this.offline = Bukkit.getOfflinePlayer(uuid);
+            this.offline = Bukkit.getOfflinePlayer(this.uuid = player.getUniqueId());
             this.player = player;
 
             name = this.player.getName();
-        }
-
-        @NotNull
-        public OfflinePlayer getOfflinePlayer() {
-            return offline;
         }
 
         @Override
@@ -685,6 +666,7 @@ final class UserManagerImpl implements UserManager, Registrable {
         }
     }
 
+    @Getter
     final class OfflineUser extends BaseUser {
 
         @NotNull
@@ -698,11 +680,6 @@ final class UserManagerImpl implements UserManager, Registrable {
             super(offline.getUniqueId());
             this.offline = offline;
             this.uuid = offline.getUniqueId();
-        }
-
-        @NotNull
-        public OfflinePlayer getOfflinePlayer() {
-            return offline;
         }
 
         @NotNull

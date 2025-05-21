@@ -98,7 +98,7 @@ public final class SIRPlugin extends JavaPlugin {
         worldRuleManager = new RuleManagerImpl(this);
         worldRuleManager.load();
 
-        moduleManager = new ModuleManagerImpl(this);
+        moduleManager = new ModuleImpl(this);
         moduleManager.load();
         moduleManager.register();
 
@@ -106,7 +106,7 @@ public final class SIRPlugin extends JavaPlugin {
         lib = new LangUtils(this);
         FileData.FILE_MAP.forEach((k, v) -> v.setLoggerAction(lib.getLogger()::log));
 
-        commandManager = new CommandManagerImpl(this);
+        commandManager = new CommandImpl(this);
         commandManager.load();
         commandManager.register();
 
@@ -252,7 +252,7 @@ public final class SIRPlugin extends JavaPlugin {
 
             UpdateDisplay display = player == null ? lib.getLogger()::log :
                     strings -> {
-                        if (UserManager.hasPerm(player, "sir.admin.update"))
+                        if (UserManager.hasPermission(player, "sir.admin.update"))
                             lib.getLoadedSender()
                                     .setTargets(player).setLogger(false).send(strings);
                     };

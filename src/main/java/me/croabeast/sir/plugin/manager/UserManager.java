@@ -1,7 +1,7 @@
 package me.croabeast.sir.plugin.manager;
 
 import me.croabeast.sir.plugin.FileData;
-import me.croabeast.sir.plugin.misc.SIRUser;
+import me.croabeast.sir.plugin.user.SIRUser;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
@@ -31,61 +31,23 @@ public interface UserManager {
 
     SIRUser fromClosest(String name);
 
-    void mute(SIRUser user, int seconds, String admin, String reason);
-
-    default void mute(SIRUser user, int seconds) {
-        mute(user, seconds, "", "");
-    }
-
-    void unmute(SIRUser user);
-
-    default void mute(OfflinePlayer player, int seconds, String admin, String reason) {
-        mute(getUser(player), seconds, admin, reason);
-    }
-
-    default void mute(OfflinePlayer player, int seconds) {
-        mute(getUser(player), seconds);
-    }
-
-    default void unmute(OfflinePlayer player) {
-        unmute(getUser(player));
-    }
-
-    default void mute(Player player, int seconds, String admin, String reason) {
-        mute(getUser(player), seconds, admin, reason);
-    }
-
-    default void mute(Player player, int seconds) {
-        mute(getUser(player), seconds);
-    }
-
-    default void unmute(Player player) {
-        unmute(getUser(player));
-    }
-
-    void toggleLocalChannelView(SIRUser user, String channel);
-
-    default void toggleLocalChannelView(Player player, String channel) {
-        toggleLocalChannelView(getUser(player), channel);
-    }
-
     Set<SIRUser> getOfflineUsers();
 
     Set<SIRUser> getOnlineUsers();
 
-    static boolean hasPerm(CommandSender sender, String perm) {
-        if (StringUtils.isBlank(perm)) return false;
-        if (sender instanceof ConsoleCommandSender || perm.matches("(?i)DEFAULT"))
+    static boolean hasPermission(CommandSender sender, String permission) {
+        if (StringUtils.isBlank(permission)) return false;
+        if (sender instanceof ConsoleCommandSender || permission.matches("(?i)DEFAULT"))
             return true;
 
-        boolean hasPermission = sender.hasPermission(perm);
+        boolean hasPermission = sender.hasPermission(permission);
         if (!FileData.Main.CONFIG.getFile().get("options.override-op", false))
             return hasPermission;
 
-        return (!sender.isOp() || sender.isPermissionSet(perm)) && hasPermission;
+        return (!sender.isOp() || sender.isPermissionSet(permission)) && hasPermission;
     }
 
-    static boolean hasPerm(SIRUser user, String perm) {
-        return hasPerm(user.getPlayer(), perm);
+    static boolean hasPermission(SIRUser user, String permission) {
+        return hasPermission(user.getPlayer(), permission);
     }
 }

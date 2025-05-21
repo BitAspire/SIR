@@ -113,8 +113,8 @@ public abstract class SIRCommand extends BukkitCommand {
                     @Override
                     public boolean isPermitted(CommandSender s, boolean log) {
                         final String wild = getWildcardPermission();
-                        return UserManager.hasPerm(s, wild) ||
-                                UserManager.hasPerm(s, getPermission());
+                        return UserManager.hasPermission(s, wild) ||
+                                UserManager.hasPermission(s, getPermission());
                     }
                 }));
         setExecutingError((sender, e) -> {
@@ -312,8 +312,8 @@ public abstract class SIRCommand extends BukkitCommand {
     }
 
     public final boolean testPermissionSilent(@NotNull CommandSender target) {
-        return UserManager.hasPerm(target, getPermission()) ||
-                UserManager.hasPerm(target, getWildcardPermission());
+        return UserManager.hasPermission(target, getPermission()) ||
+                UserManager.hasPermission(target, getWildcardPermission());
     }
 
     public final boolean isPermitted(CommandSender sender, boolean log) {
@@ -376,7 +376,7 @@ public abstract class SIRCommand extends BukkitCommand {
     }
 
     protected static TabBuilder createBasicTabBuilder() {
-        return new TabBuilder().setPermissionPredicate(UserManager::hasPerm);
+        return new TabBuilder().setPermissionPredicate(UserManager::hasPermission);
     }
 
     @Accessors(makeFinal = false)
@@ -426,11 +426,26 @@ public abstract class SIRCommand extends BukkitCommand {
                 return "Clear Chat";
             }
         },
-        MSG_REPLY(4, 2,
+        CHAT_COLOR(4, 2,
+                "Handles the /color command.",
+                "It allows players to change their",
+                "chat color."
+        ) {
+            @NotNull
+            public String getName() {
+                return "color";
+            }
+
+            @NotNull
+            public String getTitle() {
+                return "Chat Color";
+            }
+        },
+        MSG_REPLY(5, 2,
                 "Handles the /msg & /reply commands.",
                 "Sent private message to players."
         ),
-        MUTE(5, 2,
+        MUTE(6, 2,
                 "Handles all mute-related commands",
                 "like /mute, /tempmute, /unmute and",
                 "/checkmute."

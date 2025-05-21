@@ -5,7 +5,7 @@ import me.croabeast.common.util.ReplaceUtils;
 @FunctionalInterface
 public interface Actionable {
 
-    void act(Object... objects);
+    void accept(Object... objects);
 
     static boolean failsCheck(Object[] o, Class<?>... c) {
         if (!ReplaceUtils.isApplicable(o, c)) return true;

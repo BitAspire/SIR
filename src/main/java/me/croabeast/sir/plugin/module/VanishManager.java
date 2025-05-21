@@ -10,7 +10,7 @@ import me.croabeast.file.Configurable;
 import me.croabeast.common.util.Exceptions;
 import me.croabeast.common.CustomListener;
 import me.croabeast.sir.plugin.FileData;
-import me.croabeast.sir.plugin.misc.SIRUser;
+import me.croabeast.sir.plugin.user.SIRUser;
 import me.croabeast.takion.message.MessageSender;
 import net.ess3.api.IUser;
 import net.ess3.api.events.VanishStatusChangeEvent;

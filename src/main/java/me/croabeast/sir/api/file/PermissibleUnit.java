@@ -3,7 +3,7 @@ package me.croabeast.sir.api.file;
 import me.croabeast.file.ConfigurableUnit;
 import me.croabeast.sir.plugin.SIRPlugin;
 import me.croabeast.sir.plugin.manager.UserManager;
-import me.croabeast.sir.plugin.misc.SIRUser;
+import me.croabeast.sir.plugin.user.SIRUser;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -22,7 +22,7 @@ public interface PermissibleUnit extends ConfigurableUnit {
      * @return True if the sender has the permission, false otherwise.
      */
     default boolean hasPerm(CommandSender sender) {
-        return UserManager.hasPerm(sender, getPermission());
+        return UserManager.hasPermission(sender, getPermission());
     }
 
     /**
@@ -32,7 +32,7 @@ public interface PermissibleUnit extends ConfigurableUnit {
      * @return True if the sender has the permission, false otherwise.
      */
     default boolean hasPerm(SIRUser user) {
-        return UserManager.hasPerm(user, getPermission());
+        return UserManager.hasPermission(user, getPermission());
     }
 
     /**

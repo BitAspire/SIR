@@ -46,7 +46,7 @@ final class ModeratorHandler extends ListenerModule {
             @EventHandler(priority = EventPriority.LOWEST)
             private void onChatEvent(AsyncPlayerChatEvent event) {
                 if (!options.isEnabled() ||
-                        UserManager.hasPerm(event.getPlayer(), options.getResult()))
+                        UserManager.hasPermission(event.getPlayer(), options.getResult()))
                     return;
 
                 String message = event.getMessage();
@@ -314,7 +314,7 @@ final class ModeratorHandler extends ListenerModule {
             if (options.notifier.isEnabled())
                 sender.copy().setTargets(
                                 CollectionBuilder.of(Bukkit.getOnlinePlayers())
-                                        .filter(p -> UserManager.hasPerm(
+                                        .filter(p -> UserManager.hasPermission(
                                                 p,
                                                 options.notifier.getResult())
                                         ).toSet()

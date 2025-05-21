@@ -10,7 +10,8 @@ import me.croabeast.sir.plugin.aspect.AspectButton;
 import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.aspect.AspectKey;
 import me.croabeast.sir.plugin.aspect.SIRAspect;
-import me.croabeast.sir.plugin.misc.SIRUser;
+import me.croabeast.sir.plugin.user.IgnoreData;
+import me.croabeast.sir.plugin.user.SIRUser;
 import me.croabeast.sir.plugin.LangUtils;
 import me.croabeast.sir.plugin.Commandable;
 import me.croabeast.takion.message.MessageSender;
@@ -65,16 +66,17 @@ final class AuditChatHandler implements Commandable {
                 String channel = getLang()
                         .get("lang.channels." + (chat ? "chat" : "msg"), "");
 
+                IgnoreData data = user.getIgnoreData();
                 if (args[0].matches("(?i)@a")) {
-                    if (user.isIgnoringAll(chat)) {
-                        user.unignoreAll(chat);
+                    if (data.isIgnoringAll(chat)) {
+                        data.unignoreAll(chat);
                     } else {
-                        user.ignoreAll(chat);
+                        data.ignoreAll(chat);
                     }
 
                     return createSender(sender)
                             .addPlaceholders(baseKeys, null, channel)
-                            .send((user.isIgnoringAll(chat) ?
+                            .send((data.isIgnoringAll(chat) ?
                                     "success" :
                                     "remove") + ".all");
                 }
@@ -84,15 +86,15 @@ final class AuditChatHandler implements Commandable {
                     return createSender(sender)
                             .addPlaceholder("{target}", args[0]).send("not-player");
 
-                if (user.isIgnoring(target, chat)) {
-                    user.unignore(target, chat);
+                if (data.isIgnoring(target, chat)) {
+                    data.unignore(target, chat);
                 } else {
-                    user.ignore(target, chat);
+                    data.ignore(target, chat);
                 }
 
                 return createSender(sender)
                         .addPlaceholders(baseKeys, target.getName(), channel)
-                        .send((user.isIgnoring(target, chat) ?
+                        .send((data.isIgnoring(target, chat) ?
                                 "success" :
                                 "remove") + ".player");
             }
@@ -112,7 +114,7 @@ final class AuditChatHandler implements Commandable {
                 if (!isPermitted(s)) return true;
 
                 SIRUser user = plugin.getUserManager().getUser(s);
-                if (user != null && user.isMuted())
+                if (user != null && user.getMuteData().isMuted())
                     return createSender(s).send("is-muted");
 
                 if (args.length == 0)
@@ -127,7 +129,7 @@ final class AuditChatHandler implements Commandable {
                 if (Objects.equals(target, user))
                     return createSender(s).setLogger(false).send("not-yourself");
 
-                if (target.isIgnoring(user, false)) {
+                if (target.getIgnoreData().isIgnoring(user, false)) {
                     return plugin.getLibrary().getLoadedSender()
                             .setLogger(false)
                             .addPlaceholder(
@@ -189,7 +191,7 @@ final class AuditChatHandler implements Commandable {
                 if (!isPermitted(s)) return true;
 
                 SIRUser receiver = plugin.getUserManager().getUser(s);
-                if (receiver != null && receiver.isMuted())
+                if (receiver != null && receiver.getMuteData().isMuted())
                     return createSender(s).setLogger(false).send("is-muted");
 
                 final CommandSender init = replies.get(s);
@@ -198,7 +200,7 @@ final class AuditChatHandler implements Commandable {
 
                 SIRUser initiator = plugin.getUserManager().getUser(init);
                 if (initiator != null) {
-                    if (initiator.isIgnoring(receiver, false)) {
+                    if (initiator.getIgnoreData().isIgnoring(receiver, false)) {
                         return plugin.getLibrary().getLoadedSender()
                                 .setLogger(false)
                                 .addPlaceholder(

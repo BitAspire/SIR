@@ -2,6 +2,7 @@ package me.croabeast.sir.plugin.misc;
 
 import me.croabeast.common.CollectionBuilder;
 import me.croabeast.sir.api.file.PermissibleUnit;
+import me.croabeast.sir.plugin.user.SIRUser;
 import me.croabeast.takion.chat.ChatComponent;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;

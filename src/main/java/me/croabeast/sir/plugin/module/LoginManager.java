@@ -9,7 +9,7 @@ import lombok.Getter;
 import me.croabeast.common.CollectionBuilder;
 import me.croabeast.common.util.Exceptions;
 import me.croabeast.common.CustomListener;
-import me.croabeast.sir.plugin.misc.SIRUser;
+import me.croabeast.sir.plugin.user.SIRUser;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;

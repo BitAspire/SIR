@@ -17,7 +17,7 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.Modifier;
 import java.util.*;
 
-final class CommandManagerImpl implements CommandManager {
+final class CommandImpl implements CommandManager {
 
     private final Map<String, SIRCommand> commands = new LinkedHashMap<>();
     private final Set<Class<?>> classes = new HashSet<>();
@@ -29,7 +29,7 @@ final class CommandManagerImpl implements CommandManager {
     @Getter
     private boolean loaded = false;
 
-    CommandManagerImpl(SIRPlugin plugin) {
+    CommandImpl(SIRPlugin plugin) {
         this.plugin = plugin;
         final ClassLoader classLoader = plugin.classLoader();
 
@@ -66,7 +66,7 @@ final class CommandManagerImpl implements CommandManager {
                         b -> b.setPriority(Pane.Priority.LOW)
                 )
                 .addSingleItem(
-                        0, 6, 2,
+                        0, 7, 2,
                         ItemCreator.of(Material.BARRIER)
                                 .modifyLore("&8More commands will be added soon.")
                                 .modifyName("&c&lCOMING SOON...")

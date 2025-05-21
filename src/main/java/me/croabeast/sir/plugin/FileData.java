@@ -154,9 +154,9 @@ public class FileData {
         );
     }
 
-    interface BaseKey extends FileKey<Object> {}
+    interface Key extends FileKey<Object> {}
 
-    public enum Main implements BaseKey {
+    public enum Main implements Key {
         CONFIG,
         BOSSBARS,
         WEBHOOKS;
@@ -207,7 +207,7 @@ public class FileData {
             return folderPath("modules", "modules");
         }
 
-        public enum Chat implements BaseKey {
+        public enum Chat implements Key {
             CHANNELS,
             COOLDOWNS,
             EMOJIS,
@@ -231,7 +231,7 @@ public class FileData {
             }
         }
 
-        public enum Hook implements BaseKey {
+        public enum Hook implements Key {
             DISCORD,
             LOGIN,
             VANISH;
@@ -249,7 +249,7 @@ public class FileData {
     }
 
     @Getter
-    public enum Command implements BaseKey {
+    public enum Command implements Key {
         ANNOUNCER,
         CLEAR_CHAT("clear-chat"),
         SIR,
@@ -277,6 +277,7 @@ public class FileData {
         }
 
         public enum Multi implements FileKey<Boolean> {
+            CHAT_COLOR,
             CHAT_VIEW,
             MUTE,
             IGNORE;

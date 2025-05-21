@@ -11,7 +11,7 @@ import me.croabeast.sir.plugin.misc.ChatChannel;
 import me.croabeast.sir.plugin.aspect.AspectKey;
 import me.croabeast.sir.plugin.SIRPlugin;
 import me.croabeast.sir.plugin.FileData;
-import me.croabeast.sir.plugin.misc.SIRUser;
+import me.croabeast.sir.plugin.user.SIRUser;
 import me.croabeast.sir.plugin.manager.UserManager;
 import me.croabeast.takion.chat.ChatComponent;
 import me.croabeast.takion.chat.MultiComponent;
@@ -175,11 +175,11 @@ class ChannelUtils {
                 if (StringUtils.isNotBlank(getGroup()))
                     users.filter(u -> isInGroup(u.getPlayer()));
 
-                users.filter(u -> u.hasPerm(getPermission()));
-                users.filter(u -> u.isLocalChannelToggled(getName()));
+                users.filter(u -> u.hasPermission(getPermission()));
+                users.filter(u -> u.getChannelData().isToggled(getName()));
             }
 
-            users.filter(u -> !u.isIgnoring(user, true));
+            users.filter(u -> !u.getIgnoreData().isIgnoring(user, true));
             return users.toSet();
         }
 
@@ -361,7 +361,7 @@ class ChannelUtils {
                     b = normal;
                     break;
             }
-            return !UserManager.hasPerm(player, PERM + perm) && !b;
+            return !UserManager.hasPermission(player, PERM + perm) && !b;
         }
 
         String check(Player player, String string) {

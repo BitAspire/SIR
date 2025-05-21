@@ -11,7 +11,8 @@ import me.croabeast.sir.plugin.aspect.AspectButton;
 import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.aspect.AspectKey;
 import me.croabeast.sir.plugin.aspect.SIRAspect;
-import me.croabeast.sir.plugin.misc.SIRUser;
+import me.croabeast.sir.plugin.user.MuteData;
+import me.croabeast.sir.plugin.user.SIRUser;
 import me.croabeast.sir.plugin.LangUtils;
 import me.croabeast.takion.message.MessageSender;
 import org.bukkit.Bukkit;
@@ -63,8 +64,9 @@ final class MuteHandler implements Commandable {
                         .addPlaceholder("{target}", target.getName())
                         .addPlaceholder("{admin}", sender.getName());
 
-                if (target.isMuted()) {
-                    final long remaining = target.getRemainingMute();
+                MuteData data = target.getMuteData();
+                if (data.isMuted()) {
+                    final long remaining = data.getRemaining();
                     String path = remaining < 1 ? "perm" : "temp";
 
                     if (remaining > 0)
@@ -73,7 +75,7 @@ final class MuteHandler implements Commandable {
                     return message.send("is-muted." + path);
                 }
 
-                plugin.getUserManager().mute(target, -1, sender.getName(), reason);
+                data.mute(-1, sender.getName(), reason);
                 return message.setTargets(Bukkit.getOnlinePlayers()).send("action.perm");
             }
         });
@@ -142,8 +144,9 @@ final class MuteHandler implements Commandable {
                         .addPlaceholder("{target}", target.getName())
                         .addPlaceholder("{admin}", sender.getName());
 
-                if (target.isMuted()) {
-                    final long remaining = target.getRemainingMute();
+                MuteData data = target.getMuteData();
+                if (data.isMuted()) {
+                    final long remaining = data.getRemaining();
                     String path = remaining < 1 ? "perm" : "temp";
 
                     if (remaining > 0)
@@ -153,7 +156,7 @@ final class MuteHandler implements Commandable {
                 }
 
                 final int time = convertToSeconds(args[1]);
-                plugin.getUserManager().mute(target, time, sender.getName(), reason);
+                data.mute(time, sender.getName(), reason);
 
                 return message.setTargets(Bukkit.getOnlinePlayers())
                         .addPlaceholder("{time}", parseTime(time)).send("action.temp");
@@ -193,8 +196,8 @@ final class MuteHandler implements Commandable {
                         .addPlaceholder("{target}", target.getName())
                         .addPlaceholder("{admin}", sender.getName());
 
-                if (target.isMuted()) {
-                    plugin.getUserManager().unmute(target);
+                if (target.getMuteData().isMuted()) {
+                    target.getMuteData().unmute();
                     return message.send("action.unmute");
                 }
 

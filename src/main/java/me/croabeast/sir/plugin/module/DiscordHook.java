@@ -70,7 +70,7 @@ final class DiscordHook extends SIRModule implements Actionable, HookLoadable {
     }
 
     @Override
-    public void act(Object... objects) {
+    public void accept(Object... objects) {
         if (!isEnabled() && !HookChecker.DISCORD_ENABLED) return;
 
         if (Actionable.failsCheck(objects,

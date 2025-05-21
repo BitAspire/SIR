@@ -7,7 +7,7 @@ import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.sir.api.file.PermissibleUnit;
 import me.croabeast.sir.plugin.misc.ChatChannel;
 import me.croabeast.sir.plugin.FileData;
-import me.croabeast.sir.plugin.misc.SIRUser;
+import me.croabeast.sir.plugin.user.SIRUser;
 import me.croabeast.takion.chat.MultiComponent;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.configuration.ConfigurationSection;
@@ -71,7 +71,7 @@ final class MentionFormatter extends SIRModule implements PlayerFormatter<ChatCh
             while (matcher.find()) {
                 SIRUser user = plugin.getUserManager().fromClosest(matcher.group(1));
                 if (user == null || player == user.getPlayer() ||
-                        user.isIgnoring(player, true))
+                        user.getIgnoreData().isIgnoring(player, true))
                     continue;
 
                 if (channel != null &&

@@ -7,7 +7,7 @@ import me.croabeast.common.util.ServerInfoUtils;
 import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.misc.FileKey;
 import me.croabeast.sir.plugin.misc.DelayLogger;
-import me.croabeast.sir.plugin.misc.SIRUser;
+import me.croabeast.sir.plugin.user.SIRUser;
 import me.croabeast.sir.plugin.LangUtils;
 import me.croabeast.sir.plugin.misc.Timer;
 import me.croabeast.common.WorldRule;
@@ -127,7 +127,7 @@ final class Advancements extends ListenerModule {
         LangUtils.executeCommands(player, cList);
 
         Actionable actor = plugin.getModuleManager().getActionable(Key.DISCORD);
-        if (actor != null) actor.act("advances", player, keys, values);
+        if (actor != null) actor.accept("advances", player, keys, values);
     }
 
     static class BaseInfo {

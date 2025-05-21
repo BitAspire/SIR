@@ -6,10 +6,12 @@ import me.croabeast.file.ConfigurableFile;
 import me.croabeast.file.UnitMappable;
 import me.croabeast.sir.api.file.PermissibleUnit;
 import me.croabeast.sir.plugin.FileData;
-import me.croabeast.sir.plugin.misc.SIRUser;
+import me.croabeast.sir.plugin.user.SIRUser;
 import me.croabeast.sir.plugin.LangUtils;
 import me.croabeast.takion.message.MessageSender;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -46,7 +48,7 @@ final class JoinQuitHandler extends ListenerModule {
 
         for (Set<Unit> maps : loaded.values())
             for (Unit unit : maps)
-                if (user.hasPerm(unit.getPermission()))
+                if (user.hasPermission(unit.getPermission()))
                     return unit;
 
         return null;
@@ -106,7 +108,7 @@ final class JoinQuitHandler extends ListenerModule {
         SIRUser user = plugin.getUserManager().getUser(player);
         if (!user.isLogged()) return;
 
-        user.giveImmunity(0);
+        user.getImmuneData().giveImmunity(0);
         if (!this.isEnabled()) return;
 
         Unit unit = get(Type.QUIT, user);
@@ -219,7 +221,7 @@ final class JoinQuitHandler extends ListenerModule {
             if (type != Type.QUIT) {
                 sender.copy().setTargets(player).send(privateList);
 
-                user.giveImmunity(invulnerability);
+                user.getImmuneData().giveImmunity(invulnerability);
                 user.playSound(sound);
 
                 teleportToSpawn(user);
@@ -228,11 +230,47 @@ final class JoinQuitHandler extends ListenerModule {
             LangUtils.executeCommands(type != Type.QUIT ? player : null, commandList);
 
             Actionable actor = plugin.getModuleManager().getActionable(Key.DISCORD);
-            if (actor != null) actor.act(type.name, player, new String[0], new String[0]);
+            if (actor != null) actor.accept(type.name, player, new String[0], new String[0]);
         }
 
         void teleportToSpawn(SIRUser user) {
-            user.teleport(spawn);
+            if (spawn == null || spawn.getBoolean("enabled"))
+                return;
+
+            World world = Bukkit.getWorld(spawn.getString("world", ""));
+            if (world == null) return;
+
+            Location loc = world.getSpawnLocation();
+
+            String coords = spawn.getString("coordinates");
+            String rot = spawn.getString("rotation");
+
+            if (coords != null) {
+                final String[] mC = coords.split(",", 3);
+
+                try {
+                    loc.setX(Double.parseDouble(mC[0]));
+                } catch (Exception ignored) {}
+                try {
+                    loc.setY(Double.parseDouble(mC[1]));
+                } catch (Exception ignored) {}
+                try {
+                    loc.setZ(Double.parseDouble(mC[2]));
+                } catch (Exception ignored) {}
+            }
+
+            if (rot != null) {
+                final String[] mD = rot.split(",", 2);
+
+                try {
+                    loc.setYaw(Float.parseFloat(mD[0]));
+                } catch (Exception ignored) {}
+                try {
+                    loc.setPitch(Float.parseFloat(mD[1]));
+                } catch (Exception ignored) {}
+            }
+
+            user.getPlayer().teleport(loc);
         }
 
         @Override

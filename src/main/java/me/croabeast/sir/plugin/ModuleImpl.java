@@ -23,7 +23,7 @@ import java.lang.reflect.Modifier;
 import java.util.*;
 
 @SuppressWarnings("unchecked")
-final class ModuleManagerImpl implements ModuleManager {
+final class ModuleImpl implements ModuleManager {
 
     private final List<Class<SIRModule>> classes = new ArrayList<>();
     private final ModuleMap moduleMap = new ModuleMap();
@@ -93,7 +93,7 @@ final class ModuleManagerImpl implements ModuleManager {
         }
     }
 
-    ModuleManagerImpl(SIRPlugin plugin) {
+    ModuleImpl(SIRPlugin plugin) {
         final ClassLoader classLoader = plugin.classLoader();
 
         SIRPlugin.getJarEntries()

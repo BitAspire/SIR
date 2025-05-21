@@ -11,7 +11,7 @@ import me.croabeast.sir.plugin.module.PlayerFormatter;
 import me.croabeast.sir.plugin.FileData;
 import me.croabeast.sir.plugin.manager.ModuleManager;
 import me.croabeast.sir.plugin.module.SIRModule;
-import me.croabeast.sir.plugin.misc.SIRUser;
+import me.croabeast.sir.plugin.user.SIRUser;
 import me.croabeast.sir.plugin.manager.UserManager;
 import me.croabeast.sir.plugin.LangUtils;
 import me.croabeast.takion.TakionLib;
@@ -181,7 +181,7 @@ final class PrintCommand extends SIRCommand {
 
                     case "PERM":
                         targets = stream
-                                .filter(p -> UserManager.hasPerm(p, array[1]))
+                                .filter(p -> UserManager.hasPermission(p, array[1]))
                                 .toSet();
                         break;
 

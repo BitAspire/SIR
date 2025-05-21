@@ -35,7 +35,8 @@ public interface ModuleManager extends BaseManager<SIRModule> {
         }
     }
 
-    @NotNull Set<SIRCommand> getCommands(AspectKey key);
+    @NotNull
+    Set<SIRCommand> getCommands(AspectKey key);
 
     @NotNull
     Set<SIRCommand> getCommands();
