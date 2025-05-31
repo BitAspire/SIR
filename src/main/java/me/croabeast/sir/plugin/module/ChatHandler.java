@@ -170,7 +170,7 @@ final class ChatHandler extends ListenerModule implements Commandable {
         final String message = event.getMessage();
 
         EmptyChecker checker = new EmptyChecker();
-        if (!checker.enabled && StringUtils.isBlank(message)) {
+        if (checker.enabled && StringUtils.isBlank(message)) {
             plugin.getLibrary().getLoadedSender()
                     .setTargets(user.getPlayer()).send(checker.messages);
 

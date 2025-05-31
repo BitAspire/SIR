@@ -54,6 +54,9 @@ public interface SIRUser {
     ChannelData getChannelData();
 
     @NotNull
+    ColorData getColorData();
+
+    @NotNull
     ImmuneData getImmuneData();
 
     default void playSound(String rawSound, float volume, float pitch) {

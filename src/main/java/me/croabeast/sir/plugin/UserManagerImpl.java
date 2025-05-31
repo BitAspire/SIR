@@ -87,9 +87,8 @@ final class UserManagerImpl implements UserManager, Registrable {
 
     void loadData(OfflinePlayer offline) {
         BaseUser user = new OfflineUser(offline);
-
+        user.load();
         userMap.put(user.getUuid(), user);
-        userMap.get(user.getUuid()).load();
     }
 
     void loadData(Player player) {
@@ -150,12 +149,12 @@ final class UserManagerImpl implements UserManager, Registrable {
         return null;
     }
 
-    @Override
+    @NotNull
     public Set<SIRUser> getOfflineUsers() {
         return Collections.unmodifiableSet(new HashSet<>(userMap.values()));
     }
 
-    @Override
+    @NotNull
     public Set<SIRUser> getOnlineUsers() {
         return Collections
                 .unmodifiableSet(CollectionBuilder
@@ -542,12 +541,38 @@ final class UserManagerImpl implements UserManager, Registrable {
         void save(boolean save) {}
     }
 
+    static final class ColorImpl extends BaseData implements ColorData {
+
+        @Getter @Setter
+        private String colorStart = "", colorEnd = null;
+
+        ColorImpl(UUID uuid) {
+            super(FileData.Command.Multi.CHAT_COLOR.getFile(false), uuid.toString());
+        }
+
+        @Override
+        void load() {
+            colorStart = file.get(uuid + ".start", colorStart);
+
+            colorEnd = file.get(uuid + ".end", colorEnd);
+            if (StringUtils.isBlank(colorEnd)) colorEnd = null;
+        }
+
+        @Override
+        void save(boolean save) {
+            file.set(uuid + ".start", colorStart);
+            file.set(uuid + ".end", colorEnd);
+
+            if (save) file.save();
+        }
+    }
+
     abstract class BaseUser implements SIRUser {
 
         private final DataMap map = new DataMap();
 
         @Getter
-        private final UUID uuid;
+        final UUID uuid;
 
         @Getter(AccessLevel.NONE)
         @Setter
@@ -559,6 +584,7 @@ final class UserManagerImpl implements UserManager, Registrable {
             map.map.put("ignore", new IgnoreImpl(uuid));
             map.map.put("mute", new MuteImpl(this));
             map.map.put("channel", new ChannelImpl(uuid));
+            map.map.put("color", new ColorImpl(uuid));
             map.map.put("immune", new ImmuneImpl(this));
         }
 
@@ -612,6 +638,11 @@ final class UserManagerImpl implements UserManager, Registrable {
         }
 
         @NotNull
+        public ColorData getColorData() {
+            return map.get("color");
+        }
+
+        @NotNull
         public ImmuneData getImmuneData() {
             return map.get("immune");
         }
@@ -649,12 +680,11 @@ final class UserManagerImpl implements UserManager, Registrable {
         @NotNull
         private final Player player;
 
-        private final UUID uuid;
         private final String name;
 
         OnlineUser(Player player) {
             super(player.getUniqueId());
-            this.offline = Bukkit.getOfflinePlayer(this.uuid = player.getUniqueId());
+            this.offline = Bukkit.getOfflinePlayer(uuid);
             this.player = player;
 
             name = this.player.getName();
@@ -666,20 +696,15 @@ final class UserManagerImpl implements UserManager, Registrable {
         }
     }
 
-    @Getter
     final class OfflineUser extends BaseUser {
 
-        @NotNull
+        @Getter
         private final OfflinePlayer offline;
-        @Getter @NotNull
-        private final UUID uuid;
-
         private Player player = null;
 
         OfflineUser(OfflinePlayer offline) {
             super(offline.getUniqueId());
             this.offline = offline;
-            this.uuid = offline.getUniqueId();
         }
 
         @NotNull

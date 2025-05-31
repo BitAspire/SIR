@@ -42,6 +42,36 @@ commands:
     permissions:
       main: sir.chatview  # Permission to toggle channel visibility
 
+  # Chat Color management command
+  chatcolor:
+    override-existing: true    # Override existing command
+    enabled: true             # Enable/disable functionality
+    aliases: [ color, cc ]  # Short command alias
+    permissions:
+      main: sir.chatcolor  # Permission to toggle channel visibility
+      subcommands:
+        - dark_red
+        - red
+        - gold
+        - yellow
+        - green
+        - aqua
+        - blue
+        - dark_blue
+        - light_purple
+        - dark_purple
+        - white
+        - gray
+        - dark_gray
+        - black
+        - bold
+        - strikethrough
+        - italic
+        - underline
+        - rainbow  # Rainbow color support
+        - gradient  # Gradient color support
+        - reset  # Reset color to default
+
   # Player ignore system command
   ignore:
     override-existing: true    # Override existing command

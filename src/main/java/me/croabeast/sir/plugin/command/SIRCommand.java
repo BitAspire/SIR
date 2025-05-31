@@ -433,7 +433,7 @@ public abstract class SIRCommand extends BukkitCommand {
         ) {
             @NotNull
             public String getName() {
-                return "color";
+                return "chatcolor";
             }
 
             @NotNull

@@ -234,7 +234,7 @@ final class JoinQuitHandler extends ListenerModule {
         }
 
         void teleportToSpawn(SIRUser user) {
-            if (spawn == null || spawn.getBoolean("enabled"))
+            if (spawn == null || !spawn.getBoolean("enabled"))
                 return;
 
             World world = Bukkit.getWorld(spawn.getString("world", ""));

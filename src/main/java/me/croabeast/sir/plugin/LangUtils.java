@@ -137,32 +137,34 @@ public final class LangUtils extends TakionLib {
         Pattern cPattern = Pattern.compile("(?i)^\\[(global|console)]");
         Pattern pPattern = Pattern.compile("(?i)^\\[player]");
 
-        for (String c : commands) {
-            if (StringUtils.isBlank(c)) continue;
+        Bukkit.getScheduler().runTask(SIRPlugin.getInstance(), () -> {
+            for (String c : commands) {
+                if (StringUtils.isBlank(c)) continue;
 
-            Matcher pm = pPattern.matcher(c), cm = cPattern.matcher(c);
+                Matcher pm = pPattern.matcher(c), cm = cPattern.matcher(c);
 
-            StringApplier applier = StringApplier.simplified(c)
-                    .apply(s -> getLib().getPlaceholderManager().replace(player, s))
-                    .apply(PlainFormat.TRIM_START_SPACES::accept);
+                StringApplier applier = StringApplier.simplified(c)
+                        .apply(s -> getLib().getPlaceholderManager().replace(player, s))
+                        .apply(PlainFormat.TRIM_START_SPACES::accept);
 
-            if (pm.find() && player != null) {
-                String text = applier.toString().replace(pm.group(), "");
+                if (pm.find() && player != null) {
+                    String text = applier.toString().replace(pm.group(), "");
 
-                Bukkit.dispatchCommand(player, text);
-                continue;
+                    Bukkit.dispatchCommand(player, text);
+                    continue;
+                }
+
+                if (cm.find()) applier.apply(s -> s.replace(cm.group(), ""));
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), applier.toString());
             }
-
-            if (cm.find()) applier.apply(s -> s.replace(cm.group(), ""));
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), applier.toString());
-        }
+        });
     }
 
     public static String stringFromArray(String[] args, int argumentIndex) {
         if (argumentIndex >= args.length) return null;
         StringBuilder b = new StringBuilder();
 
-        for (int i = argumentIndex; i < args.length; i++)  {
+        for (int i = argumentIndex; i < args.length; i++) {
             b.append(args[i]);
             if (i != args.length - 1) b.append(" ");
         }

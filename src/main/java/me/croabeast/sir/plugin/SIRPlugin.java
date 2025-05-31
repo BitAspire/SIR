@@ -201,7 +201,7 @@ public final class SIRPlugin extends JavaPlugin {
                 );
 
         for (OfflinePlayer o : Bukkit.getOfflinePlayers())
-            userManager.loadData(o);
+            if (o != null) userManager.loadData(o);
 
         if (SIRModule.Key.LOGIN.isEnabled())
             userManager.getOnlineUsers().forEach(u -> u.setLogged(true));
