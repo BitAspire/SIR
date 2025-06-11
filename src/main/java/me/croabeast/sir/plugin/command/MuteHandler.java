@@ -48,8 +48,7 @@ final class MuteHandler implements Commandable {
                     return createSender(sender).send("help.perm");
 
                 SIRUser target = plugin.getUserManager().fromClosest(args[0]);
-                if (target == null)
-                    return createSender(sender).send("not-player");
+                if (target == null) return checkPlayer(sender, args[0]);
 
                 String reason = getLang().get(
                         "lang.default.mute-reason", "Not following server rules.");
@@ -128,8 +127,7 @@ final class MuteHandler implements Commandable {
                     return createSender(sender).send("help.temp");
 
                 SIRUser target = plugin.getUserManager().fromClosest(args[0]);
-                if (target == null)
-                    return createSender(sender).send("not-player");
+                if (target == null) return checkPlayer(sender, args[0]);
 
                 String reason = getLang().get(
                         "lang.default.mute-reason", "Not following server rules.");
@@ -180,8 +178,7 @@ final class MuteHandler implements Commandable {
                     return createSender(sender).send("help.unmute");
 
                 SIRUser target = plugin.getUserManager().fromClosest(args[0]);
-                if (target == null)
-                    return createSender(sender).send("not-player");
+                if (target == null) return checkPlayer(sender, args[0]);
 
                 String reason = getLang().get(
                         "lang.default.unmute-reason", "Time ended.");
@@ -230,12 +227,14 @@ final class MuteHandler implements Commandable {
                 file.save();
 
                 if (b.isEnabled()) {
-                    commands.forEach(SIRCommand::register);
+                    commands.forEach(c -> c.register(false));
                 } else {
-                    commands.forEach(SIRCommand::unregister);
+                    commands.forEach(c -> c.unregister(false));
                 }
 
-                String s = "Mute commands active status:" + b.isEnabled();
+                SIRCommand.syncCommands();
+
+                String s = "Mute commands active status: " + b.isEnabled();
                 SIRPlugin.getLib().getLogger().log(s);
             });
 

@@ -66,7 +66,7 @@ final class AuditChatHandler implements Commandable {
                 String channel = getLang()
                         .get("lang.channels." + (chat ? "chat" : "msg"), "");
 
-                IgnoreData data = user.getIgnoreData();
+                final IgnoreData data = user.getIgnoreData();
                 if (args[0].matches("(?i)@a")) {
                     if (data.isIgnoringAll(chat)) {
                         data.unignoreAll(chat);
@@ -82,9 +82,7 @@ final class AuditChatHandler implements Commandable {
                 }
 
                 SIRUser target = plugin.getUserManager().fromClosest(args[0]);
-                if (target == null)
-                    return createSender(sender)
-                            .addPlaceholder("{target}", args[0]).send("not-player");
+                if (target == null) return checkPlayer(sender, args[0]);
 
                 if (data.isIgnoring(target, chat)) {
                     data.unignore(target, chat);
@@ -121,10 +119,7 @@ final class AuditChatHandler implements Commandable {
                     return createSender(s).setLogger(false).send("need-player");
 
                 SIRUser target = plugin.getUserManager().fromClosest(args[0]);
-                if (target == null)
-                    return createSender(s).setLogger(false)
-                            .addPlaceholder("{target}", args[0])
-                            .send("not-player");
+                if (target == null) return checkPlayer(s, args[0]);
 
                 if (Objects.equals(target, user))
                     return createSender(s).setLogger(false).send("not-yourself");
@@ -279,10 +274,12 @@ final class AuditChatHandler implements Commandable {
                 file.save();
 
                 if (b.isEnabled()) {
-                    messageCommands.forEach(SIRCommand::register);
+                    messageCommands.forEach(c -> c.register(false));
                 } else {
-                    messageCommands.forEach(SIRCommand::unregister);
+                    messageCommands.forEach(c -> c.unregister(false));
                 }
+
+                SIRCommand.syncCommands();
 
                 String s = "Messaging commands registered: " + b.isEnabled();
                 SIRPlugin.getLib().getLogger().log(s);

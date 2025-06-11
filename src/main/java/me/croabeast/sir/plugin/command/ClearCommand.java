@@ -31,10 +31,7 @@ final class ClearCommand extends SIRCommand {
         }
 
         Player player = Bukkit.getPlayer(args[0]);
-        if (player == null)
-            return createSender(sender)
-                    .addPlaceholder("{target}", args[0])
-                    .send("not-player");
+        if (player == null) return checkPlayer(sender, args[0]);
 
         for (int i = 0; i < 200; i++)
             player.sendMessage("");

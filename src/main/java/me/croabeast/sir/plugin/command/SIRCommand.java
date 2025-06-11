@@ -311,6 +311,12 @@ public abstract class SIRCommand extends BukkitCommand {
         }
     }
 
+    protected final boolean checkPlayer(CommandSender sender, String name) {
+        return createSender(sender)
+                .setLogger(false).addPlaceholder("{target}", name)
+                .send(file.toStringList("lang.not-player"));
+    }
+
     public final boolean testPermissionSilent(@NotNull CommandSender target) {
         return UserManager.hasPermission(target, getPermission()) ||
                 UserManager.hasPermission(target, getWildcardPermission());

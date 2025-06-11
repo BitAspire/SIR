@@ -8,10 +8,6 @@ lang:
     - '  &7- &b/clearchat <@a/player>&7: Clears the chat to all or one player.'
     - '&7'
 
-  # Error message when specified player is not found
-  # {target} shows the invalid player name that was attempted
-  not-player: '<P> &cThe player {target} does not exist.'
-
   # Success messages for different clearing scenarios
   success:
     # Confirmation message when clearing chat for all players

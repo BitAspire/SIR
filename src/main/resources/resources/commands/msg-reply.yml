@@ -11,10 +11,6 @@ lang:
   # Shown when using /msg without a player name
   need-player: '<P> &cYou need a player to use this command.'
 
-  # Error for invalid/offline player targets
-  # {target} shows the invalid player name attempted
-  not-player: '<P> &cThe player {target} does not exist.'
-
   # Error when using /reply without previous conversation
   # Requires a prior /msg command to work
   not-replied: '<P> &cYou did not send a message to a player before.'

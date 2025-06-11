@@ -16,10 +16,6 @@ lang:
   # This is a safety measure to prevent self-isolation
   not-yourself: '<P> &cYou can not ignore yourself.'
 
-  # Error message for invalid or offline player targets
-  # {target} placeholder shows the invalid player name
-  not-player: '<P> &cThe player {target} does not exist.'
-
   # Notification when trying to message someone who is ignoring you
   # {type} shows either "Chat" or "Private Messages" based on context
   ignoring: '<P> &7This player is ignoring you in &e{type}&7.'
