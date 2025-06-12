@@ -541,9 +541,12 @@ final class UserManagerImpl implements UserManager, Registrable {
         void save(boolean save) {}
     }
 
+    @Getter
     static final class ColorImpl extends BaseData implements ColorData {
 
-        @Getter @Setter
+        private Set<String> colorFormats = new HashSet<>();
+
+        @Setter
         private String colorStart = "", colorEnd = null;
 
         ColorImpl(UUID uuid) {
@@ -551,8 +554,16 @@ final class UserManagerImpl implements UserManager, Registrable {
         }
 
         @Override
+        public void removeAnyFormats() {
+            colorStart = "";
+            colorEnd = null;
+            colorFormats = new HashSet<>();
+        }
+
+        @Override
         void load() {
             colorStart = file.get(uuid + ".start", colorStart);
+            colorFormats = new HashSet<>(file.toStringList(uuid + ".formats"));
 
             colorEnd = file.get(uuid + ".end", colorEnd);
             if (StringUtils.isBlank(colorEnd)) colorEnd = null;
@@ -562,6 +573,7 @@ final class UserManagerImpl implements UserManager, Registrable {
         void save(boolean save) {
             file.set(uuid + ".start", colorStart);
             file.set(uuid + ".end", colorEnd);
+            file.set(uuid + ".formats", colorFormats);
 
             if (save) file.save();
         }
