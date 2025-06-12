@@ -40,7 +40,6 @@ import java.io.File;
 import java.net.URLDecoder;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
-import java.util.function.UnaryOperator;
 import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -144,15 +143,9 @@ public final class SIRPlugin extends JavaPlugin {
         logger.add(true, "&e[Hooks]");
         int hooksEnabled = 0;
 
-        UnaryOperator<String> operator = s -> "- " + s + ": " + HookChecker.getVersion(s);
-
-        if (HookChecker.DISCORD_ENABLED) {
-            logger.add(operator.apply("DiscordSRV"), true);
-            hooksEnabled++;
-        }
-
-        if (HookChecker.PAPI_ENABLED) {
-            logger.add(operator.apply("PlaceholderAPI"), true);
+        Plugin papi = Bukkit.getPluginManager().getPlugin("PlaceholderAPI");
+        if (papi != null && papi.isEnabled()) {
+            logger.add("- " + papi.getName() + ": " + papi.getDescription().getVersion(), true);
             hooksEnabled++;
         }
 
@@ -165,10 +158,21 @@ public final class SIRPlugin extends JavaPlugin {
             hooksEnabled++;
         }
 
+        Plugin discord = moduleManager
+                .fromParent(SIRModule.Key.DISCORD, HookLoadable::getHookedPlugin);
         Plugin login = moduleManager
                 .fromParent(SIRModule.Key.LOGIN, HookLoadable::getHookedPlugin);
         Plugin vanish = moduleManager
                 .fromParent(SIRModule.Key.VANISH, HookLoadable::getHookedPlugin);
+
+        if (discord != null) {
+            logger.add("- Discord: &e" + function.apply(discord), true);
+            logger.add(true,
+                    "  &cWARNING: &7EssentialsDiscord manage all its settings in their config files.",
+                    "           &7SIR doesn't manage any of them."
+            );
+            hooksEnabled++;
+        }
 
         if (login != null) {
             logger.add("- Login: &e" + function.apply(login), true);
@@ -184,12 +188,15 @@ public final class SIRPlugin extends JavaPlugin {
             logger.add("- &cNo hooks found. &7Skipping...", true);
 
         MetricsLoader.initialize(this, 25264)
-                .addSimplePie("hasDiscord", HookChecker.DISCORD_ENABLED)
-                .addSimplePie("hasPAPI", HookChecker.PAPI_ENABLED)
+                .addSimplePie("hasPAPI", Exceptions.isPluginEnabled("PlaceholderAPI"))
                 .addSimplePie("hasInteractive", Exceptions.isPluginEnabled("InteractiveChat"))
                 .addDrillDownPie(
                         "permissionPlugins", "Permission Plugins",
                         permission != null ? permission.getName() : "None/Other"
+                )
+                .addDrillDownPie(
+                        "discordPlugins", "Discord Plugins",
+                        discord != null ? discord.getName() : "None/Other"
                 )
                 .addDrillDownPie(
                         "loginPlugins", "Login Plugins",

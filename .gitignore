@@ -113,4 +113,3 @@ buildNumber.properties
 run/
 
 /src/main/java/me/croabeast/sir/api/addon/
-/src/main/resources/resources/commands/chat_color/

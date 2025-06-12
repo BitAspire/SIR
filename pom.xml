@@ -6,7 +6,7 @@
 
     <groupId>me.croabeast</groupId>
     <artifactId>SIR</artifactId>
-    <version>1.1</version>
+    <version>1.2</version>
     <packaging>jar</packaging>
 
     <name>SIR</name> <!--Simple In-game Receptionist-->
@@ -107,6 +107,21 @@
                             <file>lib/CMI.jar</file>
                         </configuration>
                     </execution>
+
+                    <execution>
+                        <id>Discord</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>install-file</goal>
+                        </goals>
+                        <configuration>
+                            <groupId>net.essentialsx</groupId>
+                            <artifactId>Discord</artifactId>
+                            <version>2.21.0</version>
+                            <packaging>jar</packaging>
+                            <file>lib/Discord.jar</file>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
         </plugins>
@@ -175,6 +190,16 @@
             <id>nickuc-repo</id>
             <url>https://repo.nickuc.com/maven-releases/</url>
         </repository>
+
+        <repository>
+            <id>essentials-releases</id>
+            <url>https://repo.essentialsx.net/releases/</url>
+        </repository>
+
+        <repository>
+            <id>paper-repo</id>
+            <url>https://papermc.io/repo/repository/maven-public/</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -202,7 +227,7 @@
         <dependency>
             <groupId>me.croabeast</groupId>
             <artifactId>Takion</artifactId>
-            <version>1.0</version>
+            <version>1.1</version>
             <scope>provided</scope>
         </dependency>
 
@@ -237,7 +262,7 @@
         <dependency>
             <groupId>com.github.stefvanschie.inventoryframework</groupId>
             <artifactId>IF</artifactId>
-            <version>0.10.19</version>
+            <version>0.11.0</version>
             <scope>provided</scope>
         </dependency>
 
@@ -257,7 +282,7 @@
         <dependency>
             <groupId>com.discordsrv</groupId>
             <artifactId>discordsrv</artifactId>
-            <version>1.27.0</version>
+            <version>1.29.0</version>
             <scope>provided</scope>
             <exclusions>
                 <exclusion>
@@ -268,9 +293,9 @@
         </dependency>
 
         <dependency>
-            <groupId>net.ess3</groupId>
+            <groupId>net.essentialsx</groupId>
             <artifactId>EssentialsX</artifactId>
-            <version>2.18.2</version>
+            <version>2.21.0</version>
             <scope>provided</scope>
             <exclusions>
                 <exclusion>
@@ -357,6 +382,13 @@
             <groupId>com.elchologamer</groupId>
             <artifactId>UserLogin</artifactId>
             <version>2.0</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>net.essentialsx</groupId>
+            <artifactId>Discord</artifactId>
+            <version>2.21.0</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
