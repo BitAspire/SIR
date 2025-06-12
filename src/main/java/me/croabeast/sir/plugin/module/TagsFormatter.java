@@ -1,10 +1,10 @@
 package me.croabeast.sir.plugin.module;
 
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
+import me.croabeast.common.util.Exceptions;
 import me.croabeast.file.Configurable;
 import me.croabeast.sir.api.file.PermissibleUnit;
 import me.croabeast.sir.plugin.FileData;
-import me.croabeast.sir.plugin.HookChecker;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
@@ -24,7 +24,7 @@ final class TagsFormatter extends SIRModule implements PlayerFormatter<Object> {
     TagsFormatter() {
         super(Key.TAGS);
 
-        if (!HookChecker.PAPI_ENABLED) return;
+        if (!Exceptions.isPluginEnabled("PlaceholderAPI")) return;
 
         expansion = new PlaceholderExpansion() {
             @NotNull
@@ -116,7 +116,8 @@ final class TagsFormatter extends SIRModule implements PlayerFormatter<Object> {
                 .getSections("tags")
                 .forEach((key, s) -> tags.put(key, new ChatTag(s)));
 
-        if (!HookChecker.PAPI_ENABLED) return true;
+        if (!Exceptions.isPluginEnabled("PlaceholderAPI"))
+            return true;
 
         PlaceholderExpansion ex = (PlaceholderExpansion) expansion;
         return ex.isRegistered() || ex.register();
@@ -124,7 +125,8 @@ final class TagsFormatter extends SIRModule implements PlayerFormatter<Object> {
 
     @Override
     public boolean unregister() {
-        if (!HookChecker.PAPI_ENABLED) return false;
+        if (!Exceptions.isPluginEnabled("PlaceholderAPI"))
+            return false;
 
         PlaceholderExpansion ex = (PlaceholderExpansion) expansion;
         return !ex.isRegistered() || ex.unregister();
