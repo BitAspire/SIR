@@ -28,6 +28,7 @@ softdepend:
   # Misc
   - AdvancedBan
   - DiscordSRV
+  - EssentialsDiscord
 
 permissions:
   sir.*:

@@ -248,8 +248,14 @@ final class ChatHandler extends ListenerModule implements Commandable {
             String name = event.isGlobal() ? "global-chat" : channel.getName();
 
             Actionable act = plugin.getModuleManager().getActionable(Key.DISCORD);
-            if (act != null)
-                act.accept(name, player, keys, channel.getChatValues(m));
+            DiscordHook hook = (DiscordHook) act;
+
+            if (hook != null)
+                act.accept(
+                        hook.restricted ? "restricted" : name,
+                        player, keys,
+                        channel.getChatValues(m)
+                );
         }
 
         lib.getLogger().log(channel.formatString(player, message, false));

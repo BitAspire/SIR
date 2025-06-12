@@ -6,23 +6,31 @@ import github.scarsz.discordsrv.dependencies.jda.api.entities.Guild;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.MessageEmbed;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
 import github.scarsz.discordsrv.util.DiscordUtil;
+import lombok.Getter;
+import me.croabeast.common.CollectionBuilder;
 import me.croabeast.common.applier.StringApplier;
+import me.croabeast.common.reflect.Reflector;
+import me.croabeast.common.util.Exceptions;
 import me.croabeast.file.Configurable;
 import me.croabeast.common.util.ArrayUtils;
 import me.croabeast.common.util.ReplaceUtils;
 import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.sir.plugin.FileData;
-import me.croabeast.sir.plugin.HookChecker;
+import me.croabeast.sir.plugin.SIRPlugin;
 import me.croabeast.sir.plugin.misc.FileKey;
 import me.croabeast.takion.chat.MultiComponent;
 import me.croabeast.takion.format.PlainFormat;
+import net.essentialsx.api.v2.ChatType;
+import net.essentialsx.api.v2.events.discord.DiscordChatMessageEvent;
+import net.essentialsx.discord.EssentialsDiscord;
+import net.essentialsx.discord.JDADiscordService;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
-import org.jetbrains.annotations.NotNull;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.lang.reflect.Field;
 import java.time.Instant;
@@ -36,15 +44,28 @@ final class DiscordHook extends SIRModule implements Actionable, HookLoadable {
     private final Map<String, List<String>> idMap = new HashMap<>();
     private final Map<String, EmbedObject> embedMap = new HashMap<>();
 
+    @Getter
+    private final String[] supportedPlugins = {"DiscordSRV", "EssentialsDiscord"};
+    boolean restricted;
+
     private final FileKey<Object> key;
+    private final List<Plugin> loadedHooks;
 
     DiscordHook() {
         super(Key.DISCORD);
+        loadedHooks = CollectionBuilder.of(supportedPlugins)
+                .filter(Exceptions::isPluginEnabled)
+                .map(Bukkit.getPluginManager()::getPlugin).toList();
+
+        restricted = loadedHooks.size() == 1 &&
+                loadedHooks.get(0).getName().equals("EssentialsDiscord");
         key = FileData.Module.Hook.DISCORD;
     }
 
     @Override
     public boolean register() {
+        if (restricted) return false;
+
         idMap.clear();
         embedMap.clear();
 
@@ -66,12 +87,12 @@ final class DiscordHook extends SIRModule implements Actionable, HookLoadable {
 
     @Override
     public boolean unregister() {
-        return false;
+        return restricted;
     }
 
     @Override
     public void accept(Object... objects) {
-        if (!isEnabled() && !HookChecker.DISCORD_ENABLED) return;
+        if (!isEnabled() && !isPluginEnabled()) return;
 
         if (Actionable.failsCheck(objects,
                 String.class, Player.class, String[].class, String[].class))
@@ -82,8 +103,12 @@ final class DiscordHook extends SIRModule implements Actionable, HookLoadable {
 
         String[] keys = (String[]) objects[2], values = (String[]) objects[3];
 
-        if (!idMap.containsKey(channel) ||
-                !embedMap.containsKey(channel))
+        if (restricted && channel.equals("restricted")) {
+            EssentialsHolder.send(player, keys, values);
+            return;
+        }
+
+        if (!idMap.containsKey(channel) || !embedMap.containsKey(channel))
             return;
 
         List<String> ids = idMap.get(channel);
@@ -92,14 +117,9 @@ final class DiscordHook extends SIRModule implements Actionable, HookLoadable {
         new Sender(ids, object, player).set(keys, values).send();
     }
 
-    @NotNull
-    public String[] getSupportedPlugins() {
-        return new String[] {"DiscordSRV"};
-    }
-
     @Override
     public Plugin getHookedPlugin() {
-        return Bukkit.getPluginManager().getPlugin("DiscordSRV");
+        return loadedHooks.size() != 1 ? null : loadedHooks.get(0);
     }
 
     @Override
@@ -107,6 +127,38 @@ final class DiscordHook extends SIRModule implements Actionable, HookLoadable {
 
     @Override
     public void unload() {}
+
+    static String replacePlaceholders(Player player, String s) {
+        return SIRPlugin.getLib().getPlaceholderManager().replace(player, s);
+    }
+
+    static class EssentialsHolder {
+
+        static void send(Player player, String[] keys, String[] values) {
+            Bukkit.getScheduler().runTask(SIRPlugin.getInstance(), () -> {
+                EssentialsDiscord discord;
+                try {
+                    discord = JavaPlugin.getPlugin(EssentialsDiscord.class);
+                } catch (Exception e) {
+                    return;
+                }
+
+                JDADiscordService service = Reflector.from(() -> discord).get("jda");
+
+                String message = StringUtils.isBlank(values[5]) ? values[5] :
+                        StringApplier.simplified(values[5])
+                                .apply(s -> ReplaceUtils.replaceEach(keys, values, s))
+                                .apply(s -> replacePlaceholders(player, s))
+                                .apply(s -> PlainFormat.PLACEHOLDER_API.accept(player, s))
+                                .apply(PrismaticAPI::stripAll).toString();
+
+                DiscordChatMessageEvent event =
+                        new DiscordChatMessageEvent(player, message, ChatType.UNKNOWN);
+                Bukkit.getPluginManager().callEvent(event);
+                service.sendChatMessage(player, event.getMessage());
+            });
+        }
+    }
 
     private class EmbedObject {
 
@@ -264,10 +316,6 @@ final class DiscordHook extends SIRModule implements Actionable, HookLoadable {
 
         private final UnaryOperator<String> operator;
 
-        String replacePlaceholders(Player player, String s) {
-            return plugin.getLibrary().getPlaceholderManager().replace(player, s);
-        }
-
         private Sender(List<String> ids, EmbedObject object, Player player) {
             this.ids = ids;
             this.object = object;
@@ -289,9 +337,11 @@ final class DiscordHook extends SIRModule implements Actionable, HookLoadable {
             this.keys = keys;
 
             List<String> list = ArrayUtils.toList(values);
-
-            list.replaceAll(MultiComponent.DEFAULT_FORMAT::removeFormat);
-            list.replaceAll(operator);
+            list.replaceAll(s -> StringUtils.isBlank(s) ?
+                    s :
+                    StringApplier.simplified(s)
+                            .apply(MultiComponent.DEFAULT_FORMAT::removeFormat)
+                            .apply(operator).toString());
 
             this.values = list.toArray(new String[0]);
             return this;
