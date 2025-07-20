@@ -57,7 +57,7 @@ final class MentionFormatter extends SIRModule implements PlayerFormatter<ChatCh
 
         for (Mention mention : mentions) {
             if (!mention.isInGroupAsNull(player)) continue;
-            if (!mention.hasPerm(player)) continue;
+            if (!mention.hasPermission(player)) continue;
 
             final String prefix = mention.prefix;
             if (StringUtils.isBlank(prefix)) continue;

@@ -98,7 +98,7 @@ final class EmojisFormatter extends SIRModule implements PlayerFormatter<Object>
         String parse(Player player, String line) {
             if (StringUtils.isBlank(line) || key == null) return line;
 
-            if (player != null && !hasPerm(player)) return line;
+            if (player != null && !hasPermission(player)) return line;
 
             if (checks.isWord()) {
                 StringBuilder builder = new StringBuilder();

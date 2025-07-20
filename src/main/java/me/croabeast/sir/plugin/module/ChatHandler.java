@@ -54,7 +54,7 @@ final class ChatHandler extends ListenerModule implements Commandable {
             List<String> keys(SIRUser user) {
                 Set<ChatChannel> set = locals.getStoredValues(HashSet::new);
                 return CollectionBuilder.of(set)
-                        .filter(c -> !c.hasPerm(user))
+                        .filter(c -> !c.hasPermission(user))
                         .map(ConfigurableUnit::getName)
                         .collect(ArrayList::new);
             }

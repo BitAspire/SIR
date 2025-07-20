@@ -36,7 +36,7 @@ final class CooldownHandler extends ListenerModule {
     private CooldownUnit get(Player player) {
         for (Set<CooldownUnit> set : units.values())
             for (CooldownUnit unit : set)
-                if (unit.isInGroupNonNull(player) && unit.hasPerm(player))
+                if (unit.isInGroupNonNull(player) && unit.hasPermission(player))
                     return unit;
 
         return null;

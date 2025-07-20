@@ -21,7 +21,7 @@ public interface PermissibleUnit extends ConfigurableUnit {
      * @param sender The command sender.
      * @return True if the sender has the permission, false otherwise.
      */
-    default boolean hasPerm(CommandSender sender) {
+    default boolean hasPermission(CommandSender sender) {
         return UserManager.hasPermission(sender, getPermission());
     }
 
@@ -31,7 +31,7 @@ public interface PermissibleUnit extends ConfigurableUnit {
      * @param user The user.
      * @return True if the sender has the permission, false otherwise.
      */
-    default boolean hasPerm(SIRUser user) {
+    default boolean hasPermission(SIRUser user) {
         return UserManager.hasPermission(user, getPermission());
     }
 
