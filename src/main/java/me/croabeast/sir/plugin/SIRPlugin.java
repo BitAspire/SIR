@@ -77,8 +77,8 @@ public final class SIRPlugin extends JavaPlugin {
     private UserManagerImpl userManager;
     private VaultHolder<?> vaultHolder;
 
-    private ModuleManager moduleManager;
     private CommandManager commandManager;
+    private ModuleManager moduleManager;
     private WorldRuleManager worldRuleManager;
 
     @Override
@@ -365,23 +365,37 @@ public final class SIRPlugin extends JavaPlugin {
         return ResourceUtils.fileFrom(getDataFolder(), childPaths);
     }
 
+    private boolean checkDefaultBukkitMethods() {
+        return FileData.Main.CONFIG.getFile().get("default-bukkit-plugin-methods", false);
+    }
+
     @NotNull
     public FileConfiguration getConfig() {
+        if (checkDefaultBukkitMethods()) return super.getConfig();
         throw new IllegalStateException("Please use FileData for File management.");
     }
 
     @Override
     public void reloadConfig() {
+        if (checkDefaultBukkitMethods()) {
+            super.reloadConfig();
+            return;
+        }
         throw new IllegalStateException("Please use FileData for File management.");
     }
 
     @Override
     public void saveConfig() {
+        if (checkDefaultBukkitMethods()) {
+            super.saveConfig();
+            return;
+        }
         throw new IllegalStateException("Please use FileData for File management.");
     }
 
     @Nullable
     public PluginCommand getCommand(@NotNull String name) {
+        if (checkDefaultBukkitMethods()) return super.getCommand(name);
         throw new IllegalStateException("Please refer to SIRPlugin#getCommandManager() for command management.");
     }
 

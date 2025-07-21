@@ -15,7 +15,6 @@ public interface SIRUser {
     @NotNull
     OfflinePlayer getOffline();
 
-    @NotNull
     Player getPlayer();
 
     @NotNull
@@ -34,9 +33,7 @@ public interface SIRUser {
         return UserManager.hasPermission(this, permission);
     }
 
-    default boolean isOnline() {
-        return getOffline().isOnline();
-    }
+    boolean isOnline();
 
     boolean isLogged();
 
@@ -59,6 +56,15 @@ public interface SIRUser {
     @NotNull
     ImmuneData getImmuneData();
 
+    default void playSound(Sound sound, float volume, float pitch) {
+        final Player p = getPlayer();
+        p.playSound(p.getLocation(), sound, volume, pitch);
+    }
+
+    default void playSound(Sound sound) {
+        playSound(sound, 1.0f, 1.0f);
+    }
+
     default void playSound(String rawSound, float volume, float pitch) {
         Sound sound;
         try {
@@ -67,8 +73,7 @@ public interface SIRUser {
             return;
         }
 
-        final Player p = getPlayer();
-        p.playSound(p.getLocation(), sound, volume, pitch);
+        playSound(sound, volume, pitch);
     }
 
     default void playSound(String sound) {

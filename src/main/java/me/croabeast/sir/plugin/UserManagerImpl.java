@@ -54,12 +54,12 @@ final class UserManagerImpl implements UserManager, Registrable {
             @Getter
             private final Status status = new Status();
 
-            @EventHandler(priority = EventPriority.LOWEST)
+            @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
             void onJoin(PlayerJoinEvent event) {
                 loadData(event.getPlayer());
             }
 
-            @EventHandler(priority = EventPriority.HIGHEST)
+            @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
             void onQuit(PlayerQuitEvent event) {
                 BaseUser user = userMap.remove(event.getPlayer().getUniqueId());
                 if (user == null) return;
@@ -125,7 +125,10 @@ final class UserManagerImpl implements UserManager, Registrable {
 
     @Override
     public SIRUser getUser(UUID uuid) {
-        return uuid == null ? null : userMap.get(uuid);
+        if (uuid == null) return null;
+
+        final SIRUser user = userMap.get(uuid);
+        return user.isOnline() ? user : null;
     }
 
     @Override
@@ -133,7 +136,8 @@ final class UserManagerImpl implements UserManager, Registrable {
         if (StringUtils.isBlank(name)) return null;
 
         for (SIRUser user : userMap.values())
-            if (user.getName().equals(name)) return user;
+            if (user.getName().equals(name) && user.isOnline())
+                return user;
 
         return null;
     }
@@ -143,8 +147,8 @@ final class UserManagerImpl implements UserManager, Registrable {
         if (StringUtils.isBlank(input)) return null;
 
         for (SIRUser user : userMap.values())
-            if (user.getName().matches("(?i)" + Pattern.quote(input)))
-                return user;
+            if (user.getName().matches("(?i)" + Pattern.quote(input)) &&
+                    user.isOnline()) return user;
 
         return null;
     }
@@ -703,30 +707,37 @@ final class UserManagerImpl implements UserManager, Registrable {
         }
 
         @Override
+        public boolean isOnline() {
+            return true;
+        }
+
+        @Override
         public String toString() {
             return "OnlineUser{player=" + player + '}';
         }
     }
 
+    @Getter
     final class OfflineUser extends BaseUser {
 
-        @Getter
         private final OfflinePlayer offline;
-        private Player player = null;
+        private final Player player;
 
         OfflineUser(OfflinePlayer offline) {
             super(offline.getUniqueId());
+
             this.offline = offline;
+            this.player = offline.getPlayer();
         }
 
-        @NotNull
-        public Player getPlayer() {
-            return Objects.requireNonNull(offline.isOnline() && player != null ? (player = offline.getPlayer()) : player);
+        @Override
+        public boolean isOnline() {
+            return false;
         }
 
         @NotNull
         public String getName() {
-            return getPlayer().getName();
+            return player.getName();
         }
 
         @Override
