@@ -5,6 +5,10 @@
 
 # 🔄 Updater Configuration
 updater:
+  # Controls the automatic update checking
+  # When true, the plugin will check for updates to this config file
+  enabled: true
+
   # Controls the startup update notification
   # When true, sends a notification about available updates when the server starts
   # When false, no update checks will be performed at startup
@@ -46,6 +50,12 @@ options:
   # false: Other plugins' mute systems take priority
   # Useful when using multiple mute systems
   check-mute: true
+
+  # Controls the use of Bukkit's default plugin methods
+  # true: Uses Bukkit's methods for PluginCommand, Config-related methods, etc.
+  # false: Uses SIR's custom implementations
+  # Recommended to keep false for better performance and consistency
+  default-bukkit-plugin-methods: false
 
 # 🎨 Message Formatting Values
 values:
