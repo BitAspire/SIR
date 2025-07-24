@@ -371,7 +371,7 @@ public final class SIRPlugin extends JavaPlugin {
     }
 
     private boolean checkDefaultBukkitMethods() {
-        return FileData.Main.CONFIG.getFile().get("default-bukkit-plugin-methods", false);
+        return FileData.Main.CONFIG.getFile().get("options.default-bukkit-plugin-methods", false);
     }
 
     @NotNull
