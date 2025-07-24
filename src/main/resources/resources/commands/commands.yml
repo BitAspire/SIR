@@ -17,13 +17,13 @@ commands:
   # Raw message broadcasting command
   print:
     override-existing: true  # Override existing command if present
-    enabled: true           # Enable/disable the command
-    aliases: [ rawmsg, rm ] # Alternative command names
+    enabled: true            # Enable/disable the command
+    aliases: [ rawmsg, rm ]  # Alternative command names
     permissions:
-      main: sir.print      # Base permission for /print
+      main: sir.print        # Base permission for /print
       # Available message types and their permissions
       subcommands:
-        - targets          # Send to specific players
+        - targets         # Send to specific players
         - chat            # Regular chat messages
         - action-bar;action_bar  # Action bar messages
         - title           # Title messages
@@ -34,7 +34,7 @@ commands:
     permissions:
       main: sir.announcer  # Base announcer permission
       subcommands:
-        - preview         # Preview announcements
+        - preview        # Preview announcements
         - help           # View announcer help
 
   # Chat channel visibility command
@@ -45,8 +45,8 @@ commands:
   # Chat Color management command
   chatcolor:
     override-existing: true    # Override existing command
-    enabled: true             # Enable/disable functionality
-    aliases: [ color, cc ]  # Short command alias
+    enabled: true              # Enable/disable functionality
+    aliases: [ color, cc ]     # Short command alias
     permissions:
       main: sir.chatcolor  # Permission to toggle channel visibility
       subcommands:
@@ -70,7 +70,7 @@ commands:
         - strikethrough
         - italic
         - underline
-        - obfuscated;magic  # Obfuscated text effect
+        - magic;obfuscated  # Obfuscated text effect
         - rainbow  # Rainbow color support
         - gradient  # Gradient color support
         - reset  # Reset color to default
@@ -78,56 +78,56 @@ commands:
   # Player ignore system command
   ignore:
     override-existing: true    # Override existing command
-    enabled: true             # Enable/disable functionality
-    aliases: [ ig ]           # Short command alias
+    enabled: true              # Enable/disable functionality
+    aliases: [ ig ]            # Short command alias
     permissions:
-      main: sir.ignore       # Permission to ignore players
+      main: sir.ignore         # Permission to ignore players
 
   # Chat clearing command
   clearchat:
     override-existing: true    # Override existing clear commands
-    enabled: true             # Enable/disable functionality
-    aliases: [ cc ]           # Short command alias
+    enabled: true              # Enable/disable functionality
+    aliases: [ cc ]            # Short command alias
     permissions:
-      main: sir.clearchat    # Permission to clear chat
+      main: sir.clearchat      # Permission to clear chat
 
   # Private messaging command
   msg:
     override-existing: true    # Override existing message commands
-    enabled: true             # Enable/disable messaging
+    enabled: true              # Enable/disable messaging
     aliases: [ m, message, tell ]  # Alternative command names
     permissions:
-      main: sir.message      # Permission to send private messages
+      main: sir.message        # Permission to send private messages
 
   # Message reply command
   reply:
     parent: msg              # Links to msg command (DO NOT EDIT)
     aliases: [ r ]           # Short reply alias
     permissions:
-      main: sir.reply       # Permission to reply to messages
+      main: sir.reply        # Permission to reply to messages
 
   # Permanent mute command
   mute:
     override-existing: true   # Override existing mute commands
-    enabled: true            # Enable/disable mute system
+    enabled: true             # Enable/disable mute system
     permissions:
-      main: sir.mute.perm   # Permission for permanent mutes
+      main: sir.mute.perm     # Permission for permanent mutes
 
   # Temporary mute command
   tempmute:
-    parent: mute             # Links to mute command (DO NOT EDIT)
+    parent: mute              # Links to mute command (DO NOT EDIT)
     permissions:
-      main: sir.mute.temp   # Permission for temporary mutes
+      main: sir.mute.temp     # Permission for temporary mutes
 
   # Unmute command
   unmute:
-    parent: mute             # Links to mute command (DO NOT EDIT)
+    parent: mute            # Links to mute command (DO NOT EDIT)
     permissions:
       main: sir.unmute      # Permission to remove mutes
 
   # Mute status check command
   checkmute:
-    parent: mute             # Links to mute command (DO NOT EDIT)
+    parent: mute            # Links to mute command (DO NOT EDIT)
     permissions:
       main: sir.checkmute   # Permission to check mute status
 

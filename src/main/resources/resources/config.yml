@@ -37,8 +37,7 @@ options:
   # [BOSSBAR] Event Starting
   show-prefix: true
 
-  # Permission System Override
-  # Advanced permission control for OP players
+  # Permission System Configuration for OP Players
   # false: Uses vanilla OP system (recommended)
   # true: Requires specific permissions even for OP players
   # Example: An OP player would need 'sir.admin.reload' to use /sir reload
