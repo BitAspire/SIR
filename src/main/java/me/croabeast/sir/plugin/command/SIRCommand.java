@@ -351,13 +351,13 @@ public abstract class SIRCommand extends BukkitCommand {
     }
 
     @Override
-    public final boolean register(boolean sync) {
+    public boolean register(boolean sync) {
         loadOptionsFromFile();
         return super.register(sync);
     }
 
     @Override
-    public final boolean unregister(boolean sync) {
+    public boolean unregister(boolean sync) {
         loadOptionsFromFile();
         return super.unregister(sync);
     }
@@ -368,7 +368,7 @@ public abstract class SIRCommand extends BukkitCommand {
     }
 
     @Override
-    public boolean unregister() {
+    public final boolean unregister() {
         return unregister(true);
     }
 
