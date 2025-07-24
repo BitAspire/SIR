@@ -125,19 +125,22 @@ public final class SIRPlugin extends JavaPlugin {
         logger.add(files).add(true, "&e[Modules]");
 
         CollectionBuilder<SIRModule> modules = moduleManager.asBuilder();
+        String modulesCount = "/" + modules.size();
+
         logger.add(true,
-                "- Loaded: " + modules.size() + "/13",
-                "- Enabled: " + modules.sizeByFilter(SIRModule::isEnabled) + "/13",
-                "- Registered: " + modules.sizeByFilter(SIRModule::isRegistered) + "/13"
+                "- Loaded: " + modules.size() + modulesCount,
+                "- Enabled: " + modules.sizeByFilter(SIRModule::isEnabled) + modulesCount,
+                "- Registered: " + modules.sizeByFilter(SIRModule::isRegistered) + modulesCount
         );
 
         logger.add(true, "&e[Commands]");
 
         CollectionBuilder<SIRCommand> commands = commandManager.asBuilder();
+        String commandsCount = "/" + commands.size();
         logger.add(true,
-                "- Loaded: " + commands.size() + "/12",
-                "- Enabled: " + commands.sizeByFilter(SIRCommand::isEnabled) + "/12",
-                "- Registered: " + commands.sizeByFilter(SIRCommand::isRegistered) + "/12"
+                "- Loaded: " + commands.size() + commandsCount,
+                "- Enabled: " + commands.sizeByFilter(SIRCommand::isEnabled) + commandsCount,
+                "- Registered: " + commands.sizeByFilter(SIRCommand::isRegistered) + commandsCount
         );
 
         logger.add(true, "&e[Hooks]");
@@ -167,10 +170,12 @@ public final class SIRPlugin extends JavaPlugin {
 
         if (discord != null) {
             logger.add("- Discord: &e" + function.apply(discord), true);
-            logger.add(true,
-                    "  &cWARNING: &7EssentialsDiscord manage all its settings in their config files.",
-                    "           &7SIR doesn't manage any of them."
-            );
+            if (discord.getName().matches("EssentialsDiscord"))
+                logger.add(true,
+                        "  &cWARNING: &7EssentialsDiscord manage all its settings",
+                        "           &7in their config files.",
+                        "           &7SIR doesn't manage any of them."
+                );
             hooksEnabled++;
         }
 
