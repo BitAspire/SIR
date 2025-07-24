@@ -545,10 +545,10 @@ final class UserManagerImpl implements UserManager, Registrable {
         void save(boolean save) {}
     }
 
-    @Getter
     static final class ColorImpl extends BaseData implements ColorData {
 
-        private Set<String> colorFormats = new HashSet<>();
+        @Getter
+        private Set<String> formats = new HashSet<>();
 
         @Setter
         private String colorStart = "", colorEnd = null;
@@ -557,17 +557,27 @@ final class UserManagerImpl implements UserManager, Registrable {
             super(FileData.Command.Multi.CHAT_COLOR.getFile(false), uuid.toString());
         }
 
+        @NotNull
+        public String getStart() {
+            return colorStart + String.join("", formats);
+        }
+
+        @Nullable
+        public String getEnd() {
+            return colorEnd;
+        }
+
         @Override
         public void removeAnyFormats() {
             colorStart = "";
             colorEnd = null;
-            colorFormats = new HashSet<>();
+            formats = new HashSet<>();
         }
 
         @Override
         void load() {
             colorStart = file.get(uuid + ".start", colorStart);
-            colorFormats = new HashSet<>(file.toStringList(uuid + ".formats"));
+            formats = new HashSet<>(file.toStringList(uuid + ".formats"));
 
             colorEnd = file.get(uuid + ".end", colorEnd);
             if (StringUtils.isBlank(colorEnd)) colorEnd = null;
@@ -575,10 +585,8 @@ final class UserManagerImpl implements UserManager, Registrable {
 
         @Override
         void save(boolean save) {
-            file.set(uuid + ".start", colorStart);
+            file.set(uuid + ".start", getStart());
             file.set(uuid + ".end", colorEnd);
-            file.set(uuid + ".formats", colorFormats);
-
             if (save) file.save();
         }
     }
