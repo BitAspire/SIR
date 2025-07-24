@@ -1,11 +1,41 @@
 lang:
+  # Complete command help menu
+  # Shows all available options and syntax for the chatcolor command
   help:
-    - ""
+    - '&7'
+    - ' &6>> &eChatColor command Help'
+    - '  &7- &b/chatcolor <color>&7: Changes your chat color to the specified color.'
+    - '  &7- &b/chatcolor <format>&7: Adds a format to your messages, such as bold or italic.'
+    - '  &7- &b/chatcolor reset&7: Resets your chat color to default.'
+    - '  &7- &b/chatcolor gradient <color1> <color2>&7: Sets a gradient color for your messages.'
+    - '  &7- &b/chatcolor rainbow&7: Sets your chat color to rainbow.'
+    - '&7'
 
+  # Error message when no player is specified in the command
+  # Shown when using /chatcolor from the console
+  need-player: '<P> &cYou need a player to use this command.'
+
+  # Error message when no color or format is specified
   color: "<P> &7You set your color to {color}."
-  gradient: "<P> {gradient}&7You set your gradient as shown.{gradient-end}"
+
+  # Gradient color settings
+  gradient:
+    # Error message when no colors are specified for gradient
+    usage: "<P> &7Usage: /chatcolor gradient <color1> <color2>"
+
+    # Success message when gradient is set
+    success: "<P> {gradient}&7You set your gradient as shown.{end}"
+
+  # Success message when rainbow color is set
   rainbow: "<P> {rainbow}You set your color as rainbow.{end}"
+
+  # Format settings
   format:
-    add: "<P> &7You added the format {format} to your messages."
-    remove: "<P> &7You removed the format {format} from your messages."
+    # Success message when a format is added
+    add: "<P> &7You added the format {format}&r&7 to your messages."
+
+    # Success message when a format is removed
+    remove: "<P> &7You removed the format {format}&r&7 from your messages."
+
+  # Success message when all formats are cleared
   reset: "<P> &7You have reset your color format to default."
