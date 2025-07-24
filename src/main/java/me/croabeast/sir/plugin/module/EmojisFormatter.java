@@ -2,41 +2,54 @@ package me.croabeast.sir.plugin.module;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import me.croabeast.common.util.Exceptions;
 import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.sir.api.file.PermissibleUnit;
 import me.croabeast.sir.plugin.FileData;
+import me.croabeast.sir.plugin.PAPIExpansion;
 import org.apache.commons.lang.StringUtils;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 final class EmojisFormatter extends SIRModule implements PlayerFormatter<Object> {
 
-    private final Set<Emoji> emojis = new LinkedHashSet<>();
+    private final Map<String, Emoji> emojis = new LinkedHashMap<>();
+    private PAPIExpansion expansion;
 
     EmojisFormatter() {
         super(Key.EMOJIS);
+
+        if (!Exceptions.isPluginEnabled("PlaceholderAPI")) return;
+
+        expansion = new PAPIExpansion("sir_emoji") {
+            @NotNull
+            public String onRequest(OfflinePlayer off, @NotNull String params) {
+                Emoji emoji = emojis.get(params);
+                return emoji != null ? emoji.value : "";
+            }
+        };
     }
 
     @Override
     public boolean register() {
         emojis.clear();
-        FileData.Module.Chat.EMOJIS.getFile()
-                .getSections("emojis")
+        FileData.Module.Chat.EMOJIS.getFile().getSections("emojis")
                 .forEach((k, s) ->
-                        emojis.add(new Emoji(s)));
+                        emojis.put(k, new Emoji(s)));
 
-        return true;
+        return expansion.registerExpansion();
     }
 
     @Override
     public boolean unregister() {
-        return false;
+        return expansion.unregisterExpansion();
     }
 
     @Override
@@ -49,7 +62,7 @@ final class EmojisFormatter extends SIRModule implements PlayerFormatter<Object>
         if (!isEnabled() || emojis.isEmpty())
             return string;
 
-        for (Emoji e : emojis)
+        for (Emoji e : emojis.values())
             string = e.parse(player, string);
 
         return string;

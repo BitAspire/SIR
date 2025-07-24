@@ -1,10 +1,10 @@
 package me.croabeast.sir.plugin.module;
 
-import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import me.croabeast.common.util.Exceptions;
 import me.croabeast.file.Configurable;
 import me.croabeast.sir.api.file.PermissibleUnit;
 import me.croabeast.sir.plugin.FileData;
+import me.croabeast.sir.plugin.PAPIExpansion;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
@@ -19,29 +19,14 @@ import java.util.regex.Pattern;
 final class TagsFormatter extends SIRModule implements PlayerFormatter<Object> {
 
     private final Map<String, ChatTag> tags = new HashMap<>();
-    private Object expansion;
+    private PAPIExpansion expansion;
 
     TagsFormatter() {
         super(Key.TAGS);
 
         if (!Exceptions.isPluginEnabled("PlaceholderAPI")) return;
 
-        expansion = new PlaceholderExpansion() {
-            @NotNull
-            public String getIdentifier() {
-                return "sir_tag";
-            }
-
-            @NotNull
-            public String getAuthor() {
-                return "CroaBeast";
-            }
-
-            @NotNull
-            public String getVersion() {
-                return "1.0";
-            }
-
+        expansion = new PAPIExpansion("sir_tag") {
             @Nullable
             public String onRequest(OfflinePlayer off, @NotNull String params) {
                 Player player = off.getPlayer();
@@ -116,20 +101,12 @@ final class TagsFormatter extends SIRModule implements PlayerFormatter<Object> {
                 .getSections("tags")
                 .forEach((key, s) -> tags.put(key, new ChatTag(s)));
 
-        if (!Exceptions.isPluginEnabled("PlaceholderAPI"))
-            return true;
-
-        PlaceholderExpansion ex = (PlaceholderExpansion) expansion;
-        return ex.isRegistered() || ex.register();
+        return expansion.registerExpansion();
     }
 
     @Override
     public boolean unregister() {
-        if (!Exceptions.isPluginEnabled("PlaceholderAPI"))
-            return false;
-
-        PlaceholderExpansion ex = (PlaceholderExpansion) expansion;
-        return !ex.isRegistered() || ex.unregister();
+        return expansion.unregisterExpansion();
     }
 
     @Override
