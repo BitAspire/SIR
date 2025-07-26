@@ -19,7 +19,7 @@ import java.util.regex.Pattern;
 final class TagsFormatter extends SIRModule implements PlayerFormatter<Object> {
 
     private final Map<String, ChatTag> tags = new HashMap<>();
-    private PAPIExpansion expansion;
+    private Object expansion;
 
     TagsFormatter() {
         super(Key.TAGS);
@@ -92,6 +92,10 @@ final class TagsFormatter extends SIRModule implements PlayerFormatter<Object> {
         return !tags.isEmpty() ? tags.iterator().next() : null;
     }
 
+    boolean callExpansion(boolean register) {
+        return expansion != null && (register ? ((PAPIExpansion) expansion).register() : ((PAPIExpansion) expansion).unregister());
+    }
+
     @Override
     public boolean register() {
         if (!isEnabled()) return false;
@@ -101,12 +105,12 @@ final class TagsFormatter extends SIRModule implements PlayerFormatter<Object> {
                 .getSections("tags")
                 .forEach((key, s) -> tags.put(key, new ChatTag(s)));
 
-        return expansion.registerExpansion();
+        return callExpansion(true);
     }
 
     @Override
     public boolean unregister() {
-        return expansion.unregisterExpansion();
+        return callExpansion(false);
     }
 
     @Override

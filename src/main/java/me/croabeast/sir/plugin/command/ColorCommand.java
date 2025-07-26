@@ -26,7 +26,7 @@ import java.util.Set;
 final class ColorCommand extends SIRCommand {
 
     final ConfigurableFile lang = FileData.Command.Multi.CHAT_COLOR.getFile(true);
-    private PAPIExpansion expansion;
+    private Object expansion;
 
     ColorCommand() {
         super(Key.CHAT_COLOR, true);
@@ -206,11 +206,20 @@ final class ColorCommand extends SIRCommand {
                 );
     }
 
+    void callExpansion(boolean register) {
+        if (expansion != null)
+            if (register) {
+                ((PAPIExpansion) expansion).register();
+            } else {
+                ((PAPIExpansion) expansion).unregister();
+            }
+    }
+
     @Override
     public boolean register(boolean async) {
         boolean registered = super.register(async);
         if (registered)
-            expansion.registerExpansion();
+            callExpansion(true);
         return registered;
     }
 
@@ -218,7 +227,7 @@ final class ColorCommand extends SIRCommand {
     public boolean unregister(boolean async) {
         boolean unregistered = super.unregister(async);
         if (unregistered)
-            expansion.unregisterExpansion();
+            callExpansion(false);
         return unregistered;
     }
 }

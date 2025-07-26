@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
 final class EmojisFormatter extends SIRModule implements PlayerFormatter<Object> {
 
     private final Map<String, Emoji> emojis = new LinkedHashMap<>();
-    private PAPIExpansion expansion;
+    private Object expansion;
 
     EmojisFormatter() {
         super(Key.EMOJIS);
@@ -37,19 +37,22 @@ final class EmojisFormatter extends SIRModule implements PlayerFormatter<Object>
         };
     }
 
+    boolean callExpansion(boolean register) {
+        return expansion != null && (register ? ((PAPIExpansion) expansion).register() : ((PAPIExpansion) expansion).unregister());
+    }
+
     @Override
     public boolean register() {
         emojis.clear();
         FileData.Module.Chat.EMOJIS.getFile().getSections("emojis")
-                .forEach((k, s) ->
-                        emojis.put(k, new Emoji(s)));
+                .forEach((k, s) -> emojis.put(k, new Emoji(s)));
 
-        return expansion.registerExpansion();
+        return callExpansion(true);
     }
 
     @Override
     public boolean unregister() {
-        return expansion.unregisterExpansion();
+        return callExpansion(false);
     }
 
     @Override

@@ -3,7 +3,6 @@ package me.croabeast.sir.plugin;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
-import me.croabeast.common.util.Exceptions;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -56,30 +55,4 @@ public abstract class PAPIExpansion extends PlaceholderExpansion {
      */
     @Nullable
     public abstract String onRequest(OfflinePlayer off, @NotNull String params);
-
-    /**
-     * Registers this expansion with PlaceholderAPI.
-     * <p>
-     * If PlaceholderAPI is not enabled, this method will return false.
-     * Otherwise, it will register the expansion if it is not already registered.
-     *
-     * @return True if the expansion was successfully registered, false otherwise.
-     */
-    public final boolean registerExpansion() {
-        return !Exceptions.isPluginEnabled("PlaceholderAPI") ||
-                (isRegistered() || super.register());
-    }
-
-    /**
-     * Unregisters this expansion from PlaceholderAPI.
-     * <p>
-     * If PlaceholderAPI is not enabled, this method will return false.
-     * Otherwise, it will unregister the expansion if it is currently registered.
-     *
-     * @return True if the expansion was successfully unregistered, false otherwise.
-     */
-    public final boolean unregisterExpansion() {
-        return Exceptions.isPluginEnabled("PlaceholderAPI") &&
-                (!isRegistered() || super.unregister());
-    }
 }
