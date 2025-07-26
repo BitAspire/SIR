@@ -11,6 +11,7 @@ import me.croabeast.sir.plugin.misc.ChatChannel;
 import me.croabeast.sir.plugin.aspect.AspectKey;
 import me.croabeast.sir.plugin.SIRPlugin;
 import me.croabeast.sir.plugin.FileData;
+import me.croabeast.sir.plugin.user.ColorData;
 import me.croabeast.sir.plugin.user.SIRUser;
 import me.croabeast.sir.plugin.manager.UserManager;
 import me.croabeast.takion.chat.ChatComponent;
@@ -216,18 +217,31 @@ class ChannelUtils {
                     })
                     .apply(s -> fromKey(SIRModule.Key.EMOJIS).format(parser, s))
                     .apply(s -> fromKey(SIRModule.Key.TAGS).format(parser, s))
-                    .apply(s -> fromKey(SIRModule.Key.MENTIONS).format(parser, s, this));
+                    .apply(s -> fromKey(SIRModule.Key.MENTIONS).format(parser, s, this))
+                    .apply(s -> {
+                        SIRUser user = plugin.getUserManager().getUser(parser);
+                        if (user == null) return s;
 
-            if (chat) applier.apply(s -> {
-                StringFormat f = SIRPlugin.getLib().getFormatManager().get("SMALL_CAPS");
-                return f.accept(s);
-            });
+                        String[] keys = {"{color-start}", "{color-end}"};
+
+                        final ColorData data = user.getColorData();
+                        String[] values = {data.getStart(), data.getEnd()};
+
+                        return ReplaceUtils.replaceEach(keys, values, s);
+                    });
+
+            if (chat)
+                applier.apply(s -> {
+                    StringFormat f = SIRPlugin.getLib().getFormatManager().get("SMALL_CAPS");
+                    return f.accept(s);
+                });
 
             Format<ChatComponent<?>> f = MultiComponent.DEFAULT_FORMAT;
             if (isDefault() && !f.isFormatted(applier.toString()))
                 return applier
                         .apply(s -> SIRPlugin.getLib().colorize(target, parser, s))
-                        .apply(plugin.getLibrary().getCharacterManager()::align).toString();
+                        .apply(plugin.getLibrary().getCharacterManager()::align)
+                        .toString();
 
             return isChatEventless() ? applier.toString() :
                     applier.apply(f::removeFormat).toString();
