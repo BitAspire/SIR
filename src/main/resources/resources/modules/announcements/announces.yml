@@ -10,10 +10,10 @@ announces:
     
     # Message lines
     lines:
-      - '&7'                                      # Empty gray line
-      - '<C>&aThis is a S.I.R announcement'       # Centered green text
-      - '<C>&7Disable announcements in&e modules.yml'  # Centered gray/yellow text
-      - '&7'                                      # Empty gray line
+      - '&7'
+      - '<C>&aThis is a S.I.R announcement'
+      - '<C>&7Disable announcements in&e modules.yml'
+      - '&7'
 
   # Announcement Entry 2
   # Mixed format announcement (action-bar, title) with command

@@ -43,5 +43,6 @@ lang:
   reminder:
     # Shown when no valid targets are found or when target selector is invalid
     empty: '<P> This target or group of targets is/are invalid or empty.'
+
     # Success message after sending the message, {TARGET} shows recipient(s)
     success: '<P> The message was send correctly to {TARGET}!'

@@ -4,16 +4,16 @@ cooldowns:
   # Default Cooldown Settings
   default:
     # Permission and Priority
-    permission: DEFAULT            # No special permission needed
+    permission: DEFAULT           # No special permission needed
     priority: 0                   # Lowest priority level
 
     # Spam Check System
     check:
       enabled: false              # Spam detection toggle
       count: 5                    # Maximum messages allowed
-      time-limit: 10             # Time window in seconds
+      time-limit: 10              # Time window in seconds
       commands:                   # Actions when limit reached
-        - "kick {player}"        # Example: Kicks spammer
+        - "kick {player}"         # Example: Kicks spammer
 
     # Basic Cooldown
     time: 5                       # Seconds between messages

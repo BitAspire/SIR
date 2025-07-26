@@ -1,14 +1,14 @@
 # DiscordSRV Integration Configuration
 
 # Server Configuration
-default-server: SERVER_ID    # Default DiscordSRV server ID
 # Falls back to DiscordSRV config if not set
+default-server: SERVER_ID
 
 # Channel Routing Configuration
 ids:
   # First Time Join Notifications
   first-join:
-    - CHANNEL_ID                       # Primary channel
+    - CHANNEL_ID                      # Primary channel
     - OTHER_SERVER_ID:CHANNEL_ID      # Cross-server channel
 
   # Regular Join Notifications

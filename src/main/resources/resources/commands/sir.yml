@@ -5,11 +5,8 @@ lang:
   help:
     - '&7'
     - ' &6>> &e&lSIR &7v {version}'
-    # Core plugin management command
     - '  &7 &b/sir&7: The main command of the plugin.'
-    # Message broadcasting utility command
     - '  &7 &b/print&7: Prints a raw message to a target.'
-    # Announcement system management command
     - '  &7 &b/announcer&7: Manage announcements task.'
     - '&7'
 

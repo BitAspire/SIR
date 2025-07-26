@@ -15,6 +15,9 @@ lang:
   # Requires a prior /msg command to work
   not-replied: '<P> &cYou did not send a message to a player before.'
 
+  # Error when the player who was messaged is not found
+  not-found: '<P> &cPlayer not found. Maybe they are offline?'
+
   # Prevention of self-messaging
   # Stops players from messaging themselves
   not-yourself: '<P> &cYou can not send a message to yourself.'
@@ -24,8 +27,9 @@ lang:
     # How the message appears to the sender
     # {receiver} = recipient's name, {message} = sent text
     message: ' &eME &8> &6{receiver}&7: &f{message}'
+
     # Sound played when sending a message
-    # Set to '' to disable the sound
+    # Set to '' to completely disable the sound
     sound: ENTITY_PLAYER_LEVELUP
 
   # Format for message receiver's view
@@ -33,14 +37,16 @@ lang:
     # How the message appears to the recipient
     # {sender} = sender's name, {message} = received text
     message: ' &6{sender} &8> &eME&7: &f{message}'
+
     # Sound played when receiving a message
-    # Set to '' to disable the sound
+    # Set to '' to completely disable the sound
     sound: ENTITY_PLAYER_LEVELUP
 
   # Console message formatting
   console-formatting:
     # Display name for console in messages
     name: '&cConsole'
+
     # Format for console log entries
     # {sender}, {receiver}, {message} placeholders
     format: ' &6{sender} &8> &e{receiver}&7: &f{message}'
@@ -49,5 +55,6 @@ lang:
   vanish-messages:
     # Whether to allow messaging vanished players
     enabled: false
+
     # Error shown when attempting to message vanished players
     message: '<P> &cYou can not send a message to a vanished player.'

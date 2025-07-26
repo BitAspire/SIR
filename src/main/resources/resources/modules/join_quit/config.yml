@@ -1,14 +1,14 @@
 # Join/Quit Message Configuration
+update: true
 
 # Default Message Control
-default-messages:
-  disable-join: true     # Disable vanilla join messages
-  disable-quit: true     # Disable vanilla quit messages
-
 # ⚠️ IMPORTANT WARNING ⚠️
 # These settings ONLY affect vanilla Minecraft messages
 # S.I.R. custom join/quit messages are controlled separately
 # This will NOT disable custom messages configured in S.I.R.
+default-messages:
+  disable-join: true     # Disable vanilla join messages
+  disable-quit: true     # Disable vanilla quit messages
 
 # Anti-Spam Cooldowns
 cooldown:

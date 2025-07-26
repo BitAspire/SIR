@@ -4,25 +4,25 @@ type:
   # Task Advancements (Basic achievements)
   task:
     # Display format and rewards
-    - ' &e{player}&7 has got the {low-type} <hover:"&7{description}">&a{adv}</text>'  # Notification message
-    - '[cmd] minecraft:experience add {player} 100 points'                             # 100 XP reward
+    - ' &e{player}&7 has got the {low-type} <hover:"&7{description}">&a{adv}</text>'
+    - '[cmd] minecraft:experience add {player} 100 points'
 
   # Goal Advancements (Intermediate achievements)
   goal:
     # Display format and rewards
-    - ' &e{player}&7 has reached the {type} <hover:"&7{description}">&b{adv}</text>'  # Notification message
-    - '[cmd] minecraft:experience add {player} 500 points'                             # 500 XP reward
+    - ' &e{player}&7 has reached the {type} <hover:"&7{description}">&b{adv}</text>'
+    - '[cmd] minecraft:experience add {player} 500 points'
 
   # Challenge Advancements (Difficult achievements)
   challenge:
     # Display format and rewards
-    - ' &e{player}&7 has finished the &d{cap-type}&7: <hover:"&7{description}">&5{adv}</text>'  # Notification message
-    - '[cmd] minecraft:experience add {player} 1000 points'                                       # 1000 XP reward
+    - ' &e{player}&7 has finished the &d{cap-type}&7: <hover:"&7{description}">&5{adv}</text>'
+    - '[cmd] minecraft:experience add {player} 1000 points'
 
   # Custom Advancements (Data pack achievements)
   custom:
     # Display format only (no default reward)
-    - ' &e{player} &7has made the {low-type} <hover:"&7{description}">&b{adv}</text>'  # Notification message
+    - ' &e{player} &7has made the {low-type} <hover:"&7{description}">&b{adv}</text>'
 
 # Available Placeholders:
 # {player}      - Player name

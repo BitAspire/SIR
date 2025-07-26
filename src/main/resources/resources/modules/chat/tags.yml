@@ -3,11 +3,11 @@
 tags:
   # Example VIP Tag
   custom-tag:
-    tag: "[I'M GOD]"           # Display text
-    permission: "tag.god"      # Required permission
-    priority: 20              # Tag priority (higher = more important)
+    tag: "[I'M GOD]"         # Display text
+    permission: "tag.god"    # Required permission
+    priority: 20             # Tag priority (higher = more important)
     group: vip               # Required player group
-    description:            # Hover text/description
+    description:             # Hover text/description
       - "This tag can only be obtained having VIP"
       - "Buy one in walmart.com"
 

@@ -1,21 +1,26 @@
 # Chat System Configuration
+update: true
 
 # Empty Message Control
-allow-empty:
-  enabled: false    # Allow messages with only spaces
-  message: '<P> &cYou can not send an empty message.'  # Error message
 # Note: Keeping this disabled is recommended to prevent chat spam
+allow-empty:
+  # Allow messages with only spaces
+  enabled: false
+
+  # Error message
+  message: '<P> &cYou can not send an empty message.'
 
 # Console Log Format
+# Note: Affects ALL channel formats in console
 simple-logger:
-  enabled: false    # Use simplified console logging
+  # Use simplified logger format
+  enabled: false
+
   # Custom console format
   # Supports: PlaceholderAPI, {prefix}, {suffix}
   format: ' &7{player}: {message}'
-# Note: Affects ALL channel formats in console
 
 # Chat Format System
-default-format: false    # Use vanilla chat format
 # When false (recommended):
 # ✓ InteractiveChat compatibility
 # ✓ Ignore command support
@@ -29,6 +34,7 @@ default-format: false    # Use vanilla chat format
 # × Limited functionality
 # × No interactive elements
 # × No radius support
+default-format: false
 
 # Important Notes:
 # 1. Empty messages should remain disabled to prevent abuse
@@ -41,3 +47,5 @@ default-format: false    # Use vanilla chat format
 # {message} - Chat message
 # {prefix}  - Player prefix
 # {suffix}  - Player suffix
+# {color-start} - Color start tag
+# {color-end}   - Color end tag

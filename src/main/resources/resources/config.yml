@@ -3,11 +3,12 @@
 # Depressed since 2004 #
 ########################
 
+# Controls the automatic update checking
+# When true, the plugin will check for updates to this config file
+update: true
+
 # 🔄 Updater Configuration
 updater:
-  # Controls the automatic update checking
-  # When true, the plugin will check for updates to this config file
-  enabled: true
 
   # Controls the startup update notification
   # When true, sends a notification about available updates when the server starts
