@@ -92,11 +92,21 @@ final class UserManagerImpl implements UserManager, Registrable {
     }
 
     void loadData(Player player) {
-        BaseUser user = new OnlineUser(player);
-        userMap.keySet().removeIf(u -> u.equals(user.uuid));
-        userMap.values().removeIf(u -> u.getName().equals(user.getName()) && !u.isOnline());
-        userMap.put(user.getUuid(), user);
-        user.load();
+        UUID uuid = player.getUniqueId();
+        String playerName = player.getName();
+
+        userMap.values().removeIf(user -> {
+            if (user == null) return true;
+            try {
+                return user.getUuid().equals(uuid) && !user.isOnline();
+            } catch (Exception e) {
+                return true;
+            }
+        });
+
+        BaseUser onlineUser = new OnlineUser(player);
+        userMap.put(uuid, onlineUser);
+        onlineUser.load();
     }
 
     void saveAllData() {
@@ -131,12 +141,17 @@ final class UserManagerImpl implements UserManager, Registrable {
         if (StringUtils.isBlank(name)) return null;
 
         for (SIRUser user : userMap.values()) {
-            if (user == null || !user.isOnline()) continue;
+            if (user == null) continue;
 
             try {
-                String userName = user.getName();
-                if (userName.equals(name)) return user;
-            } catch (Exception ignored) {}
+                if (user.isOnline()) {
+                    String userName = user.getName();
+                    if (userName != null && userName.equals(name)) {
+                        return user;
+                    }
+                }
+            } catch (Exception ignored) {
+            }
         }
 
         return null;
@@ -147,12 +162,15 @@ final class UserManagerImpl implements UserManager, Registrable {
         if (StringUtils.isBlank(input)) return null;
 
         for (SIRUser user : userMap.values()) {
-            if (user == null || !user.isOnline()) continue;
+            if (user == null) continue;
 
             try {
-                String userName = user.getName();
-                if (userName.matches("(?i)" + Pattern.quote(input)))
-                    return user;
+                if (user.isOnline()) {
+                    String userName = user.getName();
+                    if (userName != null && userName.matches("(?i)" + Pattern.quote(input))) {
+                        return user;
+                    }
+                }
             } catch (Exception ignored) {}
         }
 
@@ -339,6 +357,7 @@ final class UserManagerImpl implements UserManager, Registrable {
 
             return Exceptions.isPluginEnabled("CMI") &&
                     CMIUser.getUser(user.getPlayer()).isMuted();
+//            return muted;
         }
 
         @Override
@@ -618,6 +637,10 @@ final class UserManagerImpl implements UserManager, Registrable {
             map.map.put("immune", new ImmuneImpl(this));
         }
 
+        @NotNull
+        @Override
+        public abstract String getName();
+
         @Nullable
         public String getPrefix() {
             return plugin.getVaultHolder().getPrefix(getPlayer());
@@ -631,6 +654,7 @@ final class UserManagerImpl implements UserManager, Registrable {
         @Override
         public boolean isLogged() {
             return !SIRModule.Key.LOGIN.isEnabled() || logged;
+//            return logged;
         }
 
         @Override
@@ -739,7 +763,6 @@ final class UserManagerImpl implements UserManager, Registrable {
 
         OfflineUser(OfflinePlayer offline) {
             super(offline.getUniqueId());
-
             this.offline = offline;
             this.player = offline.getPlayer();
         }
@@ -750,13 +773,22 @@ final class UserManagerImpl implements UserManager, Registrable {
         }
 
         @NotNull
+        @Override
         public String getName() {
-            return player.getName();
+            if (offline != null && offline.getName() != null) {
+                return offline.getName();
+            }
+
+            if (player != null) {
+                return player.getName();
+            }
+
+            return "Unknown-" + (uuid != null ? uuid.toString().substring(0, 8) : "null");
         }
 
         @Override
         public String toString() {
-            return "OfflineUser{offline=" + offline + '}';
+            return "OfflineUser{offline=" + offline + ", name=" + getName() + '}';
         }
     }
 }
