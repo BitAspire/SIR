@@ -137,7 +137,7 @@ public final class LangUtils extends TakionLib {
         Pattern cPattern = Pattern.compile("(?i)^\\[(global|console)]");
         Pattern pPattern = Pattern.compile("(?i)^\\[player]");
 
-        Bukkit.getScheduler().runTask(SIRPlugin.getInstance(), () -> {
+        SIRPlugin.getScheduler().runTask(() -> {
             for (String c : commands) {
                 if (StringUtils.isBlank(c)) continue;
 

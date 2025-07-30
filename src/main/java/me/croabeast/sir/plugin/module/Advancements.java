@@ -5,6 +5,7 @@ import me.croabeast.advancement.AdvancementInfo;
 import me.croabeast.file.ConfigurableFile;
 import me.croabeast.common.util.ServerInfoUtils;
 import me.croabeast.sir.plugin.FileData;
+import me.croabeast.sir.plugin.SIRPlugin;
 import me.croabeast.sir.plugin.misc.FileKey;
 import me.croabeast.sir.plugin.misc.DelayLogger;
 import me.croabeast.sir.plugin.user.SIRUser;
@@ -226,7 +227,7 @@ final class Advancements extends ListenerModule {
             if (plugin.getWorldRuleManager().isLoaded()) checkAdvancements();
             if (loaded || taskId != -1) return;
 
-            taskId = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+            taskId = SIRPlugin.getScheduler().runTask(() -> {
                 loaded = true;
                 final DelayLogger logger = new DelayLogger()
                         .add(true,
@@ -287,7 +288,7 @@ final class Advancements extends ListenerModule {
                         "- Completed in " + time.result() + " ms.",
                         "==========================="
                 ).sendLines();
-            });
+            }).getTaskId();
         }
 
         void save() {

@@ -23,7 +23,7 @@ final class RuleManagerImpl implements WorldRuleManager {
     public void load() {
         if (loaded) return;
 
-        loaded = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+        loaded = SIRPlugin.getScheduler().runTask(() -> {
             for (World world : plugin.getServer().getWorlds()) {
                 Map<WorldRule<?>, Object> map = data.getOrDefault(world, new HashMap<>());
 
@@ -36,7 +36,7 @@ final class RuleManagerImpl implements WorldRuleManager {
 
                 data.put(world, map);
             }
-        }) != -1;
+        }).getTaskId() != -1;
     }
 
     @Override

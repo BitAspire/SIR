@@ -11,6 +11,7 @@ import me.croabeast.common.CustomListener;
 import me.croabeast.common.Registrable;
 import me.croabeast.common.util.Exceptions;
 import me.croabeast.file.ConfigurableFile;
+import me.croabeast.scheduler.GlobalScheduler;
 import me.croabeast.sir.plugin.manager.UserManager;
 import me.croabeast.sir.plugin.user.SIRUser;
 import me.croabeast.sir.plugin.module.SIRModule;
@@ -32,7 +33,6 @@ import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitScheduler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -54,12 +54,12 @@ final class UserManagerImpl implements UserManager, Registrable {
             @Getter
             private final Status status = new Status();
 
-            @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+            @EventHandler(priority = EventPriority.LOW)
             void onJoin(PlayerJoinEvent event) {
                 loadData(event.getPlayer());
             }
 
-            @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+            @EventHandler(priority = EventPriority.HIGHEST)
             void onQuit(PlayerQuitEvent event) {
                 BaseUser user = userMap.remove(event.getPlayer().getUniqueId());
                 if (user == null) return;
@@ -87,20 +87,15 @@ final class UserManagerImpl implements UserManager, Registrable {
 
     void loadData(OfflinePlayer offline) {
         BaseUser user = new OfflineUser(offline);
-        user.load();
         userMap.put(user.getUuid(), user);
+        user.load();
     }
 
     void loadData(Player player) {
-        BaseUser before = new OnlineUser(player);
-        UUID uuid = before.getUuid();
-
-        BaseUser user = userMap.get(uuid);
-        if (user == null || user instanceof OfflineUser) {
-            userMap.put(uuid, before);
-            user = userMap.get(uuid);
-        }
-
+        BaseUser user = new OnlineUser(player);
+        userMap.keySet().removeIf(u -> u.equals(user.uuid));
+        userMap.values().removeIf(u -> u.getName().equals(user.getName()) && !u.isOnline());
+        userMap.put(user.getUuid(), user);
         user.load();
     }
 
@@ -127,17 +122,22 @@ final class UserManagerImpl implements UserManager, Registrable {
     public SIRUser getUser(UUID uuid) {
         if (uuid == null) return null;
 
-        final SIRUser user = userMap.get(uuid);
-        return user.isOnline() ? user : null;
+        SIRUser user = userMap.get(uuid);
+        return user != null && user.isOnline() ? user : null;
     }
 
     @Override
     public SIRUser getUser(String name) {
         if (StringUtils.isBlank(name)) return null;
 
-        for (SIRUser user : userMap.values())
-            if (user.getName().equals(name) && user.isOnline())
-                return user;
+        for (SIRUser user : userMap.values()) {
+            if (user == null || !user.isOnline()) continue;
+
+            try {
+                String userName = user.getName();
+                if (userName.equals(name)) return user;
+            } catch (Exception ignored) {}
+        }
 
         return null;
     }
@@ -146,9 +146,15 @@ final class UserManagerImpl implements UserManager, Registrable {
     public SIRUser fromClosest(String input) {
         if (StringUtils.isBlank(input)) return null;
 
-        for (SIRUser user : userMap.values())
-            if (user.getName().matches("(?i)" + Pattern.quote(input)) &&
-                    user.isOnline()) return user;
+        for (SIRUser user : userMap.values()) {
+            if (user == null || !user.isOnline()) continue;
+
+            try {
+                String userName = user.getName();
+                if (userName.matches("(?i)" + Pattern.quote(input)))
+                    return user;
+            } catch (Exception ignored) {}
+        }
 
         return null;
     }
@@ -372,7 +378,7 @@ final class UserManagerImpl implements UserManager, Registrable {
         @Override
         public void unmute() {
             if (taskId != -1) {
-                plugin.getServer().getScheduler().cancelTask(taskId);
+                SIRPlugin.getScheduler().cancel(taskId);
                 taskId = -1;
             }
 
@@ -386,14 +392,14 @@ final class UserManagerImpl implements UserManager, Registrable {
         }
 
         void scheduleUnmute(long remaining) {
-            BukkitScheduler scheduler = plugin.getServer().getScheduler();
+            GlobalScheduler scheduler = SIRPlugin.getScheduler();
 
             if (taskId != -1) {
-                plugin.getServer().getScheduler().cancelTask(taskId);
+                scheduler.cancel(taskId);
                 taskId = -1;
             }
 
-            taskId = scheduler.runTaskLater(plugin, () -> {
+            taskId = scheduler.runTaskLater(() -> {
                 this.remaining = 0;
                 muted = false;
                 expiresAt = -1;
@@ -425,7 +431,7 @@ final class UserManagerImpl implements UserManager, Registrable {
         @Override
         void save(boolean save) {
             if (taskId != -1) {
-                plugin.getServer().getScheduler().cancelTask(taskId);
+                SIRPlugin.getScheduler().cancel(taskId);
                 taskId = -1;
             }
 
@@ -492,7 +498,7 @@ final class UserManagerImpl implements UserManager, Registrable {
         }
     }
 
-    final class ImmuneImpl extends BaseData implements ImmuneData {
+    static final class ImmuneImpl extends BaseData implements ImmuneData {
 
         private final SIRUser user;
 
@@ -507,7 +513,7 @@ final class UserManagerImpl implements UserManager, Registrable {
 
         private void cancelTask() {
             if (taskId != -1)
-                plugin.getServer().getScheduler().cancelTask(taskId);
+                SIRPlugin.getScheduler().cancel(taskId);
         }
 
         void setImmune(boolean immune) {
@@ -531,9 +537,9 @@ final class UserManagerImpl implements UserManager, Registrable {
             }
 
             setImmune(true);
-            taskId = plugin.getServer().getScheduler()
+            taskId = SIRPlugin.getScheduler()
                     .runTaskLater(
-                            plugin, () -> setImmune(false),
+                            () -> setImmune(false),
                             seconds * 20L
                     ).getTaskId();
         }

@@ -2,6 +2,7 @@ package me.croabeast.sir.plugin;
 
 import com.github.stefvanschie.inventoryframework.pane.Pane;
 import lombok.Getter;
+import me.croabeast.common.Registrable;
 import me.croabeast.common.reflect.Reflector;
 import me.croabeast.sir.plugin.aspect.AspectButton;
 import me.croabeast.common.gui.ItemCreator;
@@ -75,6 +76,8 @@ final class CommandImpl implements CommandManager {
                 );
     }
 
+    final Set<Registrable> registrables = new HashSet<>();
+
     @Override
     public void load() {
         if (loaded) return;
@@ -98,6 +101,8 @@ final class CommandImpl implements CommandManager {
                 continue;
 
             Commandable commandable = (Commandable) init;
+            if (init instanceof Registrable)
+                registrables.add((Registrable) init);
 
             final Set<SIRCommand> set = commandable.getCommands();
             set.forEach(c -> commands.put(c.getName(), c));
@@ -127,6 +132,7 @@ final class CommandImpl implements CommandManager {
     @Override
     public boolean register() {
         commands.values().forEach(c -> c.register(false));
+        registrables.forEach(Registrable::register);
         SIRCommand.syncCommands();
         return true;
     }
@@ -134,6 +140,7 @@ final class CommandImpl implements CommandManager {
     @Override
     public boolean unregister() {
         commands.values().forEach(c -> c.unregister(false));
+        registrables.forEach(Registrable::unregister);
         SIRCommand.syncCommands();
         return true;
     }

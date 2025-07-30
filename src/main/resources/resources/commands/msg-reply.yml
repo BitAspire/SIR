@@ -15,9 +15,6 @@ lang:
   # Requires a prior /msg command to work
   not-replied: '<P> &cYou did not send a message to a player before.'
 
-  # Error when the player who was messaged is not found
-  not-found: '<P> &cPlayer not found. Maybe they are offline?'
-
   # Prevention of self-messaging
   # Stops players from messaging themselves
   not-yourself: '<P> &cYou can not send a message to yourself.'

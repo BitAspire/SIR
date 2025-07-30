@@ -162,6 +162,8 @@ final class ChatHandler extends ListenerModule implements Commandable {
         if (event.isCancelled() || !isEnabled()) return;
 
         SIRUser user = plugin.getUserManager().getUser(event.getPlayer());
+        if (user == null) return;
+
         if (user.getMuteData().isMuted() || !user.isLogged()) {
             event.setCancelled(true);
             return;
@@ -214,7 +216,7 @@ final class ChatHandler extends ListenerModule implements Commandable {
         global.call();
     }
 
-    @EventHandler(priority = EventPriority.LOW)
+    @EventHandler(priority = EventPriority.LOWEST)
     private void onCommand(PlayerCommandPreprocessEvent event) {
         if (event.isCancelled() || !isEnabled()) return;
 

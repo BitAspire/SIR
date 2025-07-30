@@ -135,7 +135,7 @@ final class DiscordHook extends SIRModule implements Actionable, HookLoadable {
     static class EssentialsHolder {
 
         static void send(Player player, String[] keys, String[] values) {
-            Bukkit.getScheduler().runTask(SIRPlugin.getInstance(), () -> {
+            SIRPlugin.getScheduler().runTask(() -> {
                 EssentialsDiscord discord;
                 try {
                     discord = JavaPlugin.getPlugin(EssentialsDiscord.class);

@@ -4,6 +4,8 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import me.croabeast.common.CollectionBuilder;
 import me.croabeast.command.TabBuilder;
+import me.croabeast.common.CustomListener;
+import me.croabeast.common.Registrable;
 import me.croabeast.file.ConfigurableFile;
 import me.croabeast.sir.plugin.SIRPlugin;
 import me.croabeast.sir.plugin.aspect.AspectButton;
@@ -18,14 +20,17 @@ import me.croabeast.takion.message.MessageSender;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.function.Supplier;
 
-final class AuditChatHandler implements Commandable {
+final class AuditChatHandler implements Commandable, Registrable {
 
     private final Map<CommandSender, CommandSender> replies = new HashMap<>();
+    private final CustomListener listener;
 
     private final SIRAspect aspect = new MessageAspect();
     private final List<SIRCommand> messageCommands = new ArrayList<>();
@@ -35,6 +40,19 @@ final class AuditChatHandler implements Commandable {
 
     AuditChatHandler() {
         ConfigurableFile lang = FileData.Command.Multi.IGNORE.getFile(true);
+        listener = new CustomListener() {
+            @Getter
+            private final Status status = new Status();
+
+            @EventHandler
+            void onQuit(PlayerQuitEvent event) {
+                Player player = event.getPlayer();
+                replies.entrySet().removeIf(e ->
+                        Objects.equals(e.getKey(), player) ||
+                        Objects.equals(e.getValue(), player)
+                );
+            }
+        };
 
         commands.add(new SIRCommand(SIRCommand.Key.IGNORE, true) {
 
@@ -111,9 +129,9 @@ final class AuditChatHandler implements Commandable {
             protected boolean execute(CommandSender s, String[] args) {
                 if (!isPermitted(s)) return true;
 
-                SIRUser user = plugin.getUserManager().getUser(s);
+                final SIRUser user = plugin.getUserManager().getUser(s);
                 if (user != null && user.getMuteData().isMuted())
-                    return createSender(s).send("is-muted");
+                    return createSender(s).setLogger(false).send("is-muted");
 
                 if (args.length == 0)
                     return createSender(s).setLogger(false).send("need-player");
@@ -124,21 +142,15 @@ final class AuditChatHandler implements Commandable {
                 if (Objects.equals(target, user))
                     return createSender(s).setLogger(false).send("not-yourself");
 
-                if (target.getIgnoreData().isIgnoring(user, false)) {
+                if (target.getIgnoreData().isIgnoring(user, false))
                     return plugin.getLibrary().getLoadedSender()
                             .setLogger(false)
-                            .addPlaceholder(
-                                    "{type}",
-                                    lang.get("lang.channels.msg", "")
-                            )
+                            .addPlaceholder("{type}", lang.get("lang.channels.msg", ""))
                             .send(lang.toStringList("lang.ignoring"));
-                }
 
-                boolean vanished = getLang()
-                        .get("lang.vanish-messages.enabled", true);
+                boolean vanished = getLang().get("lang.vanish-messages.enabled", true);
                 if (target.isVanished() && vanished)
-                    return createSender(s)
-                            .setLogger(false).send("vanish-messages.message");
+                    return createSender(s).setLogger(false).send("vanish-messages.message");
 
                 String message = LangUtils.stringFromArray(args, 1);
                 if (StringUtils.isBlank(message))
@@ -165,8 +177,7 @@ final class AuditChatHandler implements Commandable {
                 replies.put(s, player);
 
                 return sender.setErrorPrefix(null)
-                        .setLogger(true)
-                        .send("console-formatting.format");
+                        .setLogger(true).send("console-formatting.format");
             }
 
             @NotNull
@@ -185,7 +196,7 @@ final class AuditChatHandler implements Commandable {
             protected boolean execute(CommandSender s, String[] args) {
                 if (!isPermitted(s)) return true;
 
-                SIRUser receiver = plugin.getUserManager().getUser(s);
+                final SIRUser receiver = plugin.getUserManager().getUser(s);
                 if (receiver != null && receiver.getMuteData().isMuted())
                     return createSender(s).setLogger(false).send("is-muted");
 
@@ -194,30 +205,20 @@ final class AuditChatHandler implements Commandable {
                     return createSender(s).setLogger(false).send("not-replied");
 
                 SIRUser initiator = plugin.getUserManager().getUser(init);
-                if (initiator != null) {
-                    if (initiator.getIgnoreData().isIgnoring(receiver, false)) {
-                        return plugin.getLibrary().getLoadedSender()
-                                .setLogger(false)
-                                .addPlaceholder(
-                                        "{type}",
-                                        lang.get("lang.channels.msg", "")
-                                )
-                                .send(lang.toStringList("lang.ignoring"));
-                    }
 
-                    boolean vanished = getLang()
-                            .get("lang.vanish-messages.enabled", true);
-                    if (initiator.isVanished() && vanished)
-                        return createSender(s)
-                                .setLogger(false)
-                                .send("vanish-messages.message");
-                }
+                if (initiator.getIgnoreData().isIgnoring(receiver, false))
+                    return plugin.getLibrary().getLoadedSender()
+                            .setLogger(false)
+                            .addPlaceholder("{type}", lang.get("lang.channels.msg", ""))
+                            .send(lang.toStringList("lang.ignoring"));
+
+                if (getLang().get("lang.vanish-messages.enabled", true) &&
+                        initiator.isVanished())
+                    return createSender(s).setLogger(false).send("vanish-messages.message");
 
                 String message = LangUtils.stringFromArray(args, 0);
                 if (StringUtils.isBlank(message))
-                    return createSender(s)
-                            .setLogger(false)
-                            .send("empty-message");
+                    return createSender(s).setLogger(false).send("empty-message");
 
                 Values initValues = new Values(plugin, true);
                 Values receiveValues = new Values(plugin, false);
@@ -232,13 +233,10 @@ final class AuditChatHandler implements Commandable {
                         .addPlaceholder("{sender}", isConsoleValue(s));
 
                 sender.copy().setTargets(s).send(initValues.getOutput());
-
-                sender.copy().setTargets(init)
-                        .send(receiveValues.getOutput());
+                sender.copy().setTargets(init).send(receiveValues.getOutput());
 
                 return sender.setErrorPrefix(null)
-                        .setLogger(true)
-                        .send("console-formatting.format");
+                        .setLogger(true).send("console-formatting.format");
             }
 
             @NotNull
@@ -248,6 +246,21 @@ final class AuditChatHandler implements Commandable {
         });
 
         commands.addAll(messageCommands);
+    }
+
+    @Override
+    public boolean isRegistered() {
+        return listener.isRegistered();
+    }
+
+    @Override
+    public boolean register() {
+        return listener.register(SIRPlugin.getInstance());
+    }
+
+    @Override
+    public boolean unregister() {
+        return listener.unregister();
     }
 
     @Getter

@@ -8,6 +8,7 @@ import me.croabeast.file.Configurable;
 import me.croabeast.file.ConfigurableFile;
 import me.croabeast.sir.plugin.Commandable;
 import me.croabeast.sir.plugin.FileData;
+import me.croabeast.sir.plugin.SIRPlugin;
 import me.croabeast.sir.plugin.command.SIRCommand;
 import me.croabeast.sir.plugin.misc.FileKey;
 import me.croabeast.sir.plugin.user.SIRUser;
@@ -103,6 +104,8 @@ final class Announcements extends SIRModule implements Actionable, Commandable {
                 continue;
 
             SIRUser user = plugin.getUserManager().getUser(p);
+            if (user == null) continue;
+
             if (!user.isVanished() && user.hasPermission(perm))
                 users.add(user);
         }
@@ -117,8 +120,7 @@ final class Announcements extends SIRModule implements Actionable, Commandable {
         if (!isEnabled() || delay <= 0 || section == null || running)
             return false;
 
-        taskId = Bukkit.getScheduler().runTaskTimer(
-                plugin,
+        taskId = SIRPlugin.getScheduler().runTaskTimer(
                 () -> {
                     int count = announcesMap.size() - 1;
                     if (order > count) order = 0;
@@ -142,7 +144,7 @@ final class Announcements extends SIRModule implements Actionable, Commandable {
     private boolean stop() {
         if (isEnabled() || !running) return false;
 
-        Bukkit.getScheduler().cancelTask(taskId);
+        SIRPlugin.getScheduler().cancel(taskId);
         running = false;
         return true;
     }

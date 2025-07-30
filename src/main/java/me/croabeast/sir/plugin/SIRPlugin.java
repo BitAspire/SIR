@@ -12,6 +12,7 @@ import me.croabeast.common.util.Exceptions;
 import me.croabeast.file.ResourceUtils;
 import me.croabeast.common.MetricsLoader;
 import me.croabeast.common.util.ServerInfoUtils;
+import me.croabeast.scheduler.GlobalScheduler;
 import me.croabeast.sir.plugin.command.SIRCommand;
 import me.croabeast.sir.plugin.manager.*;
 import me.croabeast.sir.plugin.misc.DelayLogger;
@@ -19,8 +20,8 @@ import me.croabeast.sir.plugin.misc.Timer;
 import me.croabeast.sir.plugin.module.*;
 import me.croabeast.takion.TakionLib;
 import me.croabeast.takion.VaultHolder;
+import me.croabeast.takion.bossbar.AnimatedBossbar;
 import me.croabeast.takion.character.SmallCaps;
-import me.croabeast.takion.message.AnimatedBossbar;
 import org.apache.commons.lang.math.NumberUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -68,6 +69,8 @@ public final class SIRPlugin extends JavaPlugin {
     @Getter
     private static SIRPlugin instance;
     @Getter
+    private static GlobalScheduler scheduler;
+    @Getter
     private static TakionLib lib;
 
     @Getter
@@ -86,6 +89,8 @@ public final class SIRPlugin extends JavaPlugin {
         final Timer initializer = Timer.create(true);
 
         instance = this;
+        scheduler = GlobalScheduler.getScheduler(this);
+
         author = getDescription().getAuthors().get(0);
         version = getDescription().getVersion();
 
@@ -301,7 +306,8 @@ public final class SIRPlugin extends JavaPlugin {
                     break;
             }
         };
-        getServer().getScheduler().scheduleSyncDelayedTask(this, () -> {
+
+        scheduler.runTaskLater(() -> {
             if (FileData.Main.CONFIG.getFile().get("updater.on-start", true))
                 updater.requestCheck(96378, Platform.SPIGOT)
                         .whenComplete((result, e) -> consumer.accept(null, result));
@@ -345,7 +351,7 @@ public final class SIRPlugin extends JavaPlugin {
         userManager.unregister();
         userManager.saveAllData();
 
-        getServer().getScheduler().cancelTasks(this);
+        scheduler.cancelAll();
         HandlerList.unregisterAll(this);
 
         logger.add(true,
