@@ -1,4 +1,4 @@
-main: me.croabeast.sir.plugin.SIRPlugin
+main: me.croabeast.sir.SIRPlugin
 
 name: SIR # Simple In-game Receptionist
 version: '${project.version}'

@@ -112,4 +112,4 @@ buildNumber.properties
 # Common working directory
 run/
 
-/src/main/java/me/croabeast/sir/api/addon/
+/src/main/java/me/croabeast/sir/addon/
