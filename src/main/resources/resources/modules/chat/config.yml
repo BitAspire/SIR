@@ -1,8 +1,20 @@
 # Chat System Configuration
 update: true
 
+# Default Format Settings
+# This option allows you to enable or disable compatibility
+# with other plugins that use default bukkit chat format.
+# If enabled, the chat will use the default Bukkit format, not
+# recommended.
+default-format: false
+
+# Muted Player Control message
+# This message is sent to players who are muted whn they try
+# to send a message.
+is-muted: "<P> &cYou are muted, you can not send messages."
+
 # Empty Message Control
-# Note: Keeping this disabled is recommended to prevent chat spam
+# Keeping this disabled is recommended to prevent chat spam
 allow-empty:
   # Allow messages with only spaces
   enabled: false
@@ -17,30 +29,8 @@ simple-logger:
   enabled: false
 
   # Custom console format
-  # Supports: PlaceholderAPI, {prefix}, {suffix}
+  # Supports: PlaceholderAPI and available placeholders
   format: ' &7{player}: {message}'
-
-# Chat Format System
-# When false (recommended):
-# ✓ InteractiveChat compatibility
-# ✓ Ignore command support
-# ✓ Local radius channels
-# ✓ Hover events
-# ✓ Click events
-#
-# When true (not recommended):
-# × Loses advanced features
-# × Uses vanilla format
-# × Limited functionality
-# × No interactive elements
-# × No radius support
-default-format: false
-
-# Important Notes:
-# 1. Empty messages should remain disabled to prevent abuse
-# 2. Simple logger helps readability in console
-# 3. Default format should stay false for full functionality
-# 5. All features work best with default-format: false
 
 # Available Placeholders:
 # {player}  - Player name

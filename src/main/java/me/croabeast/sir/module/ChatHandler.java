@@ -1,4 +1,4 @@
-package me.croabeast.sir.plugin.module;
+package me.croabeast.sir.module;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -8,17 +8,18 @@ import me.croabeast.file.ConfigurableFile;
 import me.croabeast.file.ConfigurableUnit;
 import me.croabeast.file.UnitMappable;
 import me.croabeast.common.util.ReplaceUtils;
-import me.croabeast.sir.plugin.Commandable;
-import me.croabeast.sir.plugin.command.SIRCommand;
-import me.croabeast.sir.plugin.misc.ChatChannel;
-import me.croabeast.sir.plugin.FileData;
-import me.croabeast.sir.plugin.misc.FileKey;
-import me.croabeast.sir.plugin.user.ChannelData;
-import me.croabeast.sir.plugin.user.SIRUser;
-import me.croabeast.sir.plugin.LangUtils;
+import me.croabeast.sir.Commandable;
+import me.croabeast.sir.command.SIRCommand;
+import me.croabeast.sir.misc.ChatChannel;
+import me.croabeast.sir.FileData;
+import me.croabeast.sir.misc.FileKey;
+import me.croabeast.sir.user.ChannelData;
+import me.croabeast.sir.user.SIRUser;
+import me.croabeast.sir.LangUtils;
 import me.croabeast.takion.TakionLib;
 import me.croabeast.takion.channel.Channel;
 import me.croabeast.takion.chat.MultiComponent;
+import me.croabeast.takion.message.MessageSender;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -45,18 +46,17 @@ final class ChatHandler extends ListenerModule implements Commandable {
 
     ChatHandler() {
         super(Key.CHANNELS);
-        file = FileData.Module.Chat.CHANNELS.getFile();
+
+        file = FileData.Module.Chat.getMain();
 
         commands.add(new SIRCommand(this, SIRCommand.Key.CHAT_VIEW) {
 
-            private final FileKey<Boolean> chatFile = FileData.Command.Multi.CHAT_VIEW;
+            private final FileKey<Boolean> view = FileData.Command.Multi.CHAT_VIEW;
 
             List<String> keys(SIRUser user) {
                 Set<ChatChannel> set = locals.getStoredValues(HashSet::new);
-                return CollectionBuilder.of(set)
-                        .filter(c -> !c.hasPermission(user))
-                        .map(ConfigurableUnit::getName)
-                        .collect(ArrayList::new);
+                return CollectionBuilder.of(set).filter(c -> !c.hasPermission(user))
+                        .map(ConfigurableUnit::getName).collect(ArrayList::new);
             }
 
             @Override
@@ -98,7 +98,7 @@ final class ChatHandler extends ListenerModule implements Commandable {
 
             @NotNull
             protected ConfigurableFile getLang() {
-                return chatFile.getFile(true);
+                return view.getFile(true);
             }
         });
     }
@@ -107,7 +107,9 @@ final class ChatHandler extends ListenerModule implements Commandable {
     public boolean register() {
         ChannelUtils.loadDefaults();
 
-        UnitMappable.Set<ChatChannel> channels = file.asUnitMap("channels", ChannelUtils::of);
+        UnitMappable.Set<ChatChannel> channels = FileData.Module.Chat
+                .CHANNELS.getFile()
+                .asUnitMap("channels", ChannelUtils::of);
 
         locals = channels.copy().filter(ChatChannel::isLocal);
         globals = channels.copy().filter(ChatChannel::isGlobal);
@@ -164,7 +166,17 @@ final class ChatHandler extends ListenerModule implements Commandable {
         SIRUser user = plugin.getUserManager().getUser(event.getPlayer());
         if (user == null) return;
 
-        if (user.getMuteData().isMuted() || !user.isLogged()) {
+        if (!user.isLogged()) {
+            event.setCancelled(true);
+            return;
+        }
+
+        MessageSender sender = plugin.getLibrary()
+                .getLoadedSender()
+                .setTargets(user.getPlayer());
+
+        if (user.getMuteData().isMuted()) {
+            sender.copy().send(file.toStringList("is-muted"));
             event.setCancelled(true);
             return;
         }
@@ -173,9 +185,7 @@ final class ChatHandler extends ListenerModule implements Commandable {
 
         EmptyChecker checker = new EmptyChecker();
         if (checker.enabled && StringUtils.isBlank(message)) {
-            plugin.getLibrary().getLoadedSender()
-                    .setTargets(user.getPlayer()).send(checker.messages);
-
+            sender.copy().send(checker.messages);
             event.setCancelled(true);
             return;
         }
@@ -208,7 +218,11 @@ final class ChatHandler extends ListenerModule implements Commandable {
         String output = channel.formatString(user.getPlayer(), message, true);
 
         if (file.get("default-format", false)) {
-            event.setFormat(MultiComponent.DEFAULT_FORMAT.removeFormat(output).replace("%", "%%"));
+            event.setFormat(MultiComponent
+                    .DEFAULT_FORMAT
+                    .removeFormat(output)
+                    .replace("%", "%%")
+            );
             return;
         }
 
@@ -216,16 +230,15 @@ final class ChatHandler extends ListenerModule implements Commandable {
         global.call();
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     private void onCommand(PlayerCommandPreprocessEvent event) {
-        if (event.isCancelled() || !isEnabled()) return;
+        if (!isEnabled()) return;
 
         SIRUser user = plugin.getUserManager().getUser(event.getPlayer());
         String[] args = event.getMessage().split(" ");
 
         ChatChannel local = localFromCommand(user, args[0]);
         if (local == null) return;
-
         event.setCancelled(true);
 
         String message = LangUtils.stringFromArray(args, 1);
@@ -280,6 +293,7 @@ final class ChatHandler extends ListenerModule implements Commandable {
 
         for (final SIRUser user : users) {
             Player p = user.getPlayer();
+
             String temp = channel.formatString(p, player, message, true);
             temp = chat.formatString(p, player, temp);
 
@@ -316,11 +330,11 @@ final class ChatHandler extends ListenerModule implements Commandable {
             this.message = message;
         }
 
-        public Set<SIRUser> getRecipients() {
+        Set<SIRUser> getRecipients() {
             return channel.getRecipients(user);
         }
 
-        public void call() {
+        void call() {
             Bukkit.getPluginManager().callEvent(this);
         }
 

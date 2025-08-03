@@ -1,4 +1,4 @@
-package me.croabeast.sir.plugin;
+package me.croabeast.sir;
 
 import com.Zrips.CMI.Containers.CMIUser;
 import com.earth2me.essentials.Essentials;
@@ -12,10 +12,10 @@ import me.croabeast.common.Registrable;
 import me.croabeast.common.util.Exceptions;
 import me.croabeast.file.ConfigurableFile;
 import me.croabeast.scheduler.GlobalScheduler;
-import me.croabeast.sir.plugin.manager.UserManager;
-import me.croabeast.sir.plugin.user.SIRUser;
-import me.croabeast.sir.plugin.module.SIRModule;
-import me.croabeast.sir.plugin.user.*;
+import me.croabeast.sir.manager.UserManager;
+import me.croabeast.sir.user.SIRUser;
+import me.croabeast.sir.module.SIRModule;
+import me.croabeast.sir.user.*;
 import me.leoko.advancedban.manager.PunishmentManager;
 import me.leoko.advancedban.manager.UUIDManager;
 import org.apache.commons.lang.StringUtils;
@@ -93,7 +93,6 @@ final class UserManagerImpl implements UserManager, Registrable {
 
     void loadData(Player player) {
         UUID uuid = player.getUniqueId();
-        String playerName = player.getName();
 
         userMap.values().removeIf(user -> {
             if (user == null) return true;
@@ -109,21 +108,27 @@ final class UserManagerImpl implements UserManager, Registrable {
         onlineUser.load();
     }
 
+    void removeUuid(Set<ConfigurableFile> files, UUID uuid) {
+        BaseUser user = userMap.remove(uuid);
+        if (user == null) return;
+
+        user.getImmuneData().giveImmunity(0);
+        user.save(false);
+
+        for (BaseData data : user.map.map.values()) {
+            ConfigurableFile file = data.file;
+            if (file != null) files.add(file);
+        }
+    }
+
     void saveAllData() {
         Set<ConfigurableFile> files = new HashSet<>();
 
-        for (OfflinePlayer o : plugin.getServer().getOfflinePlayers()) {
-            BaseUser user = userMap.remove(o.getUniqueId());
-            if (user == null) continue;
+        for (Player p : plugin.getServer().getOnlinePlayers())
+            removeUuid(files, p.getUniqueId());
 
-            user.getImmuneData().giveImmunity(0);
-            user.save(false);
-
-            for (BaseData data : user.map.map.values()) {
-                ConfigurableFile file = data.file;
-                if (file != null) files.add(file);
-            }
-        }
+        for (OfflinePlayer o : plugin.getServer().getOfflinePlayers())
+            removeUuid(files, o.getUniqueId());
 
         files.forEach(ConfigurableFile::save);
     }
@@ -145,13 +150,10 @@ final class UserManagerImpl implements UserManager, Registrable {
 
             try {
                 if (user.isOnline()) {
-                    String userName = user.getName();
-                    if (userName != null && userName.equals(name)) {
-                        return user;
-                    }
+                    String userName = Objects.requireNonNull(user.getName());
+                    if (userName.equals(name)) return user;
                 }
-            } catch (Exception ignored) {
-            }
+            } catch (Exception ignored) {}
         }
 
         return null;
@@ -166,10 +168,9 @@ final class UserManagerImpl implements UserManager, Registrable {
 
             try {
                 if (user.isOnline()) {
-                    String userName = user.getName();
-                    if (userName != null && userName.matches("(?i)" + Pattern.quote(input))) {
+                    String userName = Objects.requireNonNull(user.getName());
+                    if (userName.matches("(?i)" + Pattern.quote(input)))
                         return user;
-                    }
                 }
             } catch (Exception ignored) {}
         }
@@ -184,21 +185,7 @@ final class UserManagerImpl implements UserManager, Registrable {
 
     @NotNull
     public Set<SIRUser> getOnlineUsers() {
-        return Collections
-                .unmodifiableSet(CollectionBuilder
-                        .of(userMap.values())
-                        .filter(SIRUser::isOnline)
-                        .toSet());
-    }
-
-    final static class DataMap {
-
-        final Map<String, BaseData> map = new HashMap<>();
-
-        @SuppressWarnings("unchecked")
-        <D extends BaseData> D get(String name) {
-            return (D) map.get(name);
-        }
+        return Collections.unmodifiableSet(CollectionBuilder.of(userMap.values()).filter(SIRUser::isOnline).toSet());
     }
 
     @RequiredArgsConstructor
@@ -212,28 +199,28 @@ final class UserManagerImpl implements UserManager, Registrable {
         abstract void save(boolean save);
     }
 
-    static class UuidSet {
-
-        final Set<UUID> set = new HashSet<>();
-
-        void setAll(Collection<String> collection) {
-            if (collection == null) return;
-
-            set.clear();
-            set.addAll(CollectionBuilder.of(collection).map(UUID::fromString).toSet());
-        }
-
-        List<String> asStrings() {
-            return CollectionBuilder.of(set).map(UUID::toString).toList();
-        }
-
-        @Override
-        public String toString() {
-            return set.toString();
-        }
-    }
-
     final class IgnoreImpl extends BaseData implements IgnoreData {
+
+        class UuidSet {
+
+            final Set<UUID> set = new HashSet<>();
+
+            void setAll(Collection<String> collection) {
+                if (collection == null) return;
+
+                set.clear();
+                set.addAll(CollectionBuilder.of(collection).map(UUID::fromString).toSet());
+            }
+
+            List<String> asStrings() {
+                return CollectionBuilder.of(set).map(UUID::toString).toList();
+            }
+
+            @Override
+            public String toString() {
+                return set.toString();
+            }
+        }
 
         final UuidSet chatSet = new UuidSet(), msgSet = new UuidSet();
         boolean chatAll = false, msgAll = false;
@@ -618,12 +605,21 @@ final class UserManagerImpl implements UserManager, Registrable {
 
     abstract class BaseUser implements SIRUser {
 
+        final class DataMap {
+
+            final Map<String, BaseData> map = new HashMap<>();
+
+            @SuppressWarnings("unchecked")
+            <D extends BaseData> D get(String name) {
+                return (D) map.get(name);
+            }
+        }
+
         private final DataMap map = new DataMap();
 
         @Getter
         final UUID uuid;
 
-        @Getter(AccessLevel.NONE)
         @Setter
         private boolean logged = false;
 
@@ -638,7 +634,6 @@ final class UserManagerImpl implements UserManager, Registrable {
         }
 
         @NotNull
-        @Override
         public abstract String getName();
 
         @Nullable
@@ -654,7 +649,6 @@ final class UserManagerImpl implements UserManager, Registrable {
         @Override
         public boolean isLogged() {
             return !SIRModule.Key.LOGIN.isEnabled() || logged;
-//            return logged;
         }
 
         @Override
@@ -662,13 +656,13 @@ final class UserManagerImpl implements UserManager, Registrable {
             if (!SIRModule.Key.VANISH.isEnabled()) return false;
 
             PluginManager manager = plugin.getServer().getPluginManager();
-            Plugin e = manager.getPlugin("Essentials"),
-                    c = manager.getPlugin("CMI");
 
+            Plugin e = manager.getPlugin("Essentials");
             if (e != null)
                 return ((Essentials) e).getUser(getPlayer()).isVanished();
 
-            if (c != null) return CMIUser.getUser(getPlayer()).isVanished();
+            if (manager.getPlugin("CMI") != null)
+                return CMIUser.getUser(getPlayer()).isVanished();
 
             for (MetadataValue meta : getPlayer().getMetadata("vanished"))
                 if (meta.asBoolean()) return true;
@@ -773,15 +767,11 @@ final class UserManagerImpl implements UserManager, Registrable {
         }
 
         @NotNull
-        @Override
         public String getName() {
-            if (offline != null && offline.getName() != null) {
+            if (offline != null && offline.getName() != null)
                 return offline.getName();
-            }
 
-            if (player != null) {
-                return player.getName();
-            }
+            if (player != null) return player.getName();
 
             return "Unknown-" + (uuid != null ? uuid.toString().substring(0, 8) : "null");
         }
