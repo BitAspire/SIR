@@ -6,7 +6,7 @@ prefix: SIR
 authors: [ CroaBeast ]
 api-version: 1.13
 
-depend: [ Takion ]
+folia-supported: true
 
 softdepend:
   # Utility plugins

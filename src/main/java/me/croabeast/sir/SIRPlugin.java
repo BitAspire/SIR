@@ -346,7 +346,7 @@ public final class SIRPlugin extends JavaPlugin {
                 "==================================="
         );
 
-        AnimatedBossbar.unregisterAll();
+        AnimatedBossbar.unregisterAll(this);
 
         moduleManager.unload();
         commandManager.unload();

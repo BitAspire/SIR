@@ -45,13 +45,24 @@
                 </executions>
 
                 <configuration>
+                    <relocations>
+                        <relocation>
+                            <pattern>com.github.stefvanschie.inventoryframework</pattern>
+                            <shadedPattern>me.croabeast.menu</shadedPattern>
+                        </relocation>
+                    </relocations>
+
                     <filters>
                         <filter>
                             <artifact>*:*</artifact>
                             <excludes>
                                 <exclude>META-INF/**</exclude>
-                                <exclude>me/croabeast/sir/api/addon/**</exclude>
+                                <exclude>me/croabeast/sir/addon/**</exclude>
+                                <exclude>org/bstats/**</exclude>
                                 <exclude>resources/plugin.yml</exclude>
+                                <exclude>fonts/**</exclude>
+                                <exclude>me/croabeast/menu/font/**</exclude>
+                                <exclude>Empty.**</exclude>
                             </excludes>
                         </filter>
                     </filters>
