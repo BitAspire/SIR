@@ -94,3 +94,6 @@ permissions:
     default: op
   sir.announcer.reboot:
     default: op
+
+libraries:
+  - com.github.stefvanschie.inventoryframework:IF:0.11.5

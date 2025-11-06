@@ -638,12 +638,12 @@ final class UserManagerImpl implements UserManager, Registrable {
 
         @Nullable
         public String getPrefix() {
-            return plugin.getVaultHolder().getPrefix(getPlayer());
+            return plugin.getChat().getPrefix(getPlayer());
         }
 
         @Nullable
         public String getSuffix() {
-            return plugin.getVaultHolder().getSuffix(getPlayer());
+            return plugin.getChat().getSuffix(getPlayer());
         }
 
         @Override

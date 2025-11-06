@@ -28,6 +28,8 @@ final class ModuleImpl implements ModuleManager {
     private final List<Class<SIRModule>> classes = new ArrayList<>();
     private final ModuleMap moduleMap = new ModuleMap();
 
+    private final SIRPlugin plugin;
+
     @Getter
     private final ChestBuilder menu;
     @Getter
@@ -94,7 +96,7 @@ final class ModuleImpl implements ModuleManager {
     }
 
     ModuleImpl(SIRPlugin plugin) {
-        final ClassLoader classLoader = plugin.classLoader();
+        final ClassLoader classLoader = (this.plugin = plugin).classLoader();
 
         SIRPlugin.getJarEntries()
                 .filter(s -> !s.contains("$") &&
@@ -115,7 +117,7 @@ final class ModuleImpl implements ModuleManager {
                 });
 
         menu = ChestBuilder
-                .of(5, "&8" + SmallCaps.toSmallCaps("Loaded SIR Modules:"))
+                .of(plugin, 5, "&8" + SmallCaps.toSmallCaps("Loaded SIR Modules:"))
                 .addSingleItem(
                         0, 1, 1,
                         ItemCreator.of(Material.BARREL)
@@ -126,7 +128,7 @@ final class ModuleImpl implements ModuleManager {
                                                 SmallCaps.toSmallCaps("[Paid Version]")
                                 )
                                 .modifyName("&f&lModules Options:")
-                                .setActionToEmpty().create(),
+                                .setActionToEmpty().create(plugin),
                         b -> b.setPriority(Pane.Priority.LOW)
                 )
                 .addSingleItem(
@@ -134,7 +136,7 @@ final class ModuleImpl implements ModuleManager {
                         ItemCreator.of(Material.BARRIER)
                                 .modifyLore("&8More modules will be added soon.")
                                 .modifyName("&c&lCOMING SOON...")
-                                .setActionToEmpty().create(),
+                                .setActionToEmpty().create(plugin),
                         b -> b.setPriority(Pane.Priority.LOW)
                 );
     }
@@ -153,13 +155,13 @@ final class ModuleImpl implements ModuleManager {
 
         final String message = "able all available modules.";
         menu.addPane(0, ButtonBuilder
-                .of(1, 2, false)
+                .of(plugin, 1, 2, false)
                 .setItem(
                         ItemCreator.of(Material.LIME_DYE)
                                 .modifyName("&a&l" +
                                        SmallCaps.toSmallCaps("ENABLE ALL") +
                                         ":")
-                                .modifyLore("&f➤ &7En" + message).create(),
+                                .modifyLore("&f➤ &7En" + message).create(plugin),
                         true
                 )
                 .setItem(
@@ -167,7 +169,7 @@ final class ModuleImpl implements ModuleManager {
                                 .modifyName("&c&l" +
                                         SmallCaps.toSmallCaps("DISABLE ALL") +
                                         ":")
-                                .modifyLore("&f➤ &7Dis" + message).create(),
+                                .modifyLore("&f➤ &7Dis" + message).create(plugin),
                         false
                 )
                 .modify(b -> b.setPriority(Pane.Priority.LOW))

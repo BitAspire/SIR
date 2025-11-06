@@ -14,7 +14,8 @@ public interface SIRExtension {
      * Gets the name of the extension.
      * @return The name of the extension.
      */
-    @NotNull String getName();
+    @NotNull
+    String getName();
 
     /**
      * Checks if the extension is loaded.

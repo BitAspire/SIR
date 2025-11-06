@@ -106,7 +106,7 @@ final class PrintCommand extends SIRCommand {
                                 .filter(SIRUser::isVanished)
                                 .map(SIRUser::getName).toList());
 
-        if (plugin.getVaultHolder().isEnabled())
+        if (plugin.getChat().isEnabled())
             builder.addArgument(1, "group:");
 
         builder
@@ -188,7 +188,7 @@ final class PrintCommand extends SIRCommand {
                     case "GROUP":
                         targets = stream
                                 .filter(p -> {
-                                    String group = plugin.getVaultHolder().getPrimaryGroup(p);
+                                    String group = plugin.getChat().getPrimaryGroup(p);
                                     return group != null && group.matches("(?i)" + array[1]);
                                 })
                                 .toSet();

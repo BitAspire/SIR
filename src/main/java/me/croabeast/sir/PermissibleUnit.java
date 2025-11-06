@@ -43,7 +43,7 @@ public interface PermissibleUnit extends ConfigurableUnit {
     default boolean isInGroup(CommandSender sender) {
         Player player = sender instanceof Player ? (Player) sender : null;
         return player != null &&
-                SIRPlugin.getInstance().getVaultHolder().isInGroup(player, getGroup());
+                SIRPlugin.getInstance().getChat().isInGroup(player, getGroup());
     }
 
     /**

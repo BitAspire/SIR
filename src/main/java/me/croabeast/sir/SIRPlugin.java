@@ -4,10 +4,10 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import me.croabeast.common.CollectionBuilder;
 import me.croabeast.common.CustomListener;
-import me.croabeast.common.updater.Platform;
-import me.croabeast.common.updater.UpdateChecker;
-import me.croabeast.common.updater.UpdateResult;
-import me.croabeast.common.updater.VersionScheme;
+import me.croabeast.updater.Platform;
+import me.croabeast.updater.UpdateChecker;
+import me.croabeast.updater.Result;
+import me.croabeast.updater.VersionScheme;
 import me.croabeast.common.util.Exceptions;
 import me.croabeast.file.ResourceUtils;
 import me.croabeast.common.MetricsLoader;
@@ -19,9 +19,9 @@ import me.croabeast.sir.misc.DelayLogger;
 import me.croabeast.sir.misc.Timer;
 import me.croabeast.sir.module.*;
 import me.croabeast.takion.TakionLib;
-import me.croabeast.takion.VaultHolder;
 import me.croabeast.takion.bossbar.AnimatedBossbar;
 import me.croabeast.takion.character.SmallCaps;
+import me.croabeast.vault.ChatAdapter;
 import org.apache.commons.lang.math.NumberUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -78,11 +78,10 @@ public final class SIRPlugin extends JavaPlugin {
 
     @Getter(AccessLevel.NONE)
     private UserManagerImpl userManager;
-    private VaultHolder<?> vaultHolder;
+    private ChatAdapter<?> chat;
 
     private CommandManager commandManager;
     private ModuleManager moduleManager;
-    private WorldRuleManager worldRuleManager;
 
     @Override
     public void onEnable() {
@@ -99,16 +98,15 @@ public final class SIRPlugin extends JavaPlugin {
         userManager = new UserManagerImpl(this);
         userManager.register();
 
-        worldRuleManager = new RuleManagerImpl(this);
-        worldRuleManager.load();
-
         moduleManager = new ModuleImpl(this);
         moduleManager.load();
         moduleManager.register();
 
-        vaultHolder = VaultHolder.loadHolder();
+        chat = ChatAdapter.create();
         lib = new LangUtils(this);
         FileData.FILE_MAP.forEach((k, v) -> v.setLoggerAction(lib.getLogger()::log));
+
+        lib.getGameRuleManager().load();
 
         commandManager = new CommandImpl(this);
         commandManager.load();
@@ -160,7 +158,7 @@ public final class SIRPlugin extends JavaPlugin {
         Function<Plugin, String> function = plugin ->
                 plugin.getName() + " " + plugin.getDescription().getVersion();
 
-        Plugin permission = vaultHolder.getPlugin();
+        Plugin permission = chat.getPlugin();
         if (permission != null) {
             logger.add("- Permission: &e" + function.apply(permission), true);
             hooksEnabled++;
@@ -266,7 +264,7 @@ public final class SIRPlugin extends JavaPlugin {
     void startUpdaterChecks() {
         final UpdateChecker updater = UpdateChecker.of(this, SIR_SCHEME);
 
-        BiConsumer<Player, UpdateResult> consumer = (player, result) -> {
+        BiConsumer<Player, Result> consumer = (player, result) -> {
             String latest = result.getLatest(), current = result.getLocal();
             String prefix = SmallCaps.toSmallCaps("[updater]");
 

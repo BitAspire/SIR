@@ -109,7 +109,7 @@ public abstract class SIRCommand extends BukkitCommand {
             ((Key) aspectKey).init = this;
 
         options.getSubCommands()
-                .forEach(s -> registerSubCommand(new SubCommand(this, s) {
+                .forEach(s -> addSubCommand(new SubCommand(this, s) {
                     @Override
                     public boolean isPermitted(CommandSender s, boolean log) {
                         final String wild = getWildcardPermission();
@@ -307,7 +307,7 @@ public abstract class SIRCommand extends BukkitCommand {
             if (strings.length != 1)
                 throw new NullPointerException("Needs only a single path");
 
-            return super.send(getLang().toStringList("lang." + strings[0]));
+            return super.send(file.toStringList("lang." + strings[0]));
         }
     }
 
@@ -462,7 +462,6 @@ public abstract class SIRCommand extends BukkitCommand {
         private final UUID uuid;
         private final Slot menuSlot;
 
-        @SuppressWarnings("all")
         @Setter
         private Supplier<Boolean> supplier = () -> false;
         private SIRCommand init;

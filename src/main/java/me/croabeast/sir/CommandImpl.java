@@ -4,11 +4,11 @@ import com.github.stefvanschie.inventoryframework.pane.Pane;
 import lombok.Getter;
 import me.croabeast.common.Registrable;
 import me.croabeast.common.reflect.Reflector;
-import me.croabeast.sir.aspect.AspectButton;
 import me.croabeast.common.gui.ItemCreator;
+import me.croabeast.common.gui.ChestBuilder;
+import me.croabeast.sir.aspect.AspectButton;
 import me.croabeast.sir.manager.CommandManager;
 import me.croabeast.sir.command.SIRCommand;
-import me.croabeast.common.gui.ChestBuilder;
 import me.croabeast.takion.character.SmallCaps;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Material;
@@ -52,7 +52,7 @@ final class CommandImpl implements CommandManager {
                 });
 
         menu = ChestBuilder
-                .of(4, "&8" + SmallCaps.toSmallCaps("Loaded SIR Commands:"))
+                .of(plugin, 4, "&8" + SmallCaps.toSmallCaps("Loaded SIR Commands:"))
                 .addSingleItem(
                         0, 1, 1,
                         ItemCreator.of(Material.BARREL)
@@ -63,7 +63,7 @@ final class CommandImpl implements CommandManager {
                                                 SmallCaps.toSmallCaps("[Paid Version]")
                                 )
                                 .modifyName("&f&lCommands Options:")
-                                .setActionToEmpty().create(),
+                                .setActionToEmpty().create(plugin),
                         b -> b.setPriority(Pane.Priority.LOW)
                 )
                 .addSingleItem(
@@ -71,12 +71,12 @@ final class CommandImpl implements CommandManager {
                         ItemCreator.of(Material.BARRIER)
                                 .modifyLore("&8More commands will be added soon.")
                                 .modifyName("&c&lCOMING SOON...")
-                                .setActionToEmpty().create(),
+                                .setActionToEmpty().create(plugin),
                         b -> b.setPriority(Pane.Priority.LOW)
                 );
     }
 
-    final Set<Registrable> registrables = new HashSet<>();
+    final Set<Registrable> registrar = new HashSet<>();
 
     @Override
     public void load() {
@@ -102,7 +102,7 @@ final class CommandImpl implements CommandManager {
 
             Commandable commandable = (Commandable) init;
             if (init instanceof Registrable)
-                registrables.add((Registrable) init);
+                registrar.add((Registrable) init);
 
             final Set<SIRCommand> set = commandable.getCommands();
             set.forEach(c -> commands.put(c.getName(), c));
@@ -132,7 +132,7 @@ final class CommandImpl implements CommandManager {
     @Override
     public boolean register() {
         commands.values().forEach(c -> c.register(false));
-        registrables.forEach(Registrable::register);
+        registrar.forEach(Registrable::register);
         SIRCommand.syncCommands();
         return true;
     }
@@ -140,7 +140,7 @@ final class CommandImpl implements CommandManager {
     @Override
     public boolean unregister() {
         commands.values().forEach(c -> c.unregister(false));
-        registrables.forEach(Registrable::unregister);
+        registrar.forEach(Registrable::unregister);
         SIRCommand.syncCommands();
         return true;
     }

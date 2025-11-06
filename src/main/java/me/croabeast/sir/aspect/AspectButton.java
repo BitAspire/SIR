@@ -7,6 +7,7 @@ import me.croabeast.common.CollectionBuilder;
 import me.croabeast.common.Registrable;
 import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.common.gui.ItemCreator;
+import me.croabeast.sir.SIRPlugin;
 import me.croabeast.takion.character.SmallCaps;
 import org.bukkit.Material;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -23,7 +24,7 @@ public final class AspectButton extends ToggleButton {
     private final Registrable registrable;
 
     public AspectButton(Registrable registrable, AspectKey key, boolean enabled) {
-        super(key.getMenuSlot(), 1, 1, Priority.HIGHEST, enabled);
+        super(key.getMenuSlot(), 1, 1, Priority.HIGHEST, enabled, SIRPlugin.getInstance());
 
         this.key = key;
         this.registrable = registrable;
@@ -71,7 +72,7 @@ public final class AspectButton extends ToggleButton {
                         .apply(PrismaticAPI::colorize)
                         .toList()
                 ))
-                .create();
+                .create(SIRPlugin.getInstance());
     }
 
     public void setDefaultItems(String title) {

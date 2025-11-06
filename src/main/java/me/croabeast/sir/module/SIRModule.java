@@ -41,13 +41,10 @@ public abstract class SIRModule implements SIRAspect, SIRExtension, Registrable 
         button.setDefaultItems();
 
         button.setOnClick(b -> event -> {
-            HookLoadable loadable =
-                    !(SIRModule.this instanceof HookLoadable) ?
-                            null :
-                            (HookLoadable) SIRModule.this;
+            HookLoadable loadable = !(SIRModule.this instanceof HookLoadable) ? null : (HookLoadable) SIRModule.this;
 
             if (loadable != null && !loadable.isPluginEnabled()) {
-                final String[] plugins = loadable.getSupportedPlugins();
+                String[] plugins = loadable.getSupportedPlugins();
 
                 plugin.getLibrary().getLoadedSender().
                         setLogger(false).
@@ -77,7 +74,6 @@ public abstract class SIRModule implements SIRAspect, SIRExtension, Registrable 
                     file.set(path, false);
                     file.save();
                 }
-
                 return;
             }
 

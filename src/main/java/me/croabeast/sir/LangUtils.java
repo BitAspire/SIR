@@ -39,8 +39,8 @@ public final class LangUtils extends TakionLib {
         getPlaceholderManager().edit("{playerYaw}", "{yaw}");
         getPlaceholderManager().edit("{playerPitch}", "{pitch}");
 
-        getPlaceholderManager().load("{prefix}", instance.getVaultHolder()::getPrefix);
-        getPlaceholderManager().load("{suffix}", instance.getVaultHolder()::getSuffix);
+        getPlaceholderManager().load("{prefix}", instance.getChat()::getPrefix);
+        getPlaceholderManager().load("{suffix}", instance.getChat()::getSuffix);
 
         getChannelManager().identify("action_bar").addPrefix("action-bar");
 

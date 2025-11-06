@@ -11,7 +11,7 @@ import me.croabeast.sir.misc.DelayLogger;
 import me.croabeast.sir.user.SIRUser;
 import me.croabeast.sir.LangUtils;
 import me.croabeast.sir.misc.Timer;
-import me.croabeast.common.WorldRule;
+import me.croabeast.takion.rule.GameRule;
 import me.croabeast.takion.format.PlainFormat;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.WordUtils;
@@ -208,15 +208,14 @@ final class Advancements extends ListenerModule {
         void checkAdvancements() {
             if (!isEnabled()) return;
 
-            WorldRule<Boolean> rule = WorldRule.ANNOUNCE_ADVANCEMENTS;
+            GameRule<Boolean> rule = GameRule.ANNOUNCE_ADVANCEMENTS;
             List<String> list = fromDisabledList("worlds");
 
             for (World w : Bukkit.getWorlds()) {
                 if (list.contains(w.getName())) continue;
 
                 try {
-                    if (Boolean.TRUE.equals(rule.getValue(w)))
-                        rule.setValue(w, false);
+                    if (rule.getValue(w)) rule.setValue(w, false);
                 } catch (Exception ignored) {}
             }
         }
@@ -224,7 +223,8 @@ final class Advancements extends ListenerModule {
         void load() {
             if (ServerInfoUtils.SERVER_VERSION < 12) return;
 
-            if (plugin.getWorldRuleManager().isLoaded()) checkAdvancements();
+            if (plugin.getLibrary().getGameRuleManager().isLoaded())
+                checkAdvancements();
             if (loaded || taskId != -1) return;
 
             taskId = SIRPlugin.getScheduler().runTask(() -> {
@@ -296,17 +296,15 @@ final class Advancements extends ListenerModule {
                 return;
 
             List<String> list = fromDisabledList("worlds");
-            WorldRule<Boolean> announces = WorldRule.ANNOUNCE_ADVANCEMENTS;
+            GameRule<Boolean> announces = GameRule.ANNOUNCE_ADVANCEMENTS;
 
             for (World w : Bukkit.getWorlds()) {
                 if (list.contains(w.getName())) continue;
 
-                Boolean b = plugin.getWorldRuleManager().getLoadedValue(w, announces);
+                boolean b = plugin.getLibrary().getGameRuleManager().getLoadedValue(w, announces);
                 try {
-                    boolean v = Boolean.TRUE.equals(announces.getValue(w));
-                    if ((b != null && b) && !v) announces.setValue(w, true);
-                }
-                catch (Exception ignored) {}
+                    if (b && !announces.getValue(w)) announces.setValue(w, true);
+                } catch (Exception ignored) {}
             }
         }
     }
