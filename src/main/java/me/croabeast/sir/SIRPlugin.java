@@ -95,20 +95,22 @@ public final class SIRPlugin extends JavaPlugin {
 
         DelayLogger files = FileData.loadFiles();
 
+        chat = ChatAdapter.create();
+
+        moduleManager = new ModuleImpl(this);
+        commandManager = new CommandImpl(this);
+        lib = new LangUtils(this);
+
+        FileData.FILE_MAP.forEach((k, v) -> v.setLoggerAction(lib.getLogger()::log));
+
         userManager = new UserManagerImpl(this);
         userManager.register();
 
-        moduleManager = new ModuleImpl(this);
         moduleManager.load();
         moduleManager.register();
 
-        chat = ChatAdapter.create();
-        lib = new LangUtils(this);
-        FileData.FILE_MAP.forEach((k, v) -> v.setLoggerAction(lib.getLogger()::log));
-
         lib.getGameRuleManager().load();
 
-        commandManager = new CommandImpl(this);
         commandManager.load();
         commandManager.register();
 
