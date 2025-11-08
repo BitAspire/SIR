@@ -1,163 +1,124 @@
 # 🤖 SIR – Simple In-game Receptionist
 
-Welcome to **SIR**, the versatile and powerful Minecraft plugin that transforms server management and player interaction! With an extensive modular architecture and feature-rich tools, SIR is built to streamline your server’s chat, announcements, and overall communication systems.
+A modular Minecraft assistant that centralizes chat management, announcements, onboarding, and cross-platform communication. SIR ships with a rich configuration toolkit so you can tailor every interaction players see without touching Java code.
 
 ---
 
-## 🌟 Overview
-
-**SIR** is designed with simplicity and efficiency in mind. Whether you need advanced chat management, customizable join/quit messages, automated announcements, or deep integration with other plugins, SIR has you covered.
-
-- **Modular Design:** Activate only the modules you need.
-- **User-Friendly:** Easy configuration and intuitive command system.
-- **Highly Customizable:** Supports extensive formatting, colors, and emojis to enhance the player experience.
-- **Optimized Performance:** Engineered to handle busy servers with minimal resource consumption.
-
----
-
-## 🔧 Key Features
-
-- **Chat Management System** 🗣️  
-  Control chat channels, implement anti-spam cooldowns, and format messages using gradients, colors, and emojis.
-
-- **Custom Join/Quit Messages** 👋  
-  Automatically display personalized messages for players when they join or leave the server.
-
-- **Automated Announcements** 📢  
-  Schedule announcements with custom formats, sound effects, and commands, all adjustable with tick-based intervals.
-
-- **Server MOTD System** 📝  
-  Manage server list messages (MOTDs) with dynamic player count and server icons for that extra professional touch.
-
-- **Advanced Moderation Tools** 🛡️  
-  Filter swearing, manage excessive caps, and control link posting to keep your chat clean and fun.
-
-- **Plugin Integrations** 🔌  
-  Seamlessly integrate with popular plugins like DiscordSRV, PlaceholderAPI, Vault, and many more for an enhanced experience.
+## 🌟 Feature Highlights
+- **Modular architecture** – Toggle self-contained modules for chat, join/quit experiences, announcements, MOTDs, advancements, and third-party hooks.
+- **Deep chat customization** – Build channel hierarchies, apply gradient colours, emojis, hover/click actions, tags, and mention effects directly from YAML.
+- **Player journey controls** – Craft first-join flows, spawn teleport rules, welcome/farewell messages, and timed invulnerability windows.
+- **Automated outreach** – Schedule announcements that mix chat, action bar, title, boss bar, sounds, and console commands.
+- **Discord-ready** – Mirror activity with DiscordSRV or EssentialsDiscord using embed templates, per-event routing, and cross-server relays.
+- **Login & vanish awareness** – Coordinate with major authentication and vanish plugins so muted, hidden, or unauthenticated players follow your rules.
+- **Takion-powered runtime** – The Takion framework is bundled, providing the scheduler, text processors, gradients, and boss bars you rely on—no extra download needed.
+- **Live updates & metrics** – Automatic update checks, optional coloured console logging, and bStats analytics keep administrators informed.
 
 ---
 
-## ⚙️ Technical Details
-
-- **API Version:** 1.13+  
-- **Language:** Java  
-- **Required Dependency:** [Takion](https://github.com/CroaBeast/Takion)  
-- **Extensible Framework:** Supports additional integrations through a modular system and includes extensive APIs for developers.
-
----
-
-## 📦 Module System
-
-SIR’s modular design lets you tailor the plugin to your server’s needs. The modules fall under three main categories:
-
-### 🎮 Core Modules
-1. **Advancements** 🏆  
-   Customize achievement notifications with rewards and commands.
-2. **Announcements** 📢  
-   Schedule and format automated messages and broadcasts.
-3. **Join/Quit** 👋  
-   Set up welcoming and farewell messages with special effects.
-4. **MOTD** 📝  
-   Craft attractive server list messages with dynamic player counts.
-
-### 💬 Chat Modules
-5. **Channels** 🔊  
-   Manage global and local chat channels with custom permissions and formatting.
-6. **Cooldowns** ⏳  
-   Implement anti-spam measures and controlled message sending.
-7. **Emojis** 😊  
-   Replace text with colorful, custom emoji shortcuts.
-8. **Mentions** 📧  
-   Enable interactive player mentions with click and hover effects.
-9. **Tags** 🏷️  
-   Create custom chat tags for different player groups.
-10. **Moderation** 🛡️  
-    Enforce chat rules by blocking swearing, excessive caps, and unwanted links.
-
-### 🔗 Integration Modules
-11. **Discord** 🎮  
-    Connect Minecraft chat with Discord channels via DiscordSRV.
-12. **Login** 🔑  
-    Support authentication plugins such as AuthMe and NexAuth.
-13. **Vanish** 👻  
-    Integrate with vanish plugins to manage invisible players in chat.
+## 🧭 Compatibility Matrix
+| Area | Details |
+| --- | --- |
+| **Minecraft server** | Spigot/Paper/Folia API 1.13+ (Folia flag enabled in `plugin.yml`). |
+| **Java runtime** | Compiled for Java 8 targets while building with Maven (Java 21 toolchain supported). |
+| **Permissions** | Vault-driven chat adapter with automatic fallback when Vault is absent. |
+| **Placeholder support** | PlaceholderAPI expansion included; formats across messages, announcements, and Discord bridge respect PAPI placeholders. |
+| **Text effects** | Takion gradient & rainbow tags, hover/click actions, and InventoryFramework-powered GUIs for chat colour menus. |
+| **Analytics** | bStats (ID 25264) with drill-down charts for detected integrations. |
 
 ---
 
-## 🌈 Dynamic Text & Formatting
-
-SIR not only supports basic text messaging but lets you get creative:
-
-- **Color Gradients & Rainbow Text:**  
-  Use simple tags to create eye-catching gradients and rainbow effects.
-- **Unicode and Small Caps:**  
-  Easily transform text to small caps or include special Unicode characters.
-- **Interactive Chat Components:**  
-  Design messages that respond to hover and click actions, triggering commands or displaying tooltips.
-
-Example:
-```yaml
-message: "<g:#FF0000:#0000FF>Amazing Text</g> <hover:\"Click for help\"|run:\"/help\">Need Help?</text>"
-```
+## 🧩 Built-in & Optional Integrations
+| Category | Supported Plugins / Libraries | Notes |
+| --- | --- | --- |
+| **Bundled libraries** | Takion 1.3, GlobalScheduler, LangUtils | Shaded inside SIR—no external jars needed. |
+| **Metrics** | bStats | Relocated package (`me.croabeast.metrics`) to avoid conflicts. |
+| **Chat & permissions** | Vault, InteractiveChat | Automatically detected; permissions exposed through `commands.yml` and channel configs. |
+| **Placeholder system** | PlaceholderAPI | Optional but fully supported; registers a dedicated expansion. |
+| **Discord bridge** | DiscordSRV, EssentialsDiscord | Route join/quit/advancement/chat events with per-channel embed templates. |
+| **Authentication** | AuthMe, UserLogin, NexAuth, nLogin, OpeNLogin | Shared spawn handling via `modules/hook/login.yml`. |
+| **Vanish handling** | CMI, EssentialsX, SuperVanish, PremiumVanish | Optional vanish chat key rules to block message leaks. |
+| **Moderation synergy** | AdvancedBan and other punishment suites | Use cooldowns, mute commands, and violation actions to complement third-party moderation. |
 
 ---
 
-## 📝 Commands & GUI Integration
+## 🗂️ Modular Platform Overview
+| Module | Purpose | Key Configuration Files |
+| --- | --- | --- |
+| **Join/Quit** | Welcomes players, controls vanilla join/quit spam, and manages spawn & invulnerability. | `modules/join_quit/config.yml`, `modules/join_quit/messages.yml` |
+| **Announcements** | Time-based broadcasts mixing chat, titles, action bars, sounds, and commands. | `modules/announcements/config.yml`, `modules/announcements/announces.yml` |
+| **MOTD** | Rotates server list MOTDs and icons with custom counters. | `modules/motd/config.yml`, `modules/motd/motds.yml` |
+| **Advancements** | Broadcasts achievements with rewards and per-world/mode filters. | `modules/advancements/config.yml`, `modules/advancements/messages.yml` |
+| **Chat – Channels** | Hierarchical global/local channels with inheritance and colour governance. | `modules/chat/channels.yml` (see wiki guide) |
+| **Chat – Cooldowns** | Anti-spam timers and scripted punishments. | `modules/chat/cooldowns.yml` |
+| **Chat – Emojis & Tags** | Replace shortcuts with formatted text and manage permission-based tags. | `modules/chat/emojis.yml`, `modules/chat/tags.yml` |
+| **Chat – Mentions** | Highlight recipients with sounds, hover/click actions, and custom outputs. | `modules/chat/mentions.yml` |
+| **Chat – Moderation** | Filter swears, caps, links, and enforce format standards. | `modules/chat/moderation.yml` |
+| **Hooks – Discord** | DiscordSRV channel routing and embed templates. | `modules/hook/discord.yml`, `webhooks.yml` |
+| **Hooks – Login/Vanish** | Sync behaviour with authentication and vanish plugins. | `modules/hook/login.yml`, `modules/hook/vanish.yml` |
 
-SIR offers an array of commands grouped under four categories:
-
-### 🛠️ Administrative Commands
-- `/sir` – The primary command for administration and configuration.
-- `/print` – Broadcast raw messages with advanced formatting.
-- `/announcer` – Manage your automated announcements.
-
-### 💬 Chat Management
-- `/chatview` – Toggle chat channel visibility.
-- `/ignore` – Ignore messages from specific players.
-- `/clearchat` – Quickly clear the chat screen.
-
-### 📨 Messaging System
-- `/msg` – Send private messages to fellow players.
-- `/reply` – Quickly reply to recent messages.
-
-### 🔇 Moderation Suite
-- `/mute`, `/tempmute`, `/unmute`, `/checkmute` – Commands to handle player moderation and enforce chat rules.
-
-All command configurations are accessible through `commands.yml` or via an intuitive GUI interface, making it simple to adjust settings on the fly.
+All modules are toggled from `modules/modules.yml`, which also manages update tracking for shipped configs.
 
 ---
 
-## 🔄 Automatic Updates & Configuration
+## 💬 Command Suite
+| Command | Summary | Highlights |
+| --- | --- | --- |
+| `/sir` | Administrative hub | About, reload, module status, help, support links. |
+| `/print` | Raw formatted broadcaster | Targeted chat, titles, action bars, Discord webhooks. |
+| `/announcer` | Manage automated announcements | Preview, start/stop, reboot sequences. |
+| `/chatview` | Channel visibility | Players opt in/out of channel subscriptions. |
+| `/chatcolor` | GUI colour selector | Unlockable colours, gradients, rainbow styles. |
+| `/ignore` | Personal mute list | Persistent ignore data per player. |
+| `/clearchat` | Clear local/global chat | Instant moderation tool. |
+| `/msg`, `/reply` | Private messaging | Sound & action feedback for mentions. |
+| `/mute`, `/tempmute`, `/unmute`, `/checkmute` | Moderation controls | Permanent or timed mutes powered by configurable lang/data files. |
 
-SIR comes with an **automatic update system** to keep your configurations fresh:
-- Enable updater settings in your `config.yml` for notifications on startup.
-- Support for dynamic configuration reloads via `/sir reload` ensures changes take effect immediately without disrupting gameplay.
-
----
-
-## 🔗 Quick Links
-
-- **Documentation:** [SIR Wiki](https://github.com/CroaBeast/SIR/wiki)
-- **Discord Support:** [Join Our Discord](https://discord.gg/s9YFGMrjyF)
-- **Issue Tracker:** [Report Issues](https://github.com/CroaBeast/SIR/issues)
-- **Change Log:** [View Commits](https://github.com/CroaBeast/SIR/commits/main)
-
----
-
-## 🛡️ Why Choose SIR?
-
-- **Clean, Intuitive Design:** Enjoy streamlined chat and moderation, making server management hassle-free.
-- **Flexible Configuration:** Customize every aspect using YAML files or a GUI.
-- **Outstanding Performance:** Optimized for efficiency, even on high-traffic servers.
-- **Robust Plugin Integration:** Connect seamlessly with popular plugins to expand functionalities.
-- **Active Community & Developer Support:** Join an engaged community with continuous updates and improvements.
+Command behaviour, aliases, and language strings live under `resources/commands/` for complete customization.
 
 ---
 
-## 🎯 Final Thoughts
+## 🎨 Formatting & Player Experience Toolkit
+- **Message prefixing:** Define the main plugin prefix, centred text tag, and line separators in `config.yml`.
+- **Gradient & rainbow tags:** Use `<G:#RRGGBB:#RRGGBB>` or `<R:n>` syntax anywhere the plugin parses text.
+- **Interactive components:** Attach hover lists and click actions across messages, announcements, and mentions.
+- **Sound design:** Assign unique join/quit, mention, and announcement sounds using vanilla sound keys.
+- **Spawn logic:** Per-message group spawn teleporters align with login plugins when enabled.
+- **Boss bars & titles:** Tap into Takion’s animated boss bars for announcement or module-specific effects.
 
-With **SIR**, you’re not just installing a plugin—you're upgrading your server’s communication framework. The combination of dynamic message formatting, complete module control, and extensive integration options makes SIR the ultimate solution for server administrators aiming for a next-level Minecraft experience. 
+---
 
-> *Powered by [Takion](https://github.com/CroaBeast/Takion) and [PrismaticAPI](https://github.com/CroaBeast/PrismaticAPI), SIR has been making server management simple and efficient since 2021.* 🚀
+## 🚀 Getting Started
+1. **Drop SIR into `plugins/`** – No external dependencies are required; Takion is already shaded inside the jar.
+2. **Start your server once** – Configuration files populate under `plugins/SIR/resources/`.
+3. **Review `config.yml` and `modules/modules.yml`** – Toggle features and adjust update checks.
+4. **Tailor modules** – Edit the YAML files under each module directory to match your server’s tone and rules.
+5. **Grant permissions** – Use your permission manager (Vault-compatible) to assign command and channel access.
+6. **Reload or restart** – `/sir reload` applies configuration changes without a full reboot.
 
-Feel free to explore the documentation further for in-depth configuration examples, command usage, and module management tips. Happy crafting! 🎉
+Need more detail? The wiki pages below dive into each subsystem with copy-paste-ready examples.
+
+---
+
+## 📚 Documentation & Support
+- **Home:** [`wiki/Home.md`](wiki/Home.md)
+- **Setup guide:** [`wiki/Getting-Started.md`](wiki/Getting-Started.md)
+- **Module reference:** [`wiki/Module-Reference.md`](wiki/Module-Reference.md)
+- **Integrations:** [`wiki/Integrations.md`](wiki/Integrations.md)
+- **Chat channels deep dive:** [`wiki/Chat-Channels.md`](wiki/Chat-Channels.md)
+- **Formatting toolkit:** [`wiki/Formatting-Toolkit.md`](wiki/Formatting-Toolkit.md)
+- **Command reference:** [`wiki/Command-Reference.md`](wiki/Command-Reference.md)
+- **Community Discord:** [discord.gg/s9YFGMrjyF](https://discord.gg/s9YFGMrjyF)
+- **Issue tracker:** [github.com/CroaBeast/SIR/issues](https://github.com/CroaBeast/SIR/issues)
+
+---
+
+## 🔒 Telemetry & Privacy
+SIR reports anonymous usage data to bStats (metrics ID `25264`) to help the developer understand which integrations are active. Disable metrics globally in `plugins/bStats/config.yml` or use your firewall if you prefer to opt out.
+
+---
+
+## 🛠️ Contributing & Feedback
+Found a bug or have a feature request? Open an issue on GitHub or reach out through the Discord community. Contributions are welcome—fork the repository, make your improvements, and submit a pull request.
+
+With SIR, you control every step of the conversation players see. Configure once, delight forever.
