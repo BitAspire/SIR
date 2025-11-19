@@ -1,0 +1,13 @@
+main: me.croabeast.sir.module.advancement.Advancements
+name: Advancements
+title: "&7Advancements"
+description:
+    - "Handles if custom advancement messages"
+    - "and/or rewards should be enabled."
+    - "Each advancement can be in a different"
+    - "category."
+slot-coordinates:
+  x: 3
+  y: 1
+soft-depends:
+  - Discord

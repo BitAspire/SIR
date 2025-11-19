@@ -1,0 +1,333 @@
+package me.croabeast.sir.module;
+
+import lombok.RequiredArgsConstructor;
+import me.croabeast.sir.SIRApi;
+import me.croabeast.takion.logger.LogLevel;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
+
+import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.reflect.Constructor;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.function.Function;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+import java.util.stream.Collectors;
+
+@SuppressWarnings("unchecked")
+@RequiredArgsConstructor
+public final class ModuleManager {
+
+    private final SIRApi api;
+    private final Map<String, LoadedModule> modules = new LinkedHashMap<>();
+
+    @RequiredArgsConstructor
+    private static class ModuleCandidate {
+        final File jarFile;
+        final ModuleInformation file;
+    }
+
+    @RequiredArgsConstructor
+    private static class LoadedModule {
+        final SIRModule module;
+        final URLClassLoader classLoader;
+    }
+
+    @NotNull
+    public List<SIRModule> getModules() {
+        return modules.values().stream().map(l -> l.module).collect(Collectors.toList());
+    }
+
+    public boolean isEnabled(@NotNull String name) {
+        LoadedModule module = modules.get(name);
+        return module != null && module.module.isLoaded();
+    }
+
+    public <M extends SIRModule> M getModule(@NotNull String name) {
+        LoadedModule module = modules.get(name);
+        try {
+            return module == null ? null : (M) module.module;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public <M extends SIRModule> M getModule(Class<M> clazz) {
+        try {
+            if (!JavaPlugin.class.isAssignableFrom(clazz))
+                return null;
+        } catch (Exception e) {
+            return null;
+        }
+
+        ClassLoader loader = clazz.getClassLoader();
+        if (!(loader instanceof ModuleLoader)) return null;
+
+        SIRModule module = ((ModuleLoader) loader).module;
+        try {
+            return module == null ? null : (M) module;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    void log(LogLevel level, String... messages) {
+        api.getLibrary().getLogger().log(level, messages);
+    }
+
+    private String hookMessage(String name, String[] plugins) {
+        return "&7Module '" + name + "' can't be loaded since " +
+                ((Function<String[], String>) strings -> {
+                    final int length = strings.length;
+                    if (length == 1)
+                        return strings[0] + " is";
+
+                    StringBuilder br = new StringBuilder();
+                    for (int i = 0; i < length; i++) {
+                        br.append(strings[i]);
+
+                        if (i < length - 1)
+                            br.append(i == length - 2 ?
+                                    " or " : ", ");
+                    }
+
+                    return br.append(" are").toString();
+                }).apply(plugins) + "n't installed in the server.";
+    }
+
+    private void loadCandidate(ModuleCandidate candidate) {
+        ModuleInformation file = candidate.file;
+        String name = file.getName();
+        File jarFile = candidate.jarFile;
+
+        try {
+            URL url = jarFile.toURI().toURL();
+
+            ModuleLoader classLoader = new ModuleLoader(api, url);
+
+            Class<?> clazz = Class.forName(file.getMain(), true, classLoader);
+            if (!SIRModule.class.isAssignableFrom(clazz)) {
+                log(LogLevel.ERROR, "Main class '" + file.getMain() + "' does not extend SIRModule, skipping...");
+                classLoader.close();
+                return;
+            }
+
+            Constructor<?> constructor = clazz.getDeclaredConstructor();
+            constructor.setAccessible(true);
+
+            SIRModule module = (SIRModule) constructor.newInstance();
+            if (module instanceof HookLoadable && !((HookLoadable) module).isPluginEnabled()) {
+                log(LogLevel.INFO, hookMessage(name, ((HookLoadable) module).getDependantPlugins()));
+                classLoader.close();
+                return;
+            }
+
+            module.init(api, classLoader, file);
+            modules.put(name, new LoadedModule(module, classLoader));
+
+            module.load();
+            module.setLoaded(true);
+
+            classLoader.module = module;
+
+            log(LogLevel.INFO, "Module '" + name + "' loaded successfully.");
+        } catch (Exception e) {
+            log(LogLevel.ERROR, "Failed to load module from " + jarFile.getName());
+            e.printStackTrace();
+        }
+    }
+
+    public void load(File jarFile) {
+        log(LogLevel.INFO, "Loading module from " + jarFile.getName() + "...");
+
+        ModuleCandidate candidate;
+        try (JarFile jar = new JarFile(jarFile)) {
+            JarEntry entry = jar.getJarEntry("module.yml");
+            if (entry == null) {
+                log(LogLevel.WARN, "module.yml not found in " + jarFile.getName() + ", skipping.");
+                return;
+            }
+
+            ModuleInformation file;
+            try (InputStream in = jar.getInputStream(entry);
+                 InputStreamReader reader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
+                file = new ModuleInformation(YamlConfiguration.loadConfiguration(reader));
+            }
+
+            String key = file.getName();
+            if (modules.containsKey(key)) {
+                log(LogLevel.WARN, "Module with name '" + key + "' already loaded, skipping...");
+                return;
+            }
+
+            candidate = new ModuleCandidate(jarFile, file);
+        } catch (Exception e) {
+            log(LogLevel.ERROR, "Failed to read module.yml from " + jarFile.getName());
+            e.printStackTrace();
+            return;
+        }
+
+        for (String dep : candidate.file.getDepend()) {
+            if (!modules.containsKey(dep)) {
+                log(LogLevel.WARN, "Module '" + candidate.file.getName()
+                        + "' can't be loaded: missing hard dependency '" + dep + "'.");
+                return;
+            }
+        }
+
+        for (String dep : candidate.file.getSoftDepend()) {
+            if (!modules.containsKey(dep)) {
+                log(LogLevel.INFO, "Soft dependency '" + dep + "' for module '"
+                        + candidate.file.getName() + "' is not loaded.");
+            }
+        }
+
+        loadCandidate(candidate);
+    }
+
+    public void loadAll() {
+        File dir = new File(api.getPlugin().getDataFolder(), "modules");
+        if (!dir.exists() && !dir.mkdirs()) {
+            log(LogLevel.WARN, "Could not create modules directory: " + dir.getPath());
+            return;
+        }
+
+        File[] jars = dir.listFiles((d, name) -> name.endsWith(".jar"));
+        if (jars == null || jars.length == 0) {
+            log(LogLevel.INFO, "No modules found in " + dir.getPath());
+            return;
+        }
+
+        Map<String, ModuleCandidate> candidates = new LinkedHashMap<>();
+
+        for (File jarFile : jars) {
+            try (JarFile jar = new JarFile(jarFile)) {
+                JarEntry entry = jar.getJarEntry("module.yml");
+                if (entry == null) {
+                    log(LogLevel.WARN, "module.yml not found in " + jarFile.getName() + ", skipping.");
+                    continue;
+                }
+
+                ModuleInformation file;
+                try (InputStream in = jar.getInputStream(entry);
+                     InputStreamReader reader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
+                    file = new ModuleInformation(YamlConfiguration.loadConfiguration(reader));
+                }
+
+                String key = file.getName();
+                if (modules.containsKey(key)) {
+                    log(LogLevel.WARN, "Module with name '" + file.getName()
+                            + "' already loaded, skipping '" + jarFile.getName() + "'.");
+                    continue;
+                }
+
+                if (candidates.containsKey(key)) {
+                    log(LogLevel.WARN, "Duplicate module name '" + file.getName()
+                            + "' between '" + candidates.get(key).jarFile.getName()
+                            + "' and '" + jarFile.getName() + "', skipping the latter.");
+                    continue;
+                }
+
+                candidates.put(key, new ModuleCandidate(jarFile, file));
+            } catch (Exception e) {
+                log(LogLevel.ERROR, "Failed to read module.yml from " + jarFile.getName());
+                e.printStackTrace();
+            }
+        }
+
+        if (candidates.isEmpty()) {
+            log(LogLevel.INFO, "No valid modules found in " + dir.getPath());
+            return;
+        }
+
+        Set<String> failed = new HashSet<>();
+        boolean progress;
+
+        do {
+            progress = false;
+
+            for (Map.Entry<String, ModuleCandidate> entry : candidates.entrySet()) {
+                String nameKey = entry.getKey();
+                if (modules.containsKey(nameKey) || failed.contains(nameKey)) continue;
+
+                ModuleInformation file = entry.getValue().file;
+
+                boolean wait = false;
+                boolean hardMissing = false;
+
+                for (String dep : file.getDepend()) {
+                    if (modules.containsKey(dep)) continue;
+
+                    if (candidates.containsKey(dep) && !failed.contains(dep)) {
+                        wait = true;
+                    } else {
+                        log(LogLevel.WARN, "Module '" + file.getName()
+                                + "' can't be loaded: missing hard dependency '" + dep + "'.");
+                        hardMissing = true;
+                    }
+                    break;
+                }
+
+                if (hardMissing) {
+                    failed.add(nameKey);
+                    continue;
+                }
+
+                if (wait) continue;
+
+                for (String dep : file.getSoftDepend()) {
+                    if (modules.containsKey(dep)) continue;
+
+                    if (candidates.containsKey(dep) && !failed.contains(dep)) {
+                        wait = true;
+                        break;
+                    }
+                }
+                if (wait) continue;
+
+                loadCandidate(entry.getValue());
+                progress = true;
+            }
+        } while (progress);
+
+        List<String> unresolved = candidates.keySet()
+                .stream()
+                .filter(name -> !modules.containsKey(name) && !failed.contains(name))
+                .collect(Collectors.toList());
+
+        if (!unresolved.isEmpty())
+            log(LogLevel.ERROR, "Unresolved module dependency loop: " + String.join(", ", unresolved));
+    }
+
+    public void unload(String name) {
+        LoadedModule loadedModule = modules.get(name);
+        if (loadedModule == null) {
+            log(LogLevel.WARN, "Module with name '" + name + "' not found, skipping unload.");
+            return;
+        }
+
+        SIRModule module = loadedModule.module;
+        module.unload();
+        module.setLoaded(false);
+
+        try {
+            loadedModule.classLoader.close();
+        } catch (Exception e) {
+            log(LogLevel.ERROR, "Failed to close class loader for module '" + name + "'");
+            e.printStackTrace();
+        }
+
+        modules.remove(name.toLowerCase());
+        log(LogLevel.INFO, "Module '" + name + "' unloaded successfully.");
+    }
+
+    public void unloadAll() {
+        for (String name : new ArrayList<>(modules.keySet())) unload(name);
+    }
+}

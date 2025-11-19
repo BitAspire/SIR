@@ -1,0 +1,14 @@
+main: com.example.plugin.modules.ModuleName
+name: ModuleName
+title: "&7Module Title"
+description:
+  - "&7This is a description of the module."
+slot-coordinates:
+  x: 0
+  y: 0
+depend:
+  - Core
+  - Chat
+soft-depend:
+  - Placeholders
+  - FancyMenu
