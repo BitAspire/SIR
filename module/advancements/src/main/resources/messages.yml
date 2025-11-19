@@ -1,0 +1,18 @@
+messages:
+  task:
+    - ' &e{player}&7 has got the {low-type} <hover:"&7{description}">&a{adv}</text>'
+  goal:
+    - ' &e{player}&7 has reached the {type} <hover:"&7{description}">&b{adv}</text>'
+  challenge:
+    - ' &e{player}&7 has finished the &d{cap-type}&7: <hover:"&7{description}">&5{adv}</text>'
+  custom:
+    - ' &e{player} &7has made the {low-type} <hover:"&7{description}">&b{adv}</text>'
+
+commands:
+  task:
+    - 'minecraft:experience add {player} 100 points'
+  goal:
+    - 'minecraft:experience add {player} 500 points'
+  challenge:
+    - 'minecraft:experience add {player} 1000 points'
+  custom: []

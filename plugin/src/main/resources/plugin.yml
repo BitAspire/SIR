@@ -1,0 +1,34 @@
+main: me.croabeast.sir.SIRPlugin
+
+name: SIR # Simple In-game Receptionist
+version: '${project.version}'
+prefix: SIR
+authors: [ CroaBeast ]
+api-version: 1.13
+
+folia-supported: true
+
+softdepend:
+  # Utility plugins
+  - ViaVersion
+  - Vault
+  - PlaceholderAPI
+  - InteractiveChat
+  # Login plugins
+  - UserLogin
+  - AuthMe
+  - NexAuth
+  - nLogin
+  - OpeNLogin
+  # Vanish plugins
+  - SuperVanish
+  - PremiumVanish
+  - CMI
+  - Essentials
+  # Misc
+  - AdvancedBan
+  - DiscordSRV
+  - EssentialsDiscord
+
+libraries:
+  - com.github.stefvanschie.inventoryframework:IF:0.11.5

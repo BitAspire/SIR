@@ -1,0 +1,45 @@
+package me.croabeast.sir.module.discord;
+
+import lombok.Getter;
+import me.croabeast.common.CollectionBuilder;
+import me.croabeast.common.util.Exceptions;
+import me.croabeast.sir.module.HookLoadable;
+import me.croabeast.sir.module.SIRModule;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.function.UnaryOperator;
+
+public class Discord extends SIRModule implements HookLoadable {
+
+    @Getter
+    private final String[] dependantPlugins = {"DiscordSRV", "EssentialsDiscord"};
+    private final Set<Plugin> loadedPlugins = new HashSet<>();
+
+    private Config config;
+
+    @Override
+    public Plugin getPlugin() {
+        return loadedPlugins.size() != 1 ? null : loadedPlugins.iterator().next();
+    }
+
+    @Override
+    public void load() {
+        loadedPlugins.addAll(CollectionBuilder.of(dependantPlugins)
+                .filter(Exceptions::isPluginEnabled)
+                .map(Bukkit.getPluginManager()::getPlugin).toSet());
+
+        final Plugin plugin = getPlugin();
+        config = new Config(this, plugin != null && plugin.getName().equals("EssentialsDiscord"));
+    }
+
+    @Override
+    public void unload() {}
+
+    public void sendMessage(String channel, Player player, UnaryOperator<String> operator) {
+        config.send(channel, player, operator);
+    }
+}

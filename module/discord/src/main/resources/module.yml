@@ -1,0 +1,10 @@
+main: me.croabeast.sir.module.advancement.Advancements
+name: Discord
+title: "&7Discord Hook"
+description:
+    - "Checks if DiscordSRV or EssentialsDiscord"
+    - "will work with SIR to display join & quit"
+    - "messages, chat messages, and more."
+slot-coordinates:
+  x: 3
+  y: 3
