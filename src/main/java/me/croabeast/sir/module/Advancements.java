@@ -301,9 +301,9 @@ final class Advancements extends ListenerModule {
             for (World w : Bukkit.getWorlds()) {
                 if (list.contains(w.getName())) continue;
 
-                boolean b = plugin.getLibrary().getGameRuleManager().getLoadedValue(w, announces);
+                Boolean loaded = plugin.getLibrary().getGameRuleManager().getLoadedValue(w, announces);
                 try {
-                    if (b && !announces.getValue(w)) announces.setValue(w, true);
+                    if (Boolean.TRUE.equals(loaded) && !announces.getValue(w)) announces.setValue(w, true);
                 } catch (Exception ignored) {}
             }
         }
