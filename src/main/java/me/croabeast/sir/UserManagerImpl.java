@@ -414,13 +414,16 @@ final class UserManagerImpl implements UserManager, Registrable {
 
         @Override
         void load() {
-            muted = file.get(uuid + ".muted", false);
-            expiresAt = file.get(uuid + ".expiresAt", -1L);
-            remaining = file.get(uuid + ".remaining", -1L);
+            Object expires = file.get(uuid + ".expiresAt", -1L);
+            Object remainingRaw = file.get(uuid + ".remaining", -1L);
+
+            expiresAt = toLong(expires);
+            remaining = toLong(remainingRaw);
 
             muteBy = file.get(uuid + ".admin", muteBy);
             reason = file.get(uuid + ".reason", reason);
 
+            muted = file.get(uuid + ".muted", false);
             if (!muted) return;
 
             if (expiresAt == -1) {
@@ -431,6 +434,16 @@ final class UserManagerImpl implements UserManager, Registrable {
             } else {
                 remaining = expiresAt - System.currentTimeMillis();
                 scheduleUnmute(remaining);
+            }
+        }
+
+        private long toLong(Object value) {
+            if (value instanceof Number) return ((Number) value).longValue();
+
+            try {
+                return Long.parseLong(String.valueOf(value));
+            } catch (Exception ignored) {
+                return -1L;
             }
         }
 
