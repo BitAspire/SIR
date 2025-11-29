@@ -20,9 +20,9 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
     private EconomyAdapter<?> economy;
     private TakionLib library;
 
+    private ModuleManager moduleManager;
     private UserManager userManager;
     private CommandManager commandManager;
-    private ModuleManager moduleManager;
 
     @Override
     public void onEnable() {
@@ -34,11 +34,13 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
 
         library = new TakionLib(this);
         moduleManager = new ModuleManager(this);
+
+        moduleManager.loadAll();
     }
 
     @Override
     public void onDisable() {
-        // todo all xd
+        // ok
     }
 
     @NotNull

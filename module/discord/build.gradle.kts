@@ -1,8 +1,3 @@
-plugins {
-    id("java-library")
-    id("io.freefair.lombok")
-}
-
 repositories {
     maven("https://nexus.scarsz.me/content/groups/public/")
     maven("https://repo.essentialsx.net/releases/")
@@ -13,8 +8,6 @@ repositories {
 
 dependencies {
     compileOnly(project(":core"))
-    compileOnly(project(":api"))
-    compileOnly(project(":module"))
 
     compileOnly("net.essentialsx:EssentialsX:2.21.0") {
         exclude("*", "*")

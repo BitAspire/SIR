@@ -3,10 +3,10 @@ package me.croabeast.sir.module;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
-public interface HookLoadable {
+public interface PluginDependant {
 
     @NotNull
-    String[] getDependantPlugins();
+    String[] getDependencies();
 
     Plugin getPlugin();
 
