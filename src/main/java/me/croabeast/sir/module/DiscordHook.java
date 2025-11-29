@@ -69,13 +69,13 @@ final class DiscordHook extends SIRModule implements Actionable, HookLoadable {
         idMap.clear();
         embedMap.clear();
 
-        ConfigurationSection s = key.getFile().getSection("channels");
-        if (s == null) return false;
-
         ConfigurationSection ids = key.getFile().getSection("ids");
         if (ids != null)
             for (String key : ids.getKeys(false))
                 idMap.put(key, Configurable.toStringList(ids, key));
+
+        ConfigurationSection s = key.getFile().getSection("channels");
+        if (s == null) return false;
 
         for (String k : s.getKeys(false)) {
             ConfigurationSection c = s.getConfigurationSection(k);
@@ -103,7 +103,7 @@ final class DiscordHook extends SIRModule implements Actionable, HookLoadable {
 
         String[] keys = (String[]) objects[2], values = (String[]) objects[3];
 
-        if (restricted && channel.equals("restricted")) {
+        if (restricted) {
             EssentialsHolder.send(player, keys, values);
             return;
         }
@@ -180,19 +180,25 @@ final class DiscordHook extends SIRModule implements Actionable, HookLoadable {
 
         EmbedObject(ConfigurationSection section) {
             this.text = section.getString("text");
-            this.color = section.getString("color");
 
-            this.authorName = section.getString("author.name");
-            this.authorUrl = section.getString("author.url");
-            this.authorIcon = section.getString("author.iconURL");
+            this.color = section.getString("embed.color");
 
-            this.thumbnail = section.getString("thumbnail");
+            this.authorName = section.getString("embed.author.name");
+            this.authorUrl = section.getString("embed.author.url");
+            this.authorIcon = section.getString("embed.author.iconURL");
 
-            this.titleText = section.getString("title.text");
-            this.tUrl = section.getString("title.url");
+            this.thumbnail = section.getString("embed.thumbnail");
 
-            this.description = section.getString("description");
-            this.timeStamp = section.getBoolean("timeStamp");
+            if (section.isConfigurationSection("embed.title")) {
+                this.titleText = section.getString("embed.title.text");
+                this.tUrl = section.getString("embed.title.url");
+            } else {
+                this.titleText = section.getString("embed.title");
+                this.tUrl = null;
+            }
+
+            this.description = section.getString("embed.description");
+            this.timeStamp = section.getBoolean("embed.timeStamp");
         }
 
         private boolean isUrl(String string) {
@@ -247,8 +253,10 @@ final class DiscordHook extends SIRModule implements Actionable, HookLoadable {
                 embed.setTitle(operator.apply(titleText), url);
             }
 
-            if (StringUtils.isNotBlank(description))
-                embed.setDescription(description);
+            if (StringUtils.isNotBlank(description)) {
+                String desc = operator.apply(description);
+                embed.setDescription(StringUtils.isNotBlank(desc) ? desc : "");
+            }
 
             if (isUrl(thumbnail))
                 embed.setThumbnail(operator.apply(thumbnail));
