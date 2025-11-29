@@ -3,7 +3,7 @@ package me.croabeast.sir.module.discord;
 import lombok.Getter;
 import me.croabeast.common.CollectionBuilder;
 import me.croabeast.common.util.Exceptions;
-import me.croabeast.sir.module.HookLoadable;
+import me.croabeast.sir.module.PluginDependant;
 import me.croabeast.sir.module.SIRModule;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -13,10 +13,10 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 
-public class Discord extends SIRModule implements HookLoadable {
+public class Discord extends SIRModule implements PluginDependant {
 
     @Getter
-    private final String[] dependantPlugins = {"DiscordSRV", "EssentialsDiscord"};
+    private final String[] dependencies = {"DiscordSRV", "EssentialsDiscord"};
     private final Set<Plugin> loadedPlugins = new HashSet<>();
 
     private Config config;
@@ -28,7 +28,7 @@ public class Discord extends SIRModule implements HookLoadable {
 
     @Override
     public void load() {
-        loadedPlugins.addAll(CollectionBuilder.of(dependantPlugins)
+        loadedPlugins.addAll(CollectionBuilder.of(dependencies)
                 .filter(Exceptions::isPluginEnabled)
                 .map(Bukkit.getPluginManager()::getPlugin).toSet());
 

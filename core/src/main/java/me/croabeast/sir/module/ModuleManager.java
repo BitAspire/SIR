@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import me.croabeast.sir.SIRApi;
 import me.croabeast.takion.logger.LogLevel;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -60,7 +59,7 @@ public final class ModuleManager {
 
     public <M extends SIRModule> M getModule(Class<M> clazz) {
         try {
-            if (!JavaPlugin.class.isAssignableFrom(clazz))
+            if (!SIRModule.class.isAssignableFrom(clazz))
                 return null;
         } catch (Exception e) {
             return null;
@@ -122,8 +121,8 @@ public final class ModuleManager {
             constructor.setAccessible(true);
 
             SIRModule module = (SIRModule) constructor.newInstance();
-            if (module instanceof HookLoadable && !((HookLoadable) module).isPluginEnabled()) {
-                log(LogLevel.INFO, hookMessage(name, ((HookLoadable) module).getDependantPlugins()));
+            if (module instanceof PluginDependant && !((PluginDependant) module).isPluginEnabled()) {
+                log(LogLevel.INFO, hookMessage(name, ((PluginDependant) module).getDependencies()));
                 classLoader.close();
                 return;
             }
