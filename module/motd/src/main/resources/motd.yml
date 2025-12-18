@@ -1,0 +1,10 @@
+motd:
+  # First MOTD Style
+  first:
+    1: '<R:1>Check out my server!</R>'     # Rainbow color effect
+    2: '&7IP:&e play.my-server.com'        # Gray and yellow colors
+
+  # Custom Named MOTD Style
+  custom-name:
+    1: '               &7A Minecraft Server'      # Centered text
+    2: '              &4Here is another line'     # Centered red text

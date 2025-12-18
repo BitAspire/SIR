@@ -4,7 +4,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import me.croabeast.common.Registrable;
 import me.croabeast.sir.SIRApi;
 import me.croabeast.sir.SIRExtension;
 import me.croabeast.sir.Toggleable;
@@ -29,24 +28,7 @@ public abstract class SIRModule implements SIRExtension, Toggleable {
         this.api = api;
         this.information = file;
 
-        button = new Button(information, new Registrable() {
-            @Override
-            public boolean isRegistered() {
-                return isLoaded();
-            }
-
-            @Override
-            public boolean register() {
-                load();
-                return true;
-            }
-
-            @Override
-            public boolean unregister() {
-                unload();
-                return true;
-            }
-        }, true);
+        button = new Button(information, this, true);
         button.setDefaultItems();
 
         button.setOnClick(b -> event -> {
@@ -59,7 +41,7 @@ public abstract class SIRModule implements SIRExtension, Toggleable {
     }
 
     @Setter(AccessLevel.PACKAGE)
-    private boolean loaded = false;
+    private boolean registered = false;
 
     @Override
     public final boolean isEnabled() {

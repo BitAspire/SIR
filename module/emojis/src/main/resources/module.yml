@@ -1,0 +1,6 @@
+main: me.croabeast.sir.module.emoji.Emojis
+name: Emojis
+title: "&7Emojis"
+description:
+  - "Handles if custom emojis should be added in"
+  - "chat and/or other SIR features and files."

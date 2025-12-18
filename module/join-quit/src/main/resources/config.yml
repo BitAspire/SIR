@@ -1,0 +1,10 @@
+disable-vanilla-messages:
+  join: true
+  quit: true
+
+cooldown:
+  join: 0
+  between: 0
+  quit: 0
+
+spawn-before-login: true

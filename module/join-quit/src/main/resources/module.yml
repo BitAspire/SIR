@@ -1,0 +1,9 @@
+main: me.croabeast.sir.module.join.JoinQuit
+name: JoinQuit
+title: "&7Join & Quit"
+description:
+  - "Handles if custom join and quit messages are"
+  - "enabled. Works with multiple messages types"
+  - "like chat, title, action-bar, boss-bar, etc."
+soft-depends:
+  - Discord

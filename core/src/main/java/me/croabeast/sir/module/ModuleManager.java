@@ -45,7 +45,7 @@ public final class ModuleManager {
 
     public boolean isEnabled(@NotNull String name) {
         LoadedModule module = modules.get(name);
-        return module != null && module.module.isLoaded();
+        return module != null && module.module.isRegistered();
     }
 
     public <M extends SIRModule> M getModule(@NotNull String name) {
@@ -130,12 +130,13 @@ public final class ModuleManager {
             module.init(api, classLoader, file);
             modules.put(name, new LoadedModule(module, classLoader));
 
-            module.load();
-            module.setLoaded(true);
-
-            classLoader.module = module;
-
-            log(LogLevel.INFO, "Module '" + name + "' loaded successfully.");
+            if (module.register()) {
+                classLoader.module = module;
+                module.setRegistered(true);
+                log(LogLevel.INFO, "Module '" + name + "' loaded successfully.");
+            } else {
+                unload(module.getName());
+            }
         } catch (Exception e) {
             log(LogLevel.ERROR, "Failed to load module from " + jarFile.getName());
             e.printStackTrace();
@@ -312,18 +313,21 @@ public final class ModuleManager {
         }
 
         SIRModule module = loadedModule.module;
-        module.unload();
-        module.setLoaded(false);
-
         try {
-            loadedModule.classLoader.close();
+            if (module.unregister()) module.setRegistered(false);
+
+            try {
+                loadedModule.classLoader.close();
+                modules.remove(name.toLowerCase());
+                log(LogLevel.INFO, "Module '" + name + "' unloaded successfully.");
+            } catch (Exception e) {
+                log(LogLevel.ERROR, "Failed to close class loader for module '" + name + "'");
+                e.printStackTrace();
+            }
         } catch (Exception e) {
-            log(LogLevel.ERROR, "Failed to close class loader for module '" + name + "'");
+            log(LogLevel.ERROR, "Failed to unload module " + module.getName());
             e.printStackTrace();
         }
-
-        modules.remove(name.toLowerCase());
-        log(LogLevel.INFO, "Module '" + name + "' unloaded successfully.");
     }
 
     public void unloadAll() {
