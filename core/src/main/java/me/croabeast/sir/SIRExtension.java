@@ -9,7 +9,6 @@ import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.Files;
-import java.util.logging.Level;
 
 public interface SIRExtension extends Registrable {
 
