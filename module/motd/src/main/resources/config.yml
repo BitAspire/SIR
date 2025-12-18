@@ -1,0 +1,30 @@
+always-load-default-icon: true
+
+max-players:
+  # Available Types:
+  # MAXIMUM: Shows online players + 1
+  # CUSTOM:  Shows fixed value from 'count'
+  # DEFAULT: Uses server.properties value
+  type: DEFAULT
+
+  # Only used when you type: CUSTOM
+  count: 69420 # Custom player count
+
+server-icon:
+  # Available Modes:
+  # DISABLED: No custom icon enabled
+  # SINGLE: One static image
+  # RANDOM: Random from folder
+  # LIST: Sequential from folder
+  usage: SINGLE
+
+  # Only for SINGLE mode
+  image: server-icon.png  # Icon filename
+
+# Icon Requirements:
+# - Must be 64x64 pixels
+# - Must be PNG format
+# - Store in modules/motd/icons/
+# - Filename must match config
+
+random-motd: false # Enable random MOTDs

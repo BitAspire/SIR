@@ -255,14 +255,6 @@ public interface SIRUser {
         getPlayer().teleport(location);
     }
 
-    default void teleport(ConfigurationSection section) {
-        if (section != null)
-            teleport(
-                    section.getString("world"), section.getString("x"), section.getString("y"),
-                    section.getString("z"), section.getString("yaw"), section.getString("pitch")
-            );
-    }
-
     /**
      * Gets a set of nearby users within a specified range.
      * <p> This method retrieves all users that are within the specified range of this user.

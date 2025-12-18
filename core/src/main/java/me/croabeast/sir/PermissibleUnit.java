@@ -6,7 +6,11 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 
 /**
  * Represents a configuration unit used for handling permissions and groups in a configuration section.
@@ -45,6 +49,15 @@ public interface PermissibleUnit extends ConfigurableUnit {
                 SIRApi.instance().getChat().isInGroup(player, getGroup());
     }
 
+    default boolean isInGroup(SIRUser user) {
+        return isInGroup(user.isOnline() ? user.getPlayer() : null);
+    }
+
+    default boolean isDefaultPermission() {
+        String temp = getPermission().trim();
+        return temp.isEmpty() || "DEFAULT".equalsIgnoreCase(temp);
+    }
+
     /**
      * Creates a new PermissibleUnit instance based on the provided configuration section.
      *
@@ -65,5 +78,21 @@ public interface PermissibleUnit extends ConfigurableUnit {
      */
     static PermissibleUnit of(PermissibleUnit unit) {
         return of(unit.getSection());
+    }
+
+    static <U extends PermissibleUnit> List<U> loadUnits(ConfigurationSection section, Function<ConfigurationSection, U> function) {
+        return UnitUtils.loadUnits(section, function);
+    }
+
+    static List<PermissibleUnit> loadUnits(ConfigurationSection section) {
+        return loadUnits(section, PermissibleUnit::of);
+    }
+
+    static <U extends PermissibleUnit> U getUnit(SIRUser user, Collection<U> units, boolean order) {
+        return UnitUtils.getUnit(user, units, order);
+    }
+
+    static Comparator<PermissibleUnit> getDefaultOrder() {
+        return UnitUtils.ORDER;
     }
 }

@@ -24,18 +24,6 @@ public interface Toggleable {
     @NotNull
     Button getButton();
 
-    interface Information {
-
-        @NotNull
-        String getTitle();
-
-        @NotNull
-        String[] getDescription();
-
-        @NotNull
-        Slot getSlot();
-    }
-
     class Button extends ToggleButton {
 
         private final Information information;

@@ -1,5 +1,6 @@
 package me.croabeast.sir.module.advancement;
 
+import me.croabeast.common.util.ServerInfoUtils;
 import me.croabeast.sir.module.SIRModule;
 
 public final class Advancements extends SIRModule {
@@ -10,18 +11,23 @@ public final class Advancements extends SIRModule {
     Messages messages;
 
     @Override
-    public void load() {
+    public boolean register() {
+        if (ServerInfoUtils.SERVER_VERSION < 12)
+            return false;
+
         config = new Config(this);
 
         (data = new DataHandler(this)).load();
         messages = new Messages(this);
 
         (listener = new Listener(this)).register();
+        return true;
     }
 
     @Override
-    public void unload() {
+    public boolean unregister() {
         listener.unregister();
         data.unload();
+        return true;
     }
 }

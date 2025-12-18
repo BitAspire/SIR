@@ -1,0 +1,32 @@
+# Example commands configuration file for SIR
+# This file defines custom commands for the SIR plugin.
+
+# The main class for the command provider
+main: com.example.plugin.command.CommandProviderImpl
+
+commands:
+  command: # actual command name, name it as you will
+    permission: sir.command
+    enabled: true
+    override-existing: true
+    aliases: [ cmd, c, custom ]
+
+    sub-commands:
+      reload: sir.command.my-reload  # Permission for reloading commands
+      help: '' # if empty, will use "{main permission node}.{sub-command name}" as permission
+
+    description: 'A custom command for demonstration purposes.'
+    usage: '/command <sub-command> [args]'
+    permission-message: '&cYou do not have permission to use this command.'
+
+    # Checks if this command depends on another SIR command.
+    depends:
+      # If true:
+      # - The command won't be registered if parent command is not registered/disabled/does not exist.
+      # - The command will use the parent command's enabled and override-existing values.
+      # If false:
+      # - The command will be registered independently of the parent command (if it exists/declared).
+      # - The command will use its own enabled and override-existing values.
+      enabled: false
+      # The parent command for this command
+      parent: ''

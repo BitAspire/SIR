@@ -1,0 +1,7 @@
+vanish-chat:
+  enabled: false
+  key: '?'
+  regex: false
+  prefix: true
+  not-allowed-messages:
+    - '<P> &cYou are not allowed to chat when you are vanished.'

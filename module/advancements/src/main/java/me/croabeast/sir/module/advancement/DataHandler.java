@@ -3,11 +3,10 @@ package me.croabeast.sir.module.advancement;
 import me.croabeast.advancement.AdvancementInfo;
 import me.croabeast.common.CollectionBuilder;
 import me.croabeast.common.Loadable;
-import me.croabeast.common.util.ServerInfoUtils;
 import me.croabeast.scheduler.RunnableTask;
 import me.croabeast.sir.DelayLogger;
 import me.croabeast.sir.Timer;
-import me.croabeast.sir.module.ModuleFile;
+import me.croabeast.sir.ExtensionFile;
 import me.croabeast.takion.rule.GameRule;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -23,7 +22,7 @@ final class DataHandler implements Loadable {
     final Map<Advancement, AdvancementInfo> information = new HashMap<>();
     final Map<Advancement, ConfigurationSection> sections = new HashMap<>();
 
-    private ModuleFile data;
+    private ExtensionFile data;
     private RunnableTask task;
 
     private int tasks = 0, challenges = 0, goals = 0, custom = 0;
@@ -67,7 +66,7 @@ final class DataHandler implements Loadable {
                 });
 
         try {
-            data = new ModuleFile(main, "data");
+            data = new ExtensionFile(main, "data", true);
         } catch (Exception ignored) {}
     }
 
@@ -78,7 +77,7 @@ final class DataHandler implements Loadable {
 
     @Override
     public void load() {
-        if (ServerInfoUtils.SERVER_VERSION < 12 || isLoaded()) return;
+        if (isLoaded()) return;
 
         task = main.getApi().getScheduler().runTask(() -> {
             if (data == null) return;
@@ -146,7 +145,7 @@ final class DataHandler implements Loadable {
 
     @Override
     public void unload() {
-        if (ServerInfoUtils.SERVER_VERSION < 12 || !isLoaded()) return;
+        if (!isLoaded()) return;
 
         GameRule<Boolean> rule = GameRule.ANNOUNCE_ADVANCEMENTS;
         for (World world : Bukkit.getWorlds()) {

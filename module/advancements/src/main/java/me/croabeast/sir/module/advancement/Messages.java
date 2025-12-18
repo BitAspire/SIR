@@ -4,7 +4,7 @@ import me.croabeast.advancement.AdvancementInfo;
 import me.croabeast.common.applier.StringApplier;
 import me.croabeast.common.util.ReplaceUtils;
 import me.croabeast.sir.SIRApi;
-import me.croabeast.sir.module.ModuleFile;
+import me.croabeast.sir.ExtensionFile;
 import me.croabeast.takion.TakionLib;
 import me.croabeast.takion.format.PlainFormat;
 import org.apache.commons.lang.StringUtils;
@@ -31,7 +31,7 @@ final class Messages {
         this.main = main;
 
         try {
-            ModuleFile file = new ModuleFile(main, "messages");
+            ExtensionFile file = new ExtensionFile(main, "messages", true);
 
             for (Type type : Type.values()) {
                 String name = type.name().toLowerCase(Locale.ENGLISH);

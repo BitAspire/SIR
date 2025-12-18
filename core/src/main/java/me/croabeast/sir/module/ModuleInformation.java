@@ -5,6 +5,7 @@ import com.google.common.base.Preconditions;
 import lombok.Getter;
 import me.croabeast.common.util.ArrayUtils;
 import me.croabeast.file.Configurable;
+import me.croabeast.sir.Information;
 import me.croabeast.sir.Toggleable;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.WordUtils;
@@ -16,7 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Getter
-public final class ModuleInformation implements Toggleable.Information {
+public final class ModuleInformation implements Information {
 
     @NotNull
     private final String main, name, title;

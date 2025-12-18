@@ -27,17 +27,20 @@ public class Discord extends SIRModule implements PluginDependant {
     }
 
     @Override
-    public void load() {
+    public boolean register() {
         loadedPlugins.addAll(CollectionBuilder.of(dependencies)
                 .filter(Exceptions::isPluginEnabled)
                 .map(Bukkit.getPluginManager()::getPlugin).toSet());
 
         final Plugin plugin = getPlugin();
         config = new Config(this, plugin != null && plugin.getName().equals("EssentialsDiscord"));
+        return true;
     }
 
     @Override
-    public void unload() {}
+    public boolean unregister() {
+        return true;
+    }
 
     public void sendMessage(String channel, Player player, UnaryOperator<String> operator) {
         config.send(channel, player, operator);

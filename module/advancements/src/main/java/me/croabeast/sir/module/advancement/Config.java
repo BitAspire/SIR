@@ -1,7 +1,7 @@
 package me.croabeast.sir.module.advancement;
 
 import me.croabeast.file.Configurable;
-import me.croabeast.sir.module.ModuleFile;
+import me.croabeast.sir.ExtensionFile;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.HashMap;
@@ -23,7 +23,7 @@ final class Config {
 
     Config(Advancements main) {
         try {
-            ModuleFile file = new ModuleFile(main, "config");
+            ExtensionFile file = new ExtensionFile(main, "config", true);
 
             loadEntries(Type.GAME_MODE, file.getSection("game-modes"));
             loadEntries(Type.WORLD, file.getSection("worlds"));

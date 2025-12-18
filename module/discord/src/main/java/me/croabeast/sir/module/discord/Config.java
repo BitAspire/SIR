@@ -12,7 +12,7 @@ import me.croabeast.common.util.ArrayUtils;
 import me.croabeast.file.Configurable;
 import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.sir.SIRApi;
-import me.croabeast.sir.module.ModuleFile;
+import me.croabeast.sir.ExtensionFile;
 import me.croabeast.takion.format.PlainFormat;
 import net.essentialsx.api.v2.ChatType;
 import net.essentialsx.api.v2.events.discord.DiscordChatMessageEvent;
@@ -45,14 +45,14 @@ final class Config {
 
     private void load(Discord main) {
         try {
-            ModuleFile file = new ModuleFile(main, "config");
+            ExtensionFile file = new ExtensionFile(main, "config", true);
             defaultServer = file.get("default-server", "");
             loadEmbeds(file);
             loadChannelIds(file);
         } catch (Exception ignored) {}
     }
 
-    private void loadChannelIds(ModuleFile file) {
+    private void loadChannelIds(ExtensionFile file) {
         ConfigurationSection idsSection = file.getSection("channel-ids");
         if (idsSection == null) return;
 
@@ -60,7 +60,7 @@ final class Config {
             channelIds.put(key, Configurable.toStringList(idsSection, key));
     }
 
-    private void loadEmbeds(ModuleFile file) {
+    private void loadEmbeds(ExtensionFile file) {
         ConfigurationSection messagesSection = file.getSection("messages");
         if (messagesSection == null) return;
 
@@ -181,8 +181,7 @@ final class Config {
             if (isUrl(thumbnail))
                 embed.setThumbnail(operator.apply(thumbnail));
 
-            if (timeStamp)
-                embed.setTimestamp(Instant.now());
+            if (timeStamp) embed.setTimestamp(Instant.now());
 
             return embed;
         }
@@ -191,8 +190,7 @@ final class Config {
             return string -> {
                 if (StringUtils.isBlank(string)) return string;
 
-                return StringApplier.simplified(string)
-                        .apply(base)
+                return StringApplier.simplified(string).apply(base)
                         .apply(s -> Config.replace(player, s))
                         .apply(s -> PlainFormat.PLACEHOLDER_API.accept(player, s))
                         .apply(PrismaticAPI::stripAll)
@@ -203,12 +201,10 @@ final class Config {
 
         void send(Player player, List<String> ids, UnaryOperator<String> operator) {
             UnaryOperator<String> formatter = createFormatter(player, operator);
-
             if (!restricted) {
                 sendViaDiscordSRV(ids, formatter);
                 return;
             }
-
             sendViaEssentialsDiscord(player, formatter);
         }
 
@@ -245,8 +241,7 @@ final class Config {
             }
 
             for (String id : ids) {
-                String guildId = null;
-                String channelId = id;
+                String guildId = null, channelId = id;
 
                 if (id.contains(":")) {
                     String[] array = id.split(":", 2);
@@ -254,10 +249,9 @@ final class Config {
                     channelId = array[1];
                 }
 
-                Guild guild = getGuild(guildId);
-
                 TextChannel channel = null;
                 try {
+                    Guild guild = getGuild(guildId);
                     if (guild != null) channel = guild.getTextChannelById(channelId);
                 } catch (Exception ignored) {}
 
@@ -266,10 +260,10 @@ final class Config {
                 if (StringUtils.isNotBlank(text))
                     channel.sendMessage(formatter.apply(text)).queue();
 
-                if (enabled) {
-                    MessageEmbed embed = createEmbed(formatter).build();
-                    channel.sendMessageEmbeds(ArrayUtils.toList(embed)).queue();
-                }
+                if (!enabled) continue;
+
+                MessageEmbed embed = createEmbed(formatter).build();
+                channel.sendMessageEmbeds(ArrayUtils.toList(embed)).queue();
             }
         }
 

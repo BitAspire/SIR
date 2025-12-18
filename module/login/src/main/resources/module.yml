@@ -1,0 +1,6 @@
+main: me.croabeast.sir.module.login.Login
+name: Login
+title: "&7Login Hook"
+description:
+  - "Handles if any login plugin can verify the"
+  - "player's login status before joining the server."

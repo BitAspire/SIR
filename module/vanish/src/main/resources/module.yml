@@ -1,0 +1,9 @@
+main: me.croabeast.sir.module.vanish.Vanish
+name: Vanish
+title: "&7Vanish Hook"
+description:
+  - "Handles if any login plugin can verify the"
+  - "player's login status before joining the server."
+  -
+  - "Handles if any vanish plugin can modify player's"
+  - "vanish status to handle join & quit messages."
