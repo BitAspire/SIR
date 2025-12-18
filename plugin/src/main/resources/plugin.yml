@@ -1,7 +1,7 @@
 main: me.croabeast.sir.SIRPlugin
 
 name: SIR # Simple In-game Receptionist
-version: '${project.version}'
+version: '${version}'
 prefix: SIR
 authors: [ CroaBeast ]
 api-version: 1.13
