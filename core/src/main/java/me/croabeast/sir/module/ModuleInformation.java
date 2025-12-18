@@ -6,7 +6,6 @@ import lombok.Getter;
 import me.croabeast.common.util.ArrayUtils;
 import me.croabeast.file.Configurable;
 import me.croabeast.sir.Information;
-import me.croabeast.sir.Toggleable;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.configuration.file.FileConfiguration;

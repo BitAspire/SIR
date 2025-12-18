@@ -2,7 +2,6 @@ package me.croabeast.sir;
 
 import com.github.stefvanschie.inventoryframework.gui.GuiItem;
 import com.github.stefvanschie.inventoryframework.pane.component.ToggleButton;
-import com.github.stefvanschie.inventoryframework.pane.util.Slot;
 import me.croabeast.common.CollectionBuilder;
 import me.croabeast.common.Registrable;
 import me.croabeast.common.gui.ItemCreator;
