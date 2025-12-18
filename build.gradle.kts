@@ -35,6 +35,7 @@ subprojects {
         options.encoding = "UTF-8"
         sourceCompatibility = "1.8"
         targetCompatibility = "1.8"
+        options.compilerArgs.add("-Xlint:-options")
     }
 
     tasks.withType<Javadoc>().configureEach {
@@ -48,6 +49,23 @@ subprojects {
 
             if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_1_9))
                 addBooleanOption("html5", true)
+        }
+    }
+
+
+    plugins.withType<JavaPlugin> {
+        tasks.withType<Jar>().configureEach {
+            destinationDirectory.set(layout.projectDirectory.dir("compiled"))
+        }
+        tasks.withType<Zip>().configureEach {
+            destinationDirectory.set(layout.projectDirectory.dir("compiled"))
+        }
+
+        tasks.named<Jar>("javadocJar") {
+            destinationDirectory.set(layout.projectDirectory.dir("compiled"))
+        }
+        tasks.named<Jar>("sourcesJar") {
+            destinationDirectory.set(layout.projectDirectory.dir("compiled"))
         }
     }
 
@@ -70,4 +88,12 @@ subprojects {
 
 tasks.build {
     dependsOn("shadowJar")
+}
+
+tasks.register<Delete>("cleanCompiled") {
+    delete(allprojects.map { it.layout.projectDirectory.dir("compiled") })
+}
+
+tasks.named("clean") {
+    dependsOn("cleanCompiled")
 }
