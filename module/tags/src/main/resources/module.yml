@@ -1,0 +1,7 @@
+main: me.croabeast.sir.module.tag.Tags
+name: Tags
+title: "&7Tags"
+description:
+  - "Handles if SIR can create custom tags for chat."
+  - "Tags can be parsed in any plugin or message by"
+  - "PlaceholderAPI."

@@ -7,7 +7,7 @@ plugins {
 
 allprojects {
     group = "me.croabeast"
-    version = "0.1.0-SNAPSHOT"
+    version = "2.0"
 
     repositories {
         mavenCentral()
@@ -35,6 +35,20 @@ subprojects {
         options.encoding = "UTF-8"
         sourceCompatibility = "1.8"
         targetCompatibility = "1.8"
+    }
+
+    tasks.withType<Javadoc>().configureEach {
+        isFailOnError = false
+
+        (options as StandardJavadocDocletOptions).apply {
+            addStringOption("Xdoclint:none", "-quiet")
+            encoding = "UTF-8"
+            charSet = "UTF-8"
+            docEncoding = "UTF-8"
+
+            if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_1_9))
+                addBooleanOption("html5", true)
+        }
     }
 
     dependencies {

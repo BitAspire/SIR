@@ -9,12 +9,12 @@ import org.jetbrains.annotations.NotNull;
 
 public final class Emojis extends SIRModule {
 
-    EmojiData data;
+    Data data;
     PAPIExpansion hook;
 
     @Override
     public boolean register() {
-        data = new EmojiData(this);
+        data = new Data(this);
 
         return !Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI") ||
                 (hook = new PAPIExpansion("sir_emoji") {
