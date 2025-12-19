@@ -2,6 +2,7 @@ package me.croabeast.sir.module;
 
 import lombok.RequiredArgsConstructor;
 import me.croabeast.sir.SIRApi;
+import me.croabeast.sir.command.CommandProvider;
 import me.croabeast.takion.logger.LogLevel;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
@@ -80,6 +81,28 @@ public final class ModuleManager {
         api.getLibrary().getLogger().log(level, messages);
     }
 
+    private ModuleCandidate createCandidate(File jarFile) {
+        try (JarFile jar = new JarFile(jarFile)) {
+            JarEntry entry = jar.getJarEntry("module.yml");
+            if (entry == null) {
+                log(LogLevel.WARN, "module.yml not found in " + jarFile.getName() + ", skipping.");
+                return null;
+            }
+
+            ModuleInformation file;
+            try (InputStream in = jar.getInputStream(entry);
+                 InputStreamReader reader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
+                file = new ModuleInformation(YamlConfiguration.loadConfiguration(reader));
+            }
+
+            return new ModuleCandidate(jarFile, file);
+        } catch (Exception e) {
+            log(LogLevel.ERROR, "Failed to read module.yml from " + jarFile.getName());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     private String hookMessage(String name, String[] plugins) {
         return "&7Module '" + name + "' can't be loaded since " +
                 ((Function<String[], String>) strings -> {
@@ -134,6 +157,15 @@ public final class ModuleManager {
                 classLoader.module = module;
                 module.setRegistered(true);
                 log(LogLevel.INFO, "Module '" + name + "' loaded successfully.");
+
+                if (module instanceof CommandProvider) {
+                    try {
+                        api.getCommandManager().loadFromModule(module);
+                    } catch (Exception e) {
+                        log(LogLevel.ERROR, "Failed to load commands for module '" + name + "'.");
+                        e.printStackTrace();
+                    }
+                }
             } else {
                 unload(module.getName());
             }
@@ -146,30 +178,12 @@ public final class ModuleManager {
     public void load(File jarFile) {
         log(LogLevel.INFO, "Loading module from " + jarFile.getName() + "...");
 
-        ModuleCandidate candidate;
-        try (JarFile jar = new JarFile(jarFile)) {
-            JarEntry entry = jar.getJarEntry("module.yml");
-            if (entry == null) {
-                log(LogLevel.WARN, "module.yml not found in " + jarFile.getName() + ", skipping.");
-                return;
-            }
+        ModuleCandidate candidate = createCandidate(jarFile);
+        if (candidate == null) return;
 
-            ModuleInformation file;
-            try (InputStream in = jar.getInputStream(entry);
-                 InputStreamReader reader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
-                file = new ModuleInformation(YamlConfiguration.loadConfiguration(reader));
-            }
-
-            String key = file.getName();
-            if (modules.containsKey(key)) {
-                log(LogLevel.WARN, "Module with name '" + key + "' already loaded, skipping...");
-                return;
-            }
-
-            candidate = new ModuleCandidate(jarFile, file);
-        } catch (Exception e) {
-            log(LogLevel.ERROR, "Failed to read module.yml from " + jarFile.getName());
-            e.printStackTrace();
+        String key = candidate.file.getName();
+        if (modules.containsKey(key)) {
+            log(LogLevel.WARN, "Module with name '" + key + "' already loaded, skipping...");
             return;
         }
 
@@ -205,40 +219,25 @@ public final class ModuleManager {
         }
 
         Map<String, ModuleCandidate> candidates = new LinkedHashMap<>();
-
         for (File jarFile : jars) {
-            try (JarFile jar = new JarFile(jarFile)) {
-                JarEntry entry = jar.getJarEntry("module.yml");
-                if (entry == null) {
-                    log(LogLevel.WARN, "module.yml not found in " + jarFile.getName() + ", skipping.");
-                    continue;
-                }
+            ModuleCandidate candidate = createCandidate(jarFile);
+            if (candidate == null) continue;
 
-                ModuleInformation file;
-                try (InputStream in = jar.getInputStream(entry);
-                     InputStreamReader reader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
-                    file = new ModuleInformation(YamlConfiguration.loadConfiguration(reader));
-                }
-
-                String key = file.getName();
-                if (modules.containsKey(key)) {
-                    log(LogLevel.WARN, "Module with name '" + file.getName()
-                            + "' already loaded, skipping '" + jarFile.getName() + "'.");
-                    continue;
-                }
-
-                if (candidates.containsKey(key)) {
-                    log(LogLevel.WARN, "Duplicate module name '" + file.getName()
-                            + "' between '" + candidates.get(key).jarFile.getName()
-                            + "' and '" + jarFile.getName() + "', skipping the latter.");
-                    continue;
-                }
-
-                candidates.put(key, new ModuleCandidate(jarFile, file));
-            } catch (Exception e) {
-                log(LogLevel.ERROR, "Failed to read module.yml from " + jarFile.getName());
-                e.printStackTrace();
+            String key = candidate.file.getName();
+            if (modules.containsKey(key)) {
+                log(LogLevel.WARN, "Module with name '" + candidate.file.getName()
+                        + "' already loaded, skipping '" + jarFile.getName() + "'.");
+                continue;
             }
+
+            if (candidates.containsKey(key)) {
+                log(LogLevel.WARN, "Duplicate module name '" + candidate.file.getName()
+                        + "' between '" + candidates.get(key).jarFile.getName()
+                        + "' and '" + jarFile.getName() + "', skipping the latter.");
+                continue;
+            }
+
+            candidates.put(key, candidate);
         }
 
         if (candidates.isEmpty()) {
@@ -291,7 +290,7 @@ public final class ModuleManager {
                 }
                 if (wait) continue;
 
-                loadCandidate(entry.getValue());
+                load(entry.getValue().jarFile);
                 progress = true;
             }
         } while (progress);

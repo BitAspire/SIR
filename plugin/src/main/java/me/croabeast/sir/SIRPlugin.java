@@ -34,13 +34,16 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
 
         library = new TakionLib(this);
         moduleManager = new ModuleManager(this);
+        commandManager = new CommandManager(this);
 
         moduleManager.loadAll();
+        commandManager.loadAll();
     }
 
     @Override
     public void onDisable() {
-        // ok
+        if (commandManager != null) commandManager.unloadAll();
+        if (moduleManager != null) moduleManager.unloadAll();
     }
 
     @NotNull

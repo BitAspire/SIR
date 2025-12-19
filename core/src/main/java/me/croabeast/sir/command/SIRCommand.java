@@ -1,5 +1,6 @@
 package me.croabeast.sir.command;
 
+import lombok.Getter;
 import me.croabeast.command.BaseCommand;
 import me.croabeast.command.BukkitCommand;
 import me.croabeast.command.CommandPredicate;
@@ -30,18 +31,18 @@ public abstract class SIRCommand extends BukkitCommand {
     final SIRApi api = SIRApi.instance();
     final TakionLib lib = api.getLibrary();
 
-    final ConfigurableFile config;
-    CommandFile file;
+    @Getter
+    private String commandKey;
+    private CommandFile file;
 
     private MessageSender create(CommandSender sender) {
         return lib.getLoadedSender().setTargets(sender);
     }
 
-    protected SIRCommand(ConfigurableFile config) {
+    public SIRCommand() {
         super(SIRApi.instance().getPlugin(), "");
 
-        this.config = Objects.requireNonNull(config, "Config file cannot be null");
-        reloadOptions();
+        commandKey = null;
 
         setExecutingError((sender, e) -> {
             e.printStackTrace();
@@ -53,7 +54,7 @@ public abstract class SIRCommand extends BukkitCommand {
         });
 
         setWrongArgumentAction((sender, arg) ->
-                create(sender).addPlaceholder("{arg}", arg).send(getLangConfig().toStringList("lang.wrong-arg")));
+                create(sender).addPlaceholder("{arg}", arg).send(getLang().toStringList("lang.wrong-arg")));
     }
 
     private class SubCommand extends me.croabeast.command.SubCommand {
@@ -72,8 +73,9 @@ public abstract class SIRCommand extends BukkitCommand {
     }
 
     boolean reloadOptions() {
+        if (file == null) return false;
+
         try {
-            file = new CommandFile(config.getConfiguration());
             Reflector.from(() -> this).set("name", file.getName());
         } catch (Exception e) {
             e.printStackTrace();
@@ -132,52 +134,62 @@ public abstract class SIRCommand extends BukkitCommand {
 
     @NotNull
     public final String getName() {
-        return file.getName();
+        return file == null ? (commandKey == null ? "" : commandKey) : file.getName();
     }
 
     @NotNull
     public final String getPermission() {
-        return file.getPermission();
+        return file == null ? "" : file.getPermission();
     }
 
     @NotNull
     public final String getUsage() {
-        return file.getUsage();
+        return file == null ? "" : file.getUsage();
     }
 
     @NotNull
     public final String getDescription() {
-        return file.getDescription();
+        return file == null ? "" : file.getDescription();
     }
 
     @NotNull
     public final List<String> getAliases() {
-        return file.getAliases();
+        return file == null ? new ArrayList<>() : file.getAliases();
     }
 
     @NotNull
     public final String getPermissionMessage() {
-        return file.getPermissionMessage();
+        return file == null ? "" : file.getPermissionMessage();
     }
 
     @NotNull
-    protected final ConfigurableFile getRootConfig() {
-        return config;
-    }
-
-    @NotNull
-    protected abstract ConfigurableFile getLangConfig();
+    protected abstract ConfigurableFile getLang();
 
     public final boolean hasParent() {
-        return file.hasParent();
+        return file != null && file.hasParent();
+    }
+
+    @Nullable
+    public final SIRCommand getParent() {
+        return api.getCommandManager().getCommand(file == null ? null : file.getParentName());
     }
 
     public final boolean isEnabled() {
-        return file.isEnabled();
+        return file != null && file.isEnabled();
     }
 
     public final boolean isOverriding() {
-        return file.isOverride();
+        return file != null && file.isOverride();
+    }
+
+    void disable() {
+        if (file != null) file.setEnabled(false);
+    }
+
+    void applyFile(CommandFile file) {
+        this.file = Objects.requireNonNull(file, "Command file cannot be null");
+        this.commandKey = file.getName();
+        reloadOptions();
     }
 
     protected abstract boolean execute(CommandSender sender, String[] args);
@@ -215,14 +227,14 @@ public abstract class SIRCommand extends BukkitCommand {
             if (strings.length != 1)
                 throw new NullPointerException("Needs only a single path");
 
-            return super.send(getLangConfig().toStringList("lang." + strings[0]));
+            return super.send(getLang().toStringList("lang." + strings[0]));
         }
     }
 
     protected final boolean checkPlayer(CommandSender sender, String name) {
         return createSender(sender)
                 .setLogger(false).addPlaceholder("{target}", name)
-                .send(getRootConfig().toStringList("lang.not-player"));
+                .send(getLang().toStringList("lang.not-player"));
     }
 
     public final boolean testPermissionSilent(@NotNull CommandSender target) {
@@ -238,7 +250,7 @@ public abstract class SIRCommand extends BukkitCommand {
         Player player = sender instanceof Player ? (Player) sender : null;
         if (log)
             create(player).addPlaceholder("{perm}", getPermission())
-                    .send(getRootConfig().toStringList("lang.no-permission"));
+                    .send(getLang().toStringList("lang.no-permission"));
 
         return false;
     }
