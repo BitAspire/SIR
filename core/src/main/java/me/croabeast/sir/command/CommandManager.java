@@ -68,14 +68,14 @@ public final class CommandManager {
         }
     }
 
-    private ProviderFile readFile(InputStream stream, String source) {
+    private ProviderInformation readFile(InputStream stream, String source) {
         if (stream == null) {
             log(LogLevel.WARN, "commands.yml not found for " + source + ", skipping.");
             return null;
         }
 
         try (InputStreamReader reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
-            return new ProviderFile(YamlConfiguration.loadConfiguration(reader));
+            return new ProviderInformation(YamlConfiguration.loadConfiguration(reader));
         } catch (Exception e) {
             log(LogLevel.ERROR, "Failed to read commands.yml from " + source);
             e.printStackTrace();
@@ -83,7 +83,7 @@ public final class CommandManager {
         }
     }
 
-    private void registerProvider(CommandProvider provider, ProviderFile file) {
+    private void registerProvider(CommandProvider provider, ProviderInformation file) {
         if (provider == null || file == null) return;
 
         Set<SIRCommand> set = provider.getCommands();
@@ -143,7 +143,7 @@ public final class CommandManager {
         if (processedModules.contains(module)) return;
 
         InputStream stream = module.getClass().getClassLoader().getResourceAsStream("commands.yml");
-        ProviderFile file = readFile(stream, module.getName());
+        ProviderInformation file = readFile(stream, module.getName());
         if (file == null) {
             processedModules.add(module);
             return;
@@ -160,7 +160,7 @@ public final class CommandManager {
         processedModules.add(module);
     }
 
-    private ProviderFile readExternalCommandsFile(File jarFile) {
+    private ProviderInformation readExternalCommandsFile(File jarFile) {
         JarEntry entry;
 
         try (JarFile jar = new JarFile(jarFile)) {
@@ -172,7 +172,7 @@ public final class CommandManager {
 
             try (InputStream stream = jar.getInputStream(entry);
                   InputStreamReader reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
-                return new ProviderFile(YamlConfiguration.loadConfiguration(reader));
+                return new ProviderInformation(YamlConfiguration.loadConfiguration(reader));
             }
         } catch (Exception e) {
             log(LogLevel.ERROR, "Failed to read commands.yml from " + jarFile.getName());
@@ -184,7 +184,7 @@ public final class CommandManager {
     public void load(File jarFile) {
         log(LogLevel.INFO, "Loading command provider from " + jarFile.getName() + "...");
 
-        ProviderFile file = readExternalCommandsFile(jarFile);
+        ProviderInformation file = readExternalCommandsFile(jarFile);
         if (file == null) return;
 
         if (providers.containsKey(file.getMain())) {
