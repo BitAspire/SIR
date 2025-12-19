@@ -12,5 +12,7 @@ public interface Information {
     String[] getDescription();
 
     @NotNull
-    Slot getSlot();
+    default Slot getSlot() {
+        throw new UnsupportedOperationException("Slot not implemented yet");
+    }
 }

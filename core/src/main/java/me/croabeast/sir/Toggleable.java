@@ -23,13 +23,23 @@ public interface Toggleable {
     @NotNull
     Button getButton();
 
+    @NotNull
+    default Button createButton(Registrable registrable, boolean enabled) {
+        return new Button(getInformation(), registrable, enabled);
+    }
+
+    @NotNull
+    default Button createButton(boolean enabled) {
+        return new Button(getInformation(), enabled);
+    }
+
     class Button extends ToggleButton {
 
         private final Information information;
         private final Registrable registrable;
 
         public Button(Information information, Registrable registrable, boolean enabled) {
-            super(information.getSlot(), 1, 1, Priority.HIGHEST, enabled);
+            super(information.getSlot(), 1, 1, Priority.HIGHEST, enabled, SIRApi.instance().getPlugin());
             this.information = information;
             this.registrable = registrable;
         }

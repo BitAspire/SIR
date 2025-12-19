@@ -2,7 +2,6 @@ package me.croabeast.sir.module.emoji;
 
 import me.croabeast.sir.ExtensionFile;
 import me.croabeast.sir.PermissibleUnit;
-import me.croabeast.sir.user.SIRUser;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
