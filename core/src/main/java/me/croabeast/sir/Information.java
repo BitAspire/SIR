@@ -6,6 +6,9 @@ import org.jetbrains.annotations.NotNull;
 public interface Information {
 
     @NotNull
+    String getName();
+
+    @NotNull
     String getTitle();
 
     @NotNull

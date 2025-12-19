@@ -1,27 +1,44 @@
 package me.croabeast.sir.command;
 
+import com.github.stefvanschie.inventoryframework.pane.util.Slot;
 import com.google.common.base.Preconditions;
 import lombok.Getter;
+import lombok.Setter;
+import me.croabeast.common.util.ArrayUtils;
+import me.croabeast.file.Configurable;
+import me.croabeast.sir.Information;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.WordUtils;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 @Getter
-final class ProviderFile {
+public final class ProviderInformation implements Information {
 
-    private final String main;
     private final Map<String, ConfigurationSection> commands;
 
-    ProviderFile(@NotNull YamlConfiguration configuration) {
+    private final String main, name, title;
+    private final String[] description;
+
+    @Setter
+    private Slot slot;
+
+    ProviderInformation(@NotNull YamlConfiguration configuration) {
         main = configuration.getString("main");
         Preconditions.checkArgument(StringUtils.isNotBlank(main), "Command provider main class cannot be null or empty");
+
+        String[] mainParts = main.split("\\.");
+        this.name = configuration.getString("name", mainParts[mainParts.length - 1]);
+
+        List<String> list = ArrayUtils.toList(name.replaceAll("[-_]", " ").split(" "));
+        list.replaceAll(WordUtils::capitalize);
+        this.title = configuration.getString("title", String.join(" ", list));
+
+        this.description = Configurable.toStringList(configuration, "description").toArray(new String[0]);
 
         ConfigurationSection section = configuration.getConfigurationSection("commands");
         if (section == null) {
@@ -32,8 +49,10 @@ final class ProviderFile {
         Map<String, ConfigurationSection> map = new LinkedHashMap<>();
         for (String key : section.getKeys(false)) {
             if (StringUtils.isBlank(key)) continue;
+
             ConfigurationSection commandSection = section.getConfigurationSection(key);
             if (commandSection == null) continue;
+
             map.put(key.toLowerCase(Locale.ENGLISH), commandSection);
         }
 
@@ -45,7 +64,6 @@ final class ProviderFile {
     }
 
     ConfigurationSection getCommandSection(@Nullable String name) {
-        if (name == null) return null;
-        return commands.get(name.toLowerCase(Locale.ENGLISH));
+        return name == null ? null : commands.get(name.toLowerCase(Locale.ENGLISH));
     }
 }

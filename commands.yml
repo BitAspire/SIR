@@ -3,6 +3,10 @@
 
 # The main class for the command provider
 main: com.example.plugin.command.CommandProviderImpl
+name: CommandProviderImpl
+title: "&7My Command Provider"
+description:
+  - "&7This is a description of the provider."
 
 commands:
   command: # actual command name, name it as you will
