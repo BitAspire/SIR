@@ -42,7 +42,7 @@ public final class ModuleInformation implements Information {
         this.title = configuration.getString("title", String.join(" ", list));
 
         this.description = Configurable.toStringList(configuration, "description").toArray(new String[0]);
-        this.slot = SlotCalculator.toSlot(slotCount++);
+        this.slot = SlotCalculator.EXTENSION_LAYOUT.toSlot(slotCount++);
 
         this.depend = Collections.unmodifiableList(Configurable.toStringList(configuration, "depend"));
 

@@ -1,0 +1,44 @@
+# Option to enable or disable the swearing module.
+enabled: true
+
+# Defines how the swearing will be controlled: BLOCK (block the message) or REPLACE (replace banned words).
+control: BLOCK
+
+# List of banned words or regular expressions to detect swearing.
+# If an input starts with [regex], will work as a regex string
+banned-words:
+  - "bad-word1"
+  - "bad-word2"
+  - "[regex] (?i)f(.[^ ]*)?ck"
+
+# Replacement options that will be applied if the control type is REPLACE.
+replace-options:
+  # Determines whether to replace the entire word or just individual characters.
+  type: CHARACTER # WORD, CHARACTER
+
+  # If true, the replacements will be applied in the order they are listed.
+  order: true
+
+  # List of characters or words used to replace the banned words.
+  replacements:
+    - '*'
+    - '#'
+
+# Warning message to be sent to the player when swearing is detected.
+warnings: "<p> &7Please avoid swearing in the chat."
+
+# Actions to be taken when a player exceeds the maximum allowed violations.
+actions:
+  # The number of violations a player can incur before the command(s) are executed.
+  maximum-violations: 3
+
+  # Commands to be executed when the maximum violations are reached.
+  commands:
+    - "mute {player} Swearing"
+
+  # Messages to be sent to the player when the command(s) are executed.
+  messages:
+    - "<p> &cYou've been blocked to chat for swearing."
+
+# Permission that allows players to bypass the swearing module.
+bypass: sir.moderation.bypass.swearing

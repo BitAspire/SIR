@@ -1,0 +1,48 @@
+announcements:
+  # Announcement Entry 1
+  # Basic centered chat message with sound
+  1:
+    # Sound played when announcement shows
+    # Uses Minecraft sound names
+    sound: # optional
+      enabled: true
+      type: ENTITY_PLAYER_LEVELUP
+      volume: 1.0
+      pitch: 1.0
+
+    # Message lines
+    lines:
+      - '&7'
+      - '<C>&aThis is a S.I.R announcement'
+      - '<C>&7Disable announcements in&e modules.yml'
+      - '&7'
+
+  # Announcement Entry 2
+  # Mixed format announcement (action-bar, title) with command
+  2:
+    lines:
+      # Action bar message (above hotbar)
+      - '[ACTION-BAR] &7Look, an action-bar S.I.R. announcement'
+
+      # Title and subtitle with hex colors
+      # Format: [TITLE] main_title<n>subtitle
+      - '[TITLE] {#321ABA}A S.I.R. title<n>&#869021A S.I.R. subtitle'
+
+    # Commands executed with announcement
+    # Executes as console by default
+    commands:
+      - 'say hi server this is a command'
+
+  # Announcement Entry 3
+  # Another centered chat message with different sound
+  3:
+    sound: # optional
+      enabled: true
+      type: ENTITY_PLAYER_BURP
+      volume: 1.0
+      pitch: 1.0
+    lines:
+      - '&7'
+      - '<C>&eThis is another S.I.R. announcement'
+      - '<C>&7Disable announcements in&e modules.yml'
+      - '&7'

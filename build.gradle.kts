@@ -52,7 +52,6 @@ subprojects {
         }
     }
 
-
     plugins.withType<JavaPlugin> {
         tasks.withType<Jar>().configureEach {
             destinationDirectory.set(layout.projectDirectory.dir("compiled"))

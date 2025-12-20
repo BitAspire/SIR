@@ -1,0 +1,13 @@
+# Global language configuration
+lang:
+  # No permission message
+  # {perm} shows the missing permission node
+  no-permission: '<P> You do not have the permission &c{perm} &7to use this.'
+
+  # Error message for invalid or offline player targets
+  # {target} placeholder shows the invalid player name
+  not-player: '<P> &cThe player {target} does not exist.'
+
+  # Invalid argument message
+  # {arg} shows the incorrect argument provided
+  wrong-arg: '<P> The argument &c{arg} &7is invalid or does not exist.'

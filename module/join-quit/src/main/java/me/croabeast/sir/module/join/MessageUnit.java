@@ -45,7 +45,7 @@ final class MessageUnit implements PermissibleUnit {
         } catch (Exception ignored) {}
 
         try {
-            SpawnSection temp = new SpawnSection(section.getConfigurationSection("sound"));
+            SpawnSection temp = new SpawnSection(section.getConfigurationSection("spawn"));
             if (temp.enabled) spawnSection = temp;
         } catch (Exception ignored) {}
 

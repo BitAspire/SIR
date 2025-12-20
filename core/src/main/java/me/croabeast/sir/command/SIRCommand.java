@@ -59,7 +59,7 @@ public abstract class SIRCommand extends BukkitCommand {
 
     private class SubCommand extends me.croabeast.command.SubCommand {
 
-        public SubCommand(String name, String permission) {
+        SubCommand(String name, String permission) {
             super(SIRCommand.this, name);
             setPermission(permission);
         }

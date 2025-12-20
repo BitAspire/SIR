@@ -45,4 +45,8 @@ public class Discord extends SIRModule implements PluginDependant {
     public void sendMessage(String channel, Player player, UnaryOperator<String> operator) {
         config.send(channel, player, operator);
     }
+
+    public boolean isRestricted() {
+        return config.restricted;
+    }
 }

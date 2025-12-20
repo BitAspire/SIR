@@ -1,0 +1,9 @@
+main: me.croabeast.sir.module.channel.Channels
+
+commands:
+  chat-view:
+    aliases: [ chatview, chat-toggle, chattoggle, ctoggle ]
+    override-existing: true
+
+    description: 'A command to toggle local channels view.'
+    usage: '/chat-view'
