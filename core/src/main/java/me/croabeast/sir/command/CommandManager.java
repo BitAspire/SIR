@@ -3,6 +3,7 @@ package me.croabeast.sir.command;
 import lombok.RequiredArgsConstructor;
 import me.croabeast.common.gui.ChestBuilder;
 import me.croabeast.sir.SIRApi;
+import me.croabeast.sir.SlotCalculator;
 import me.croabeast.sir.module.ModuleManager;
 import me.croabeast.sir.module.SIRModule;
 import me.croabeast.takion.logger.LogLevel;
@@ -28,6 +29,8 @@ public final class CommandManager {
     private final Map<String, SIRCommand> commands = new LinkedHashMap<>();
     private final Map<String, LoadedProvider> providers = new LinkedHashMap<>();
     private final Set<SIRModule> processedModules = Collections.newSetFromMap(new IdentityHashMap<>());
+
+    private int slotCount = 0;
 
     public CommandManager(SIRApi api) {
         this.api = api;
@@ -205,6 +208,7 @@ public final class CommandManager {
 
             CommandProvider provider = (CommandProvider) clazz.getDeclaredConstructor().newInstance();
             providers.put(file.getMain(), new LoadedProvider(loader));
+            file.setSlot(SlotCalculator.EXTENSION_LAYOUT.toSlot(slotCount++));
             registerProvider(provider, file);
         } catch (Exception e) {
             log(LogLevel.ERROR, "Failed to load command provider from " + jarFile.getName());
@@ -297,6 +301,29 @@ public final class CommandManager {
         }
 
         commands.remove(name.toLowerCase(Locale.ENGLISH));
+    }
+
+    public void unload(CommandProvider provider) {
+        if (provider == null) return;
+
+        for (SIRCommand command : provider.getCommands()) {
+            if (command == null) continue;
+
+            String name = StringUtils.isBlank(command.getName()) ? command.getCommandKey() : command.getName();
+            if (StringUtils.isBlank(name)) continue;
+
+            unload(name);
+        }
+    }
+
+    public void reloadFromModule(@NotNull SIRModule module) {
+        if (!(module instanceof CommandProvider))
+            return;
+
+        unload((CommandProvider) module);
+        processedModules.remove(module);
+
+        if (module.isEnabled()) loadFromModule(module);
     }
 
     public void unloadAll() {

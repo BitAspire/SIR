@@ -1,0 +1,11 @@
+default-bukkit-format: false
+
+user-muted: "<P> &cYou are muted, you can not send messages."
+
+simple-logger:
+  enabled: false
+  format: ' &7{player}: {message}'
+
+allow-empty:
+  enabled: false
+  message: '<P> &cYou can not send an empty message.'

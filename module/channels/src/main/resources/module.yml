@@ -1,0 +1,14 @@
+main: me.croabeast.sir.module.channel.Channels
+name: Channels
+title: "&7Chat Channels"
+description:
+  - "Handles how the chat will display and if"
+  - "will be a local channel as well with the"
+  - "global channel.",
+  - "Local channels only can be accessed using"
+  - "a prefix and/or command."
+soft-depends:
+  - Discord
+  - Emojis
+  - Mentions
+  - Tags

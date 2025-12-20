@@ -1,0 +1,6 @@
+main: me.croabeast.sir.module.moderation.Moderation
+name: Moderation
+title: "&7Moderation"
+description:
+  - "Handles if moderation should be applied on"
+  - "the chat to avoid insults, caps, spamming, etc."

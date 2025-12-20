@@ -1,5 +1,6 @@
 package me.croabeast.sir;
 
+import me.croabeast.common.util.ArrayUtils;
 import me.croabeast.scheduler.GlobalScheduler;
 import me.croabeast.sir.command.CommandManager;
 import me.croabeast.sir.module.ModuleManager;
@@ -48,6 +49,20 @@ public interface SIRApi {
     @NotNull
     static SIRApi instance() {
         return Objects.requireNonNull(Api.api, "SIR's API isn't initialized yet");
+    }
+
+    static String joinArray(int index, String... array) {
+        if (ArrayUtils.isArrayEmpty(array) || index >= array.length)
+            return null;
+
+        StringBuilder b = new StringBuilder();
+
+        for (int i = index; i < array.length; i++) {
+            b.append(array[i]);
+            if (i != array.length - 1) b.append(" ");
+        }
+
+        return b.toString();
     }
 
     static void executeCommands(SIRUser user, List<String> commands) {

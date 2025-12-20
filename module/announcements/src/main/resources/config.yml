@@ -1,0 +1,2 @@
+interval: 2400  # Time between announcements in ticks
+random: false   # Controls message sequence

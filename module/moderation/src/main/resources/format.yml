@@ -1,0 +1,13 @@
+# Option to enable or disable the chat format module.
+enabled: false
+
+# Option to automatically capitalize the first letter of messages.
+capitalize: true
+
+# Prefix and suffix to be added to chat messages.
+characters:
+  prefix: ''
+  suffix: '.'
+
+# Permission that allows players to bypass the format module.
+bypass: sir.moderation.bypass.format

@@ -1,0 +1,30 @@
+# This section controls the language used in the chat moderation module.
+lang-names:
+  # This value is for the Swearing module.
+  swearing: "Swearing"
+
+  # This value is for the Caps module.
+  caps: "Caps"
+
+  # This value is for the Links module.
+  Links: "Links"
+
+  # This value is for the Format module.
+  format: "Format"
+
+# This section controls the logging of chat violations.
+log-violations:
+  # Option to enable or disable logging of violations.
+  enabled: true
+
+  # The format of the log message for a violation.
+  # {player} is replaced by the player's name, {type} by the violation type, and {message} by the message that caused the violation.
+  format: '<p> &7{player} incurs &e{type}&7 violation here: &f"{message}"'
+
+# This section controls the notification of staff members about chat violations.
+notify-staff:
+  # Option to enable or disable staff notifications for chat violations.
+  enabled: true
+
+  # The permission required for a staff member to receive notifications about chat violations.
+  permission: sir.moderation.staff.notify

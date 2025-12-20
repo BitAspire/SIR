@@ -2,6 +2,7 @@ package me.croabeast.sir.command;
 
 import com.github.stefvanschie.inventoryframework.pane.util.Slot;
 import com.google.common.base.Preconditions;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import me.croabeast.common.util.ArrayUtils;
@@ -24,7 +25,7 @@ public final class ProviderInformation implements Information {
     private final String main, name, title;
     private final String[] description;
 
-    @Setter
+    @Setter(AccessLevel.PACKAGE)
     private Slot slot;
 
     ProviderInformation(@NotNull YamlConfiguration configuration) {

@@ -1,0 +1,6 @@
+main: me.croabeast.sir.module.mention.Mentions
+name: Mentions
+title: "&7Mentions"
+description:
+  - "Handles if players can be mentioned in the"
+  - "chat, similar how Discord use their mentions."

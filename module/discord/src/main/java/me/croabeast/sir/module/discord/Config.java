@@ -33,7 +33,7 @@ import java.util.function.UnaryOperator;
 final class Config {
 
     private String defaultServer = "";
-    private final boolean restricted;
+    final boolean restricted;
 
     private final Map<String, List<String>> channelIds = new HashMap<>();
     private final Map<String, EmbedTemplate> embeds = new HashMap<>();

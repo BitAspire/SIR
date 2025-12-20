@@ -1,0 +1,7 @@
+main: me.croabeast.sir.module.announcement.Announcements
+name: Announcements
+title: "&7Announcements"
+description:
+  - "Handles if custom scheduled and automated"
+  - "messages will be displayed in a defined time"
+  - "frame in ticks."

@@ -1,0 +1,13 @@
+main: me.croabeast.sir.module.announcement.Announcements
+
+commands:
+  announce:
+    permission: sir.announce
+    override-existing: true
+    aliases: [ announcer, announcements, announcement ]
+    sub-commands:
+      help: ''
+      preview: ''
+
+    description: 'Broadcast your SIR announcements from file.'
+    usage: '/announce [help/preview] [<id>]'

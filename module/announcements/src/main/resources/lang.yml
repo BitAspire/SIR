@@ -1,0 +1,13 @@
+lang:
+  # Main help menu for the Announcer command
+  # Displays all available subcommands and their usage
+  # Shown when using /announce help or with invalid arguments
+  help: '<P> Correct usage: /announce [help/preview] [<announcement_id>]'
+
+  # Error message shown when an invalid announcement ID is provided
+  # Displayed when:
+  # - The announcement ID doesn't exist in announces.yml
+  # - No announcement ID is provided with preview command
+  # - The announcement ID format is invalid
+  # References the announces.yml file where announcements are configured
+  select: '<P> Please select a valid announcement from&a announcements.yml'
