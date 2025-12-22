@@ -1,43 +1,41 @@
 lang:
-  # Command usage instructions for all mute-related commands
+  # Command usage instructions for all mute-related commands.
   help:
-    # Usage for permanent mute command
-    perm: "<P> &7Correct usage: &b/mute &3<player> <reason>"
+    # Usage for permanent mute command.
+    perm: "<P> &7Usage: &b/mute &3<player> <reason>"
 
-    # Usage for temporary mute command with time parameter
-    temp: "<P> &7Correct usage: &b/tempmute &3<player> <time> <reason>"
+    # Usage for temporary mute command with time parameter.
+    temp: "<P> &7Usage: &b/tempmute &3<player> <time> <reason>"
 
-    # Usage for unmute command
-    unmute: "<P> &7Correct usage: &b/unmute &3<player> <reason>"
+    # Usage for unmute command.
+    unmute: "<P> &7Usage: &b/unmute &3<player> <reason>"
 
-    # Usage for mute status check command
-    check: "<P> &7Correct usage: &b/checkmute &3<player>"
+    # Usage for mute status check command.
+    check: "<P> &7Usage: &b/checkmute &3<player>"
 
-  # Default values for mute operations
+  # Default values for mute operations.
   default:
-    # Default admin name when not specified
+    # Default admin name when not specified.
     admin: "Unknown"
 
-    # Default reason for mute actions
-    mute-reason: "Not following server rules."
+    # Default reason for mute actions.
+    mute-reason: "Violation of server rules."
 
-    # Default reason for unmute actions
-    unmute-reason: "Time ended."
+    # Default reason for unmute actions.
+    unmute-reason: "Mute duration ended."
 
-  # Messages for already muted players
+  # Messages for already muted players or invalid unmute attempts.
   is-muted:
-    # Message for permanently muted players
-    # {target}, {admin}, {reason} placeholders
-    perm: "&e&lMUTE &8> &b{target} is already muted permanently by &c{admin}&7 due to {reason}."
+    # {target}, {admin}, {reason} placeholders.
+    perm: "&e&lMUTE &8> &b{target}&7 is already permanently muted by &c{admin}&7 for &b{reason}&7."
 
-    # Message for temporarily muted players
-    # Additional {time} placeholder shows remaining time
-    temp: "&e&lMUTE &8> &b{target} is already muted by &c{admin}&7 due to {reason}. Time left: {time}"
+    # {time} indicates remaining duration.
+    temp: "&e&lMUTE &8> &b{target}&7 is already muted by &c{admin}&7 for &b{reason}&7. Time left: &3{time}&7."
 
-    # Message when trying to unmute a non-muted player
-    unmute: "&e&lMUTE &8> &b{target} is not muted yet."
+    # Message when trying to unmute a player who is not muted.
+    unmute: "&e&lMUTE &8> &b{target}&7 is not currently muted."
 
-  # Time unit display configuration
+  # Time unit display configuration.
   time:
     seconds: "second(s)"
     minutes: "minute(s)"
@@ -47,17 +45,17 @@ lang:
     months: "month(s)"
     years: "year(s)"
 
-  # Mute action notification messages
+  # Mute action notification messages.
   action:
-    # Permanent mute notification
-    perm: "&e&lMUTE &8> &b{target}&7 was muted permanently by &c{admin}&7 due to &b{reason}&7."
+    # Permanent mute notification.
+    perm: "&e&lMUTE &8> &b{target}&7 was permanently muted by &c{admin}&7 for &b{reason}&7."
 
-    # Temporary mute notification with duration
-    temp: "&e&lMUTE &8> &b{target}&7 was muted for &3{time}&7 by &c{admin}&7 due to &b{reason}&7."
+    # Temporary mute notification with duration.
+    temp: "&e&lMUTE &8> &b{target}&7 was muted for &3{time}&7 by &c{admin}&7 for &b{reason}&7."
 
-    # Unmute notification
-    unmute: "&e&lMUTE &8> &b{player}&7 was unmuted by &c{admin}&7 due to &b{reason}&7."
+    # Unmute notification.
+    unmute: "&e&lMUTE &8> &b{player}&7 was unmuted by &c{admin}&7 for &b{reason}&7."
 
-  # Mute status check message format
+  # Mute status check message format.
   check:
-    - "&e&lMUTE &8> {player} is muted for &3{time}&7 by &c{admin}&7 due to &b{reason}&7."
+    - "&e&lMUTE &8> &b{player}&7 is muted for &3{time}&7 by &c{admin}&7 for &b{reason}&7."

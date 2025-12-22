@@ -1,10 +1,7 @@
 package me.croabeast.sir.command.color;
 
-import lombok.Getter;
-import lombok.SneakyThrows;
 import me.croabeast.command.BaseCommand;
 import me.croabeast.command.TabBuilder;
-import me.croabeast.file.ConfigurableFile;
 import me.croabeast.sir.ExtensionFile;
 import me.croabeast.sir.command.SIRCommand;
 import me.croabeast.sir.user.ColorData;
@@ -13,20 +10,15 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.io.IOException;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.Set;
 
 final class Command extends SIRCommand {
 
-    @Getter
-    private final ConfigurableFile lang;
-
-    @SneakyThrows
-    Command(ColorProvider main) {
-        super("chat-color");
-        lang = new ExtensionFile(main, "lang", true);
-
+    Command(ColorProvider main) throws IOException {
+        super("chat-color", new ExtensionFile(main, "lang", true));
         editSubCommand("help", (s, a) -> createSender(s).send("help"));
 
         for (ChatColor color : ChatColor.values()) {

@@ -124,17 +124,8 @@ final class MainCommand implements TabExecutor {
 
             case "reload":
                 Timer timer = Timer.create();
-
-                main.getCommandManager().unloadAll();
-                main.getModuleManager().unloadAll();
-
-                main.getModuleManager().loadAll();
-                main.getCommandManager().loadAll();
-
-                if (main.getCommandLang() != null)
-                    main.getCommandLang().reload();
-
                 lang.reload();
+                main.reload();
                 return displayer.addPlaceholder("{time}", timer.current()).send("reload");
 
             case "support":

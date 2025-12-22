@@ -1,27 +1,19 @@
 package me.croabeast.sir.command.clear;
 
-import lombok.Getter;
-import lombok.SneakyThrows;
 import me.croabeast.command.TabBuilder;
-import me.croabeast.file.ConfigurableFile;
 import me.croabeast.sir.ExtensionFile;
 import me.croabeast.sir.command.SIRCommand;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.io.IOException;
 import java.util.Locale;
 
 final class Command extends SIRCommand {
 
-    @Getter
-    private final ConfigurableFile lang;
-
-    @SneakyThrows
-    Command(ClearProvider main) {
-        super("clear-chat");
-        lang = new ExtensionFile(main, "lang", true);
-
+    Command(ClearProvider main) throws IOException {
+        super("clear-chat", new ExtensionFile(main, "lang", true));
         editSubCommand("help", (s, a) -> createSender(s).send("help"));
     }
 

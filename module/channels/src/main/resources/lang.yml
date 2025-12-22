@@ -1,16 +1,12 @@
 lang:
-  help: "<P> &7Correct usage: &b/chat-view &3<local format name>"
-  # Visibility toggle confirmation messages
-  # {channel} placeholder shows the affected chat channel name
+  # Usage hint for /chat-view.
+  help: "<P> &7Usage: &b/chat-view &3<local format name>"
 
-  # Success message when enabling channel visibility
-  # Displayed when:
-  # - Channel is successfully unhidden
-  # - Player gains access to previously hidden channel
-  'true': "<P> &7The messages of the channel &e{channel}&7 are&a visible&7."
+  # Visibility toggle confirmation messages.
+  # {channel} = affected channel name.
 
-  # Success message when disabling channel visibility
-  # Displayed when:
-  # - Channel is successfully hidden
-  # - Player removes access to a visible channel
-  'false': "<P> &7The messages of the channel &e{channel}&7 are&c not visible&7."
+  # Confirmation when a channel is made visible.
+  'true': "<P> &7Channel &e{channel}&7 is now &avisible&7."
+
+  # Confirmation when a channel is hidden.
+  'false': "<P> &7Channel &e{channel}&7 is now &chidden&7."

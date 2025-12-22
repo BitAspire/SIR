@@ -1,41 +1,40 @@
 lang:
-  # Complete command help menu
-  # Shows all available options and syntax for the chatcolor command
+  # Help menu for the chat color command.
   help:
     - '&7'
-    - ' &6>> &eChatColor command Help'
-    - '  &7- &b/chatcolor <color>&7: Changes your chat color to the specified color.'
-    - '  &7- &b/chatcolor <format>&7: Adds a format to your messages, such as bold or italic.'
-    - '  &7- &b/chatcolor reset&7: Resets your chat color to default.'
-    - '  &7- &b/chatcolor gradient <color1> <color2>&7: Sets a gradient color for your messages.'
-    - '  &7- &b/chatcolor rainbow&7: Sets your chat color to rainbow.'
+    - ' &6>> &eChat Color — Help'
+    - '  &7- &b/chat-color <color>&7: Set your chat text color.'
+    - '  &7- &b/chat-color <format>&7: Add a text format (bold, italic, etc.).'
+    - '  &7- &b/chat-color reset&7: Reset color and formats to default.'
+    - '  &7- &b/chat-color gradient <color1> <color2>&7: Apply a two-color gradient.'
+    - '  &7- &b/chat-color rainbow&7: Apply a rainbow effect.'
     - '&7'
 
-  # Error message when no player is specified in the command
-  # Shown when using /chatcolor from the console
-  need-player: '<P> &cYou need a player to use this command.'
+  # Error when the command is executed from the console.
+  need-player: '<P> &cThis command can only be used by a player.'
 
-  # Error message when no color or format is specified
-  color: "<P> &7You set your color to {color}."
+  # Confirmation when a color is applied.
+  # {color} = selected color preview.
+  color: "<P> &7Chat color set to {color}&7."
 
-  # Gradient color settings
+  # Gradient color settings.
   gradient:
-    # Error message when no colors are specified for gradient
-    usage: "<P> &7Usage: /chatcolor gradient <color1> <color2>"
+    # Usage message when the gradient arguments are missing.
+    usage: "<P> &7Usage: &b/chat-color gradient <color1> <color2>"
 
-    # Success message when gradient is set
-    success: "<P> {gradient}&7You set your gradient as shown.{end}"
+    # Confirmation when a gradient is applied.
+    success: "<P> {gradient}&7Gradient applied as shown.{end}"
 
-  # Success message when rainbow color is set
-  rainbow: "<P> {rainbow}You set your color as rainbow.{end}"
+  # Confirmation when the rainbow effect is applied.
+  rainbow: "<P> {rainbow}Rainbow effect enabled.{end}"
 
-  # Format settings
+  # Format settings.
   format:
-    # Success message when a format is added
-    add: "<P> &7You added the format {format}&r&7 to your messages."
+    # Confirmation when a format is added.
+    add: "<P> &7Format {format}&r&7 added to your messages."
 
-    # Success message when a format is removed
-    remove: "<P> &7You removed the format {format}&r&7 from your messages."
+    # Confirmation when a format is removed.
+    remove: "<P> &7Format {format}&r&7 removed from your messages."
 
-  # Success message when all formats are cleared
-  reset: "<P> &7You have reset your color format to default."
+  # Confirmation when all colors and formats are reset.
+  reset: "<P> &7Chat color and formats have been reset."
