@@ -1,57 +1,47 @@
 lang:
-  # Error shown when muted players attempt to send messages
-  # Prevents muted players from bypassing chat restrictions
-  is-muted: '<P> &cYou are muted, and not allowed to send private messages.'
+  # Error shown when muted players attempt to send private messages.
+  is-muted: '<P> &cYou are muted and cannot send private messages.'
 
-  # Error for empty message attempts
-  # Prevents sending blank or whitespace-only messages
-  empty-message: '<P> &cYou can not send an empty message.'
+  # Error for empty message attempts.
+  empty-message: '<P> &cYou cannot send an empty message.'
 
-  # Error when no target player is specified
-  # Shown when using /msg without a player name
-  need-player: '<P> &cYou need a player to use this command.'
+  # Error when no target player is specified.
+  need-player: '<P> &cYou must specify a player to use this command.'
 
-  # Error when using /reply without previous conversation
-  # Requires a prior /msg command to work
-  not-replied: '<P> &cYou did not send a message to a player before.'
+  # Error when /reply is used without a prior conversation.
+  not-replied: '<P> &cThere is no recent conversation to reply to.'
 
-  # Prevention of self-messaging
-  # Stops players from messaging themselves
-  not-yourself: '<P> &cYou can not send a message to yourself.'
+  # Error shown when attempting to message yourself.
+  not-yourself: '<P> &cYou cannot send a message to yourself.'
 
-  # Format for message sender's view
+  # Format and sound settings for the sender's view.
   for-sender:
-    # How the message appears to the sender
-    # {receiver} = recipient's name, {message} = sent text
-    message: ' &eME &8> &6{receiver}&7: &f{message}'
+    # {receiver} = recipient name, {message} = message text.
+    message: ' &eMe &8> &6{receiver}&7: &f{message}'
 
-    # Sound played when sending a message
-    # Set to '' to completely disable the sound
+    # Sound played when sending a message (set to '' to disable).
     sound: ENTITY_PLAYER_LEVELUP
 
-  # Format for message receiver's view
+  # Format and sound settings for the receiver's view.
   for-receiver:
-    # How the message appears to the recipient
-    # {sender} = sender's name, {message} = received text
-    message: ' &6{sender} &8> &eME&7: &f{message}'
+    # {sender} = sender name, {message} = message text.
+    message: ' &6{sender} &8> &eMe&7: &f{message}'
 
-    # Sound played when receiving a message
-    # Set to '' to completely disable the sound
+    # Sound played when receiving a message (set to '' to disable).
     sound: ENTITY_PLAYER_LEVELUP
 
-  # Console message formatting
+  # Console message formatting.
   console-formatting:
-    # Display name for console in messages
+    # Display name for console in messages.
     name: '&cConsole'
 
-    # Format for console log entries
-    # {sender}, {receiver}, {message} placeholders
+    # {sender}, {receiver}, {message} placeholders for console log entries.
     format: ' &6{sender} &8> &e{receiver}&7: &f{message}'
 
-  # Vanished player messaging settings
+  # Vanished player messaging settings.
   vanish-messages:
-    # Whether to allow messaging vanished players
+    # Whether messaging vanished players is allowed.
     enabled: false
 
-    # Error shown when attempting to message vanished players
-    message: '<P> &cYou can not send a message to a vanished player.'
+    # Error shown when attempting to message vanished players.
+    message: '<P> &cYou cannot message a vanished player.'

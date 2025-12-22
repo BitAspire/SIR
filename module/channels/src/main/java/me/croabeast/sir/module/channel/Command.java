@@ -1,6 +1,5 @@
 package me.croabeast.sir.module.channel;
 
-import lombok.Getter;
 import me.croabeast.command.TabBuilder;
 import me.croabeast.file.ConfigurableFile;
 import me.croabeast.file.ConfigurableUnit;
@@ -16,13 +15,10 @@ import java.util.stream.Collectors;
 final class Command extends SIRCommand {
 
     private final Channels main;
-    @Getter
-    private final ConfigurableFile lang;
 
     Command(Channels main, ConfigurableFile lang) {
-        super("chat-view");
+        super("chat-view", lang);
         this.main = main;
-        this.lang = lang;
     }
 
     private List<String> getKeys(SIRUser user) {

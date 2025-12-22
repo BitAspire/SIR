@@ -7,6 +7,7 @@ import me.croabeast.scheduler.GlobalScheduler;
 import me.croabeast.sir.command.CommandManager;
 import me.croabeast.sir.module.ModuleManager;
 import me.croabeast.sir.user.UserManager;
+import me.croabeast.takion.TakionLib;
 import me.croabeast.vault.ChatAdapter;
 import me.croabeast.vault.EconomyAdapter;
 import org.bukkit.command.PluginCommand;
@@ -55,6 +56,8 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
                 command.setTabCompleter(main);
             } catch (Exception ignored) {}
 
+        library.getGameRuleManager().load();
+
         moduleManager.loadAll();
         commandManager.loadAll();
     }
@@ -66,12 +69,18 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
     }
 
     @NotNull
+    public TakionLib getLibrary() {
+        return library;
+    }
+
+    @NotNull
     public Plugin getPlugin() {
         return this;
     }
 
     @Override
     public void reload() {
+        commandLang.reload();
         library.reload();
 
         commandManager.unloadAll();

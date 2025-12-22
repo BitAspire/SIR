@@ -1,26 +1,21 @@
 package me.croabeast.sir.command.print;
 
-import lombok.Getter;
-import lombok.SneakyThrows;
 import me.croabeast.command.TabBuilder;
 import me.croabeast.common.CollectionBuilder;
-import me.croabeast.file.ConfigurableFile;
 import me.croabeast.sir.ExtensionFile;
 import me.croabeast.sir.command.SIRCommand;
 import me.croabeast.sir.user.SIRUser;
 import org.bukkit.command.CommandSender;
 
+import java.io.IOException;
+
 final class Command extends SIRCommand {
 
     private final PrintProvider main;
-    @Getter
-    private final ConfigurableFile lang;
 
-    @SneakyThrows
-    Command(PrintProvider main) {
-        super("print");
+    Command(PrintProvider main) throws IOException {
+        super("print", new ExtensionFile(main, "lang", true));
         this.main = main;
-        lang = new ExtensionFile(main, "lang", true);
 
         editSubCommand("targets", (sender, args) -> args.length == 0 ?
                 createSender(sender).send("help.targets") :

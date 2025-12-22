@@ -1,9 +1,6 @@
 package me.croabeast.sir.command.ignore;
 
-import lombok.Getter;
-import lombok.SneakyThrows;
 import me.croabeast.command.TabBuilder;
-import me.croabeast.file.ConfigurableFile;
 import me.croabeast.sir.ExtensionFile;
 import me.croabeast.sir.command.SIRCommand;
 import me.croabeast.sir.user.IgnoreData;
@@ -11,17 +8,15 @@ import me.croabeast.sir.user.SIRUser;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.io.IOException;
+
 final class Command extends SIRCommand {
 
     private final IgnoreProvider main;
 
-    @Getter
-    private final ConfigurableFile lang;
-
-    @SneakyThrows
-    Command(IgnoreProvider main) {
-        super("ignore");
-        lang = new ExtensionFile((this.main = main), "lang", true);
+    Command(IgnoreProvider main) throws IOException {
+        super("ignore", new ExtensionFile(main, "lang", true));
+        this.main = main;
     }
 
     private final String[] baseKeys = {"{target}", "{type}"};

@@ -14,11 +14,8 @@ import java.util.function.Supplier;
 @Getter
 abstract class Command extends SIRCommand {
 
-    private final ConfigurableFile lang;
-
     Command(String name, ConfigurableFile lang) {
-        super(name);
-        this.lang = lang;
+        super(name, lang);
     }
 
     protected final String isConsoleValue(CommandSender sender) {

@@ -17,6 +17,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -242,10 +244,12 @@ public final class CommandManager {
         File[] jars = dir.listFiles((d, name) -> name.endsWith(".jar"));
         if (jars == null || jars.length == 0) {
             log(LogLevel.INFO, "No command providers found in " + dir.getPath());
-            return;
+        } else {
+            for (File jar : jars) load(jar);
         }
 
-        for (File jar : jars) load(jar);
+        boolean saveDefaults = api.getConfiguration().loadDefaultJars("commands");
+        loadBundledJars(saveDefaults);
     }
 
     @NotNull
@@ -353,5 +357,86 @@ public final class CommandManager {
         }
         providers.clear();
         processedModules.clear();
+    }
+
+    private List<String> findBundledJars(String folder) {
+        List<String> results = new ArrayList<>();
+        try {
+            URL location = api.getPlugin().getClass().getProtectionDomain().getCodeSource().getLocation();
+            if (location == null) return results;
+
+            File source = new File(location.toURI());
+            if (source.isFile()) {
+                try (JarFile jar = new JarFile(source)) {
+                    Enumeration<JarEntry> entries = jar.entries();
+                    while (entries.hasMoreElements()) {
+                        JarEntry entry = entries.nextElement();
+                        if (entry.isDirectory()) continue;
+
+                        String name = entry.getName();
+                        if (name.startsWith(folder + "/") && name.endsWith(".jar")) {
+                            results.add(name);
+                        }
+                    }
+                }
+            } else if (source.isDirectory()) {
+                File resourceDir = new File(source, folder);
+                File[] jars = resourceDir.listFiles((dir, name) -> name.endsWith(".jar"));
+                if (jars != null) {
+                    for (File jar : jars) {
+                        results.add(folder + "/" + jar.getName());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log(LogLevel.WARN, "Failed to inspect bundled command jars.");
+            e.printStackTrace();
+        }
+
+        return results;
+    }
+
+    private void loadBundledJars(boolean saveDefaults) {
+        List<String> bundled = findBundledJars("commands");
+        if (bundled.isEmpty()) return;
+
+        File outputDir = new File(api.getPlugin().getDataFolder(), "commands");
+        if (saveDefaults && !outputDir.exists() && !outputDir.mkdirs()) {
+            log(LogLevel.WARN, "Could not create default commands directory: " + outputDir.getPath());
+            saveDefaults = false;
+        }
+
+        for (String resource : bundled) {
+            String fileName = resource.substring(("commands" + "/").length());
+            File target;
+            try {
+                if (saveDefaults) {
+                    target = new File(outputDir, fileName);
+                } else {
+                    target = File.createTempFile("sir-commands-", ".jar", api.getPlugin().getDataFolder());
+                    target.deleteOnExit();
+                }
+            } catch (Exception e) {
+                log(LogLevel.ERROR, "Failed to create temp file for bundled command '" + fileName + "'.");
+                e.printStackTrace();
+                continue;
+            }
+
+            if (!target.exists() || !saveDefaults) {
+                try (InputStream stream = api.getPlugin().getClass().getClassLoader().getResourceAsStream(resource)) {
+                    if (stream == null) {
+                        log(LogLevel.WARN, "Bundled command jar '" + fileName + "' could not be found.");
+                        continue;
+                    }
+                    Files.copy(stream, target.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                } catch (Exception e) {
+                    log(LogLevel.ERROR, "Failed to copy bundled command jar '" + fileName + "'.");
+                    e.printStackTrace();
+                    continue;
+                }
+            }
+
+            load(target);
+        }
     }
 }

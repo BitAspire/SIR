@@ -1,6 +1,5 @@
 package me.croabeast.sir.module.announcement;
 
-import lombok.Getter;
 import me.croabeast.command.BaseCommand;
 import me.croabeast.command.TabBuilder;
 import me.croabeast.file.ConfigurableFile;
@@ -14,13 +13,10 @@ import java.util.LinkedList;
 final class Command extends SIRCommand {
 
     private final Announcements main;
-    @Getter
-    private final ConfigurableFile lang;
 
     Command(Announcements main, ConfigurableFile lang) {
-        super("announce");
+        super("announce", lang);
         this.main = main;
-        this.lang = lang;
 
         editSubCommand("help", (sender, args) -> args.length < 1 ?
                 createSender(sender).send("help") :

@@ -4,7 +4,6 @@ import lombok.Getter;
 import me.croabeast.sir.ExtensionFile;
 import me.croabeast.sir.PermissibleUnit;
 import me.croabeast.sir.user.SIRUser;
-import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
