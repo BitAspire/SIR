@@ -1,6 +1,8 @@
 package me.croabeast.sir.module;
 
 import lombok.RequiredArgsConstructor;
+import me.croabeast.common.gui.ChestBuilder;
+import me.croabeast.sir.PluginDependant;
 import me.croabeast.sir.SIRApi;
 import me.croabeast.sir.command.CommandProvider;
 import me.croabeast.takion.logger.LogLevel;
@@ -331,5 +333,10 @@ public final class ModuleManager {
 
     public void unloadAll() {
         for (String name : new ArrayList<>(modules.keySet())) unload(name);
+    }
+
+    @NotNull
+    public ChestBuilder getMenu() {
+        throw new UnsupportedOperationException();
     }
 }

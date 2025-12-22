@@ -31,4 +31,25 @@ softdepend:
   - EssentialsDiscord
 
 libraries:
-  - com.github.stefvanschie.inventoryframework:IF:0.11.5
+  - com.github.stefvanschie.inventoryframework:IF:0.11.6
+
+commands:
+  sir:
+    permission: sir.admin
+    default: op
+
+permissions:
+  sir.admin:
+    default: op
+    children:
+      sir.admin.* : true
+
+  sir.admin.*:
+    default: op
+    children:
+      sir.admin.modules: true
+      sir.admin.about: true
+      sir.admin.reload: true
+      sir.admin.help: true
+      sir.admin.commands: true
+      sir.admin.support: true

@@ -1,0 +1,59 @@
+# Bossbar Configuration
+
+bossbars:
+  # Custom bossbar with progress and cycling colors
+  custom-bossbar:
+    # Whether the progress bar decreases over time
+    # true = decreases from 100% to 0%
+    # false = increases from 0% to 100%
+    progress-decrease: true
+
+    # Duration in seconds for the bossbar to complete its cycle
+    time: 5
+
+    # Message configuration
+    messages:
+      # Delay between message changes in seconds
+      # 0 = No delay, messages change instantly
+      interval: 0
+      
+      # List of messages to display
+      # Supports color codes and emojis
+      lines:
+        - "&e&lMy custom bossbar message :o"
+
+    # Visual format configuration
+    # Can be specified in multiple formats:
+    # - Single color: "COLOR"
+    # - Color with style: "COLOR:STYLE"
+    # - List of formats that cycle
+    formats:
+      - "RED"                # Solid red bar
+      - "SEGMENTED_12"       # 12-segment style
+      - "GREEN:SOLID"        # Solid green bar
+
+  # Simple bossbar with multiple messages
+  bossbar-1:
+    # Message configuration
+    messages:
+      # Multiple lines that rotate
+      lines:
+        - "&e&lMy custom bossbar message :o"
+        - "&cAnother great line"
+
+    # Duration in seconds for the bossbar display
+    time: 7
+
+    # Single format configuration
+    # Uses BLACK color with default SOLID style
+    formats: "BLACK"
+
+# Available Colors:
+# BLUE, GREEN, PINK, PURPLE, RED, WHITE, YELLOW, BLACK
+
+# Available Styles:
+# SOLID          - Solid bar
+# SEGMENTED_6    - 6 segments
+# SEGMENTED_10   - 10 segments
+# SEGMENTED_12   - 12 segments
+# SEGMENTED_20   - 20 segments

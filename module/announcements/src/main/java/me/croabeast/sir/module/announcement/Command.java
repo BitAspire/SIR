@@ -18,6 +18,7 @@ final class Command extends SIRCommand {
     private final ConfigurableFile lang;
 
     Command(Announcements main, ConfigurableFile lang) {
+        super("announce");
         this.main = main;
         this.lang = lang;
 

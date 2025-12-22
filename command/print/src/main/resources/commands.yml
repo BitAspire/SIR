@@ -1,0 +1,16 @@
+main: me.croabeast.sir.command.print.PrintProvider
+title: "&7Print"
+
+commands:
+  announce:
+    permission: sir.print
+    override-existing: true
+    aliases: [ raw-message, raw-msg, rawmsg ]
+    sub-commands:
+      targets: ''
+      chat: ''
+      action-bar: ''
+      title: ''
+
+    description: 'Send raw messages to any player or group of players.'
+    usage: '/print [targets/chat/action-bar/title] [<args>]'

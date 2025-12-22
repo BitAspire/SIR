@@ -81,4 +81,9 @@ public final class Tags extends SIRModule {
 
         return string;
     }
+
+    @NotNull
+    public String parseTags(Player player, String string) {
+        return parseTags(getApi().getUserManager().getUser(player), string);
+    }
 }

@@ -1,0 +1,93 @@
+########################
+#   SIR by CroaBeast   #
+# Depressed since 2004 #
+########################
+
+# Controls the automatic update checking
+# When true, the plugin will check for updates to this config file
+update: true
+
+# 🔄 Updater Configuration
+updater:
+
+  # Controls the startup update notification
+  # When true, sends a notification about available updates when the server starts
+  # When false, no update checks will be performed at startup
+  on-start: true
+
+  # Controls update notifications for administrators
+  # When true, sends update notifications to:
+  # - Players with OP status
+  # - Players with 'sir.admin.update' permission
+  # When false, administrators won't receive update notifications
+  send-op: true
+
+# ⚙️ Core Plugin Options
+options:
+  # Console Output Formatting
+  # Controls whether ANSI color codes are used in console output
+  # Disable if you experience console formatting issues
+  colored-console: true
+
+  # Message Type Prefix Display
+  # When true, shows the message type in console logs
+  # Example outputs:
+  # [CHAT] Hello World
+  # [ACTION-BAR] Welcome!
+  # [TITLE] Server Announcement
+  # [BOSSBAR] Event Starting
+  show-prefix: true
+
+  # Permission System Configuration for OP Players
+  # false: Uses vanilla OP system (recommended)
+  # true: Requires specific permissions even for OP players
+  # Example: An OP player would need 'sir.admin.reload' to use /sir reload
+  override-op: false
+
+  # Mute System Priority
+  # Controls the order of mute checks
+  # true: SIR's mute system is checked before other plugins
+  # false: Other plugins' mute systems take priority
+  # Useful when using multiple mute systems
+  check-mute: true
+
+  # Controls the use of Bukkit's default plugin methods
+  # true: Uses Bukkit's methods for PluginCommand, Config-related methods, etc.
+  # false: Uses SIR's custom implementations
+  # Recommended to keep false for better performance and consistency
+  default-bukkit-plugin-methods: false
+
+  load-default-jars:
+    modules: true
+    commands: true
+    addons: true
+
+# 🎨 Message Formatting Values
+values:
+  # Prefix Key Configuration
+  # Defines the trigger for the main plugin prefix
+  # Default: '<P>'
+  # Example: '<P> Welcome!' becomes ' &e&lSIR &8>&7 Welcome!'
+  lang-prefix-key: '<P>'
+
+  # Main Plugin Prefix
+  # The prefix added when lang-prefix-key is detected
+  # Default: ' &e&lSIR &8>&7'
+  # Supports color codes and formatting
+  lang-prefix: ' &e&lSIR &8>&7'
+
+  # Center Text Marker
+  # Used to center messages in chat
+  # Place at the start of any message you want centered
+  # Example: '<C>This will be centered'
+  # Works in SIR configuration files and supported inputs
+  center-prefix: '<C>'
+
+  # Line Break Character
+  # Used to create multi-line messages
+  # Applications:
+  # - Multiple chat lines in one config entry
+  # - Title and subtitle separation
+  # - Multiple lines in /print command
+  # Example: 'Line 1<n>Line 2<n>Line 3'
+  line-separator: '<n>'

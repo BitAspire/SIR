@@ -39,10 +39,9 @@ public abstract class SIRCommand extends BukkitCommand {
         return lib.getLoadedSender().setTargets(sender);
     }
 
-    public SIRCommand() {
-        super(SIRApi.instance().getPlugin(), "");
-
-        commandKey = null;
+    public SIRCommand(String name) {
+        super(SIRApi.instance().getPlugin(), name);
+        commandKey = name;
 
         setExecutingError((sender, e) -> {
             e.printStackTrace();
@@ -174,16 +173,12 @@ public abstract class SIRCommand extends BukkitCommand {
         return api.getCommandManager().getCommand(file == null ? null : file.getParentName());
     }
 
-    public final boolean isEnabled() {
-        return file != null && file.isEnabled();
+    public boolean isEnabled() {
+        return true;
     }
 
     public final boolean isOverriding() {
         return file != null && file.isOverride();
-    }
-
-    void disable() {
-        if (file != null) file.setEnabled(false);
     }
 
     void applyFile(CommandFile file) {
@@ -259,19 +254,18 @@ public abstract class SIRCommand extends BukkitCommand {
         return new TabBuilder().setPermissionPredicate(api.getUserManager()::hasPermission);
     }
 
-    protected final MessageSender createSender(CommandSender sender) {
+    public final MessageSender createSender(CommandSender sender) {
         return new CommandDisplayer().setLogger(!(sender instanceof Player)).setTargets(sender);
     }
 
-    protected final boolean editSubCommand(String name, CommandPredicate predicate) {
+    protected final void editSubCommand(String name, CommandPredicate predicate) {
         if (StringUtils.isBlank(name) || predicate == null)
-            return false;
+            return;
 
         final BaseCommand subCommand = getSubCommand(name);
-        if (subCommand == null) return false;
+        if (subCommand == null) return;
 
         ((me.croabeast.command.SubCommand) subCommand).setPredicate(predicate);
-        return true;
     }
 
     @Override

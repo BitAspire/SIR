@@ -52,22 +52,6 @@ subprojects {
         }
     }
 
-    plugins.withType<JavaPlugin> {
-        tasks.withType<Jar>().configureEach {
-            destinationDirectory.set(layout.projectDirectory.dir("compiled"))
-        }
-        tasks.withType<Zip>().configureEach {
-            destinationDirectory.set(layout.projectDirectory.dir("compiled"))
-        }
-
-        tasks.named<Jar>("javadocJar") {
-            destinationDirectory.set(layout.projectDirectory.dir("compiled"))
-        }
-        tasks.named<Jar>("sourcesJar") {
-            destinationDirectory.set(layout.projectDirectory.dir("compiled"))
-        }
-    }
-
     dependencies {
         compileOnly("org.spigotmc:spigot-api:1.16.5-R0.1-SNAPSHOT")
 
@@ -87,12 +71,4 @@ subprojects {
 
 tasks.build {
     dependsOn("shadowJar")
-}
-
-tasks.register<Delete>("cleanCompiled") {
-    delete(allprojects.map { it.layout.projectDirectory.dir("compiled") })
-}
-
-tasks.named("clean") {
-    dependsOn("cleanCompiled")
 }

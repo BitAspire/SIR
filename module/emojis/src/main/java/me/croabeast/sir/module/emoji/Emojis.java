@@ -5,6 +5,7 @@ import me.croabeast.sir.module.SIRModule;
 import me.croabeast.sir.user.SIRUser;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 public final class Emojis extends SIRModule {
@@ -40,5 +41,10 @@ public final class Emojis extends SIRModule {
             string = emoji.parse(user, string);
 
         return string;
+    }
+
+    @NotNull
+    public String parseEmojis(Player player, String string) {
+        return parseEmojis(getApi().getUserManager().getUser(player), string);
     }
 }

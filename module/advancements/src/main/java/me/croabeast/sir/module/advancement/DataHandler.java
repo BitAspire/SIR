@@ -3,7 +3,7 @@ package me.croabeast.sir.module.advancement;
 import me.croabeast.advancement.AdvancementInfo;
 import me.croabeast.common.CollectionBuilder;
 import me.croabeast.common.Loadable;
-import me.croabeast.scheduler.RunnableTask;
+import me.croabeast.scheduler.GlobalTask;
 import me.croabeast.sir.DelayLogger;
 import me.croabeast.sir.Timer;
 import me.croabeast.sir.ExtensionFile;
@@ -23,7 +23,7 @@ final class DataHandler implements Loadable {
     final Map<Advancement, ConfigurationSection> sections = new HashMap<>();
 
     private ExtensionFile data;
-    private RunnableTask task;
+    private GlobalTask task;
 
     private int tasks = 0, challenges = 0, goals = 0, custom = 0;
     private final Set<World> processedWorlds = new HashSet<>();

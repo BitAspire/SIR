@@ -1,4 +1,4 @@
-package me.croabeast.sir.module;
+package me.croabeast.sir;
 
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;

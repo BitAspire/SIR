@@ -1,0 +1,17 @@
+main: me.croabeast.sir.command.message.MessageProvider
+title: "&7Message & Reply"
+
+commands:
+  message:
+    permission: sir.message
+    override-existing: true
+    aliases: [ m, msg, tell ]
+    usage: '/message [{player}] [<any message>]'
+  reply:
+    permission: sir.reply
+    override-existing: true
+    aliases: [ r ]
+    usage: '/reply [<any message>]'
+    depends:
+      enabled: true
+      parent: message
