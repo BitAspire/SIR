@@ -1,0 +1,31 @@
+main: me.croabeast.sir.command.mute.MuteProvider
+title: "&7Mute Commands"
+
+commands:
+  mute:
+    permission: sir.mute
+    override-existing: true
+    usage: '/mute [{player}] [<reason>]'
+  tempmute:
+    permission: sir.temp-mute
+    override-existing: true
+    aliases: [ temp-mute, tmute ]
+    usage: '/tempmute [{player}] [time] [<reason>]'
+    depends:
+      enabled: true
+      parent: mute
+  unmute:
+    permission: sir.unmute
+    override-existing: true
+    usage: '/unmute [{player}] [<reason>]'
+    depends:
+      enabled: true
+      parent: mute
+  check-mute:
+    permission: sir.check-mute
+    override-existing: true
+    aliases: [ cmute, checkmute ]
+    usage: '/mute [{player}]'
+    depends:
+      enabled: true
+      parent: mute

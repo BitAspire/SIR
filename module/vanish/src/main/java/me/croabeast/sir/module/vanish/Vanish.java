@@ -3,7 +3,7 @@ package me.croabeast.sir.module.vanish;
 import lombok.Getter;
 import me.croabeast.common.CollectionBuilder;
 import me.croabeast.common.util.Exceptions;
-import me.croabeast.sir.module.PluginDependant;
+import me.croabeast.sir.PluginDependant;
 import me.croabeast.sir.module.SIRModule;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;

@@ -40,6 +40,7 @@ public final class CommandManager {
     @RequiredArgsConstructor
     private static class LoadedProvider {
         final ProviderLoader loader;
+        final CommandProvider provider;
     }
 
     private void log(LogLevel level, String... messages) {
@@ -206,9 +207,22 @@ public final class CommandManager {
                 return;
             }
 
-            CommandProvider provider = (CommandProvider) clazz.getDeclaredConstructor().newInstance();
-            providers.put(file.getMain(), new LoadedProvider(loader));
             file.setSlot(SlotCalculator.EXTENSION_LAYOUT.toSlot(slotCount++));
+
+            CommandProvider provider = (CommandProvider) clazz.getDeclaredConstructor().newInstance();
+            if (provider instanceof StandaloneProvider)
+                ((StandaloneProvider) provider).init(api, loader, file);
+
+            if (!provider.register()) {
+                log(LogLevel.WARN, "Failed to register command provider '" + file.getMain() + "'.");
+                unload(provider);
+                return;
+            }
+
+            if (provider instanceof StandaloneProvider)
+                ((StandaloneProvider) provider).registered = true;
+
+            providers.put(file.getMain(), new LoadedProvider(loader, provider));
             registerProvider(provider, file);
         } catch (Exception e) {
             log(LogLevel.ERROR, "Failed to load command provider from " + jarFile.getName());
@@ -283,7 +297,6 @@ public final class CommandManager {
                 continue;
 
             try {
-                loaded.disable();
                 loaded.unregister(true);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -294,7 +307,6 @@ public final class CommandManager {
         }
 
         try {
-            command.disable();
             command.unregister(true);
         } catch (Exception e) {
             e.printStackTrace();

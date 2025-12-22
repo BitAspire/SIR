@@ -1,0 +1,13 @@
+main: me.croabeast.sir.command.clear.ClearProvider
+title: "&7Clear Chat"
+
+commands:
+  clear-chat:
+    permission: sir.clear-chat
+    override-existing: true
+    aliases: [ clearchat, cc, clear ]
+    sub-commands:
+      help: ''
+
+    description: 'Clears the chat to a player or all players.'
+    usage: '/clear-chat [help/@a/{player}]'

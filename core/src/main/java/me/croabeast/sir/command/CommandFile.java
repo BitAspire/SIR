@@ -2,7 +2,6 @@ package me.croabeast.sir.command;
 
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.Setter;
 import me.croabeast.file.Configurable;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.configuration.ConfigurationSection;
@@ -16,8 +15,7 @@ import java.util.Objects;
 public final class CommandFile {
 
     private final String name, permission;
-    @Setter(AccessLevel.PACKAGE)
-    private boolean override, enabled;
+    private final boolean override;
 
     private final List<String> aliases;
     private final Map<String, String> subCommands;
@@ -52,18 +50,12 @@ public final class CommandFile {
         this.hasParent = section.getBoolean("depends.enabled");
         parentName = section.getString("depends.parent");
 
-        boolean enabled = section.getBoolean("enabled", true);
         boolean override = section.getBoolean("override-existing", false);
 
         SIRCommand resolved = hasParent() && parent != null &&
                 !parent.getName().equalsIgnoreCase(parentName) ? parent : null;
 
-        if (hasParent() && resolved != null) {
-            enabled = resolved.isEnabled();
-            override = resolved.isOverriding();
-        }
-
-        this.enabled = enabled;
+        if (hasParent() && resolved != null) override = resolved.isOverriding();
         this.override = override;
     }
 

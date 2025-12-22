@@ -20,6 +20,7 @@ final class Command extends SIRCommand {
     private final ConfigurableFile lang;
 
     Command(Channels main, ConfigurableFile lang) {
+        super("chat-view");
         this.main = main;
         this.lang = lang;
     }

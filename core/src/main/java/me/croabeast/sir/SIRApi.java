@@ -35,6 +35,9 @@ public interface SIRApi {
     Plugin getPlugin();
 
     @NotNull
+    Config getConfiguration();
+
+    @NotNull
     ModuleManager getModuleManager();
 
     @NotNull
@@ -45,6 +48,8 @@ public interface SIRApi {
 
     @NotNull
     TakionLib getLibrary();
+
+    void reload();
 
     @NotNull
     static SIRApi instance() {

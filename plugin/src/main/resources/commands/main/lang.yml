@@ -1,0 +1,22 @@
+lang:
+  # Main help menu configuration for all SIR commands
+  # Shows when using /sir help or when no arguments are provided
+  # {version} placeholder shows the current plugin version
+  help:
+    - '&7'
+    - ' &6>> &e&lSIR &7v {version}'
+    - '  &7 &b/sir&7: The main command of the plugin.'
+    - '  &7 &b/print&7: Prints a raw message to a target.'
+    - '  &7 &b/announcer&7: Manage announcements task.'
+    - '&7'
+
+  # Support message with Discord server link
+  # Shown when using /sir support
+  # {link} placeholder contains the Discord invite URL
+  support: '<P> Enter our Discord server: &b{link}'
+
+  # Reload confirmation message
+  # Displayed after successful plugin reload
+  # {time} shows the reload duration in milliseconds
+  # Used to verify the reload was successful and track performance
+  reload: '<P> All data was reloaded successfully in {time} ms.'

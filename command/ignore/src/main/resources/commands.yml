@@ -1,0 +1,10 @@
+main: me.croabeast.sir.command.ignore.IgnoreProvider
+title: "&7Ignore"
+
+commands:
+  ignore:
+    permission: sir.ignore
+    override-existing: true
+    aliases: [ ig ]
+    description: 'Ignore or un-ignore players from chat or private messages.'
+    usage: '/ignore [@a/{player}] [<-chat>]'

@@ -1,0 +1,38 @@
+main: me.croabeast.sir.command.color.ColorProvider
+title: "<r:1>Color</r>"
+
+commands:
+  chat-color:
+    permission: sir.color
+    override-existing: true
+    aliases: [ chatcolor, color ]
+    sub-commands:
+      help: ''
+      black: ''
+      dark_gray: ''
+      gray: ''
+      white: ''
+      dark_blue: ''
+      blue: ''
+      dark_green: ''
+      green: ''
+      dark_aqua: ''
+      aqua: ''
+      dark_red: ''
+      red: ''
+      dark_purple: ''
+      light_purple: ''
+      gold: ''
+      yellow: ''
+      bold: ''
+      strikethrough: ''
+      italic: ''
+      underline: ''
+      magic: ''
+      obfuscated: ''
+      rainbow: ''
+      gradient: ''
+      reset: ''
+
+    description: 'Apply great colors to your chat.'
+    usage: '/chat-color [help/{color}/{format}/reset]'

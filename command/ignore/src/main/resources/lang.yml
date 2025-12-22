@@ -1,0 +1,48 @@
+lang:
+  # Complete command help menu
+  # Shows all available options and syntax for the ignore command
+  help:
+    - '&7'
+    - ' &6>> &eIgnore command Help'
+    - '  &7- &b/ignore <player> [-chat]&7: Ignores/un-ignores the messages of the player.'
+    - '    &7 The -chat argument indicates that you want to ignore chat messages only.'
+    - '&7'
+
+  # Error message when no player is specified in the command
+  # Shown when using /ignore without any arguments
+  need-player: '<P> &cYou need a player to use this command.'
+
+  # Prevention message when trying to ignore yourself
+  # This is a safety measure to prevent self-isolation
+  not-yourself: '<P> &cYou can not ignore yourself.'
+
+  # Notification when trying to message someone who is ignoring you
+  # {type} shows either "Chat" or "Private Messages" based on context
+  ignoring: '<P> &7This player is ignoring you in &e{type}&7.'
+
+  # Success messages for different ignore scenarios
+  success:
+    # When successfully ignoring a specific player
+    # {target} = player name, {type} = ignore type (chat/messages)
+    player: '<P> &7You are now ignoring &a{target}&7 in &e{type}&7.'
+
+    # When enabling ignore-all mode
+    # {type} indicates which communication type is being ignored
+    all: '<P> &7You are now ignoring all players in &e{type}&7.'
+
+  # Messages shown when removing players from ignore list
+  remove:
+    # When un-ignoring a specific player
+    # {target} = player name, {type} = ignore type
+    player: '<P> &7You are now&c not&7 ignoring &a{target}&7 in &e{type}&7.'
+
+    # When disabling ignore-all mode
+    # {type} shows which communication type is no longer ignored
+    all: '<P> &7You are now&c not&7 ignoring all players in &e{type}&7.'
+
+  # Channel type definitions for message formatting
+  channels:
+    # Used when ignoring public chat messages
+    chat: 'Chat'
+    # Used when ignoring private messages (/msg, /tell, etc.)
+    msg: 'Private Messages'
