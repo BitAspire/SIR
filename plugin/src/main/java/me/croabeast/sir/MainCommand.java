@@ -4,6 +4,10 @@ import lombok.SneakyThrows;
 import me.croabeast.command.TabBuilder;
 import me.croabeast.common.util.ServerInfoUtils;
 import me.croabeast.file.ConfigurableFile;
+import me.croabeast.sir.command.CommandManager;
+import me.croabeast.sir.command.ProviderInformation;
+import me.croabeast.sir.module.ModuleManager;
+import me.croabeast.sir.module.SIRModule;
 import me.croabeast.takion.message.MessageSender;
 import org.apache.commons.lang.SystemUtils;
 import org.bukkit.command.Command;
@@ -23,6 +27,7 @@ final class MainCommand implements TabExecutor {
     private static final String WILD_CARD = PERMISSION_PREFIX + "*";
 
     private static final List<String> SUB_COMMANDS = Arrays.asList("modules", "about", "reload", "help", "commands", "support");
+    private static final List<String> STATE_ARGUMENTS = Arrays.asList("enable", "enabled", "disable", "disabled", "toggle", "on", "off", "true", "false");
 
     private final SIRPlugin main;
     private final ConfigurableFile lang;
@@ -70,6 +75,114 @@ final class MainCommand implements TabExecutor {
         return true;
     }
 
+    private Boolean resolveState(String value, boolean current) {
+        if (value == null) return !current;
+
+        switch (value.toLowerCase(Locale.ENGLISH)) {
+            case "enable":
+            case "enabled":
+            case "on":
+            case "true":
+                return true;
+            case "disable":
+            case "disabled":
+            case "off":
+            case "false":
+                return false;
+            case "toggle":
+                return !current;
+            default:
+                return null;
+        }
+    }
+
+    private boolean handleLegacyModules(CommandSender sender, String[] args, MessageSender mainSender) {
+        ModuleManager moduleManager = main.getModuleManager();
+
+        if (args.length < 2)
+            return mainSender.setTargets(sender).send(
+                    "<P> &7Usage: &f/sir modules <module> [enable|disable|toggle]",
+                    "<P> &7Available: &f" + String.join(", ", moduleManager.getModuleNames())
+            );
+
+        SIRModule module = moduleManager.getModule(args[1]);
+        if (module == null)
+            return mainSender.setTargets(sender).send("<P> &cModule not found: &f" + args[1]);
+
+        boolean current = moduleManager.isEnabled(module.getName());
+        Boolean next = resolveState(args.length > 2 ? args[2] : null, current);
+        if (next == null)
+            return mainSender.setTargets(sender).send("<P> &cInvalid state. Use: enable, disable, toggle.");
+
+        moduleManager.updateModuleEnabled(module.getName(), next);
+        moduleManager.saveStates();
+
+        return mainSender.setTargets(sender).send(
+                "<P> &7Module &f" + module.getName() + " &7is now " + (next ? "&aenabled" : "&cdisabled") + "&7."
+        );
+    }
+
+    private boolean handleLegacyCommands(CommandSender sender, String[] args, MessageSender mainSender) {
+        CommandManager commandManager = main.getCommandManager();
+
+        if (args.length < 2)
+            return mainSender.setTargets(sender).send(
+                    "<P> &7Usage: &f/sir commands <provider> <enabled|override> [command] [state]",
+                    "<P> &7Available: &f" + String.join(", ", commandManager.getProviderNames())
+            );
+
+        ProviderInformation info = commandManager.getInformation(args[1]);
+        if (info == null)
+            return mainSender.setTargets(sender).send("<P> &cCommand provider not found: &f" + args[1]);
+
+        if (args.length < 3)
+            return mainSender.setTargets(sender).send(
+                    "<P> &7Usage: &f/sir commands " + info.getName() + " <enabled|override> [command] [state]"
+            );
+
+        String mode = args[2].toLowerCase(Locale.ENGLISH);
+        if (mode.equals("enabled")) {
+            boolean current = commandManager.isProviderEnabled(info.getName());
+            Boolean next = resolveState(args.length > 3 ? args[3] : null, current);
+            if (next == null)
+                return mainSender.setTargets(sender).send("<P> &cInvalid state. Use: enable, disable, toggle.");
+
+            if (!commandManager.updateProviderEnabled(info.getName(), next))
+                return mainSender.setTargets(sender).send("<P> &cFailed to update provider state.");
+
+            commandManager.saveStates();
+            return mainSender.setTargets(sender).send(
+                    "<P> &7Provider &f" + info.getName() + " &7is now " + (next ? "&aenabled" : "&cdisabled") + "&7."
+            );
+        }
+
+        if (mode.equals("override")) {
+            if (args.length < 4)
+                return mainSender.setTargets(sender).send(
+                        "<P> &7Usage: &f/sir commands " + info.getName() + " override <command> [state]"
+                );
+
+            String commandKey = args[3];
+            Boolean current = commandManager.getCommandOverride(info.getName(), commandKey);
+            if (current == null)
+                return mainSender.setTargets(sender).send("<P> &cCommand not found: &f" + commandKey);
+
+            Boolean next = resolveState(args.length > 4 ? args[4] : null, current);
+            if (next == null)
+                return mainSender.setTargets(sender).send("<P> &cInvalid state. Use: enable, disable, toggle.");
+
+            if (!commandManager.updateCommandOverride(info.getName(), commandKey, next))
+                return mainSender.setTargets(sender).send("<P> &cFailed to update command override.");
+
+            commandManager.saveStates();
+            return mainSender.setTargets(sender).send(
+                    "<P> &7Command &f" + commandKey + " &7override is now " + (next ? "&aenabled" : "&cdisabled") + "&7."
+            );
+        }
+
+        return mainSender.setTargets(sender).send("<P> &cInvalid mode. Use enabled or override.");
+    }
+
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (isProhibited(sender, "sir.admin") || isProhibited(sender, WILD_CARD))
@@ -97,27 +210,21 @@ final class MainCommand implements TabExecutor {
                 );
 
             case "modules":
+                if (ServerInfoUtils.SERVER_VERSION < 14.0)
+                    return handleLegacyModules(sender, args, mainSender);
+
                 if (player == null)
                     return mainSender.send("&cThis command is only for players.");
-
-                if (ServerInfoUtils.SERVER_VERSION < 14.0)
-                    return mainSender.setTargets(player).send(
-                            "<P> &cModules GUI is not supported on this version.",
-                            "<P> &7Enable/disable modules in modules/states.yml file"
-                    );
 
                 main.getModuleManager().getMenu().showGui(player);
                 return true;
 
             case "commands":
+                if (ServerInfoUtils.SERVER_VERSION < 14.0)
+                    return handleLegacyCommands(sender, args, mainSender);
+
                 if (player == null)
                     return mainSender.send("&cThis command is only for players.");
-
-                if (ServerInfoUtils.SERVER_VERSION < 14.0)
-                    return mainSender.setTargets(player).send(
-                            "<P> &cCommands GUI is not supported on this version.",
-                            "<P> &7Enable/disable commands in commands/states.yml file"
-                    );
 
                 main.getCommandManager().getMenu().showGui(player);
                 return true;
@@ -144,6 +251,20 @@ final class MainCommand implements TabExecutor {
         for (String arg : SUB_COMMANDS) {
             String permission = PERMISSION_PREFIX + arg;
             builder.addArgument(0, (s, a) -> main.getUserManager().hasPermission(s, permission), permission);
+        }
+
+        if (ServerInfoUtils.SERVER_VERSION < 14.0) {
+            ModuleManager moduleManager = main.getModuleManager();
+            CommandManager commandManager = main.getCommandManager();
+
+            builder.addArguments(1, (s, a) -> a.length > 0 && a[0].equalsIgnoreCase("modules"), moduleManager.getModuleNames());
+            builder.addArguments(2, (s, a) -> a.length > 0 && a[0].equalsIgnoreCase("modules"), STATE_ARGUMENTS);
+
+            builder.addArguments(1, (s, a) -> a.length > 0 && a[0].equalsIgnoreCase("commands"), commandManager.getProviderNames());
+            builder.addArguments(2, (s, a) -> a.length > 0 && a[0].equalsIgnoreCase("commands"), Arrays.asList("enabled", "override"));
+            builder.addArguments(3, (s, a) -> a.length > 2 && a[0].equalsIgnoreCase("commands") && a[2].equalsIgnoreCase("override"), commandManager.getProviderCommands(args.length > 1 ? args[1] : null));
+            builder.addArguments(3, (s, a) -> a.length > 2 && a[0].equalsIgnoreCase("commands") && a[2].equalsIgnoreCase("enabled"), STATE_ARGUMENTS);
+            builder.addArguments(4, (s, a) -> a.length > 2 && a[0].equalsIgnoreCase("commands") && a[2].equalsIgnoreCase("override"), STATE_ARGUMENTS);
         }
 
         return builder.build(sender, args);
