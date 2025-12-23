@@ -103,7 +103,7 @@ final class MainCommand implements TabExecutor {
                 if (ServerInfoUtils.SERVER_VERSION < 14.0)
                     return mainSender.setTargets(player).send(
                             "<P> &cModules GUI is not supported on this version.",
-                            "<P> &7Enable/disable modules in modules/modules.yml file"
+                            "<P> &7Enable/disable modules in modules/states.yml file"
                     );
 
                 main.getModuleManager().getMenu().showGui(player);
@@ -116,7 +116,7 @@ final class MainCommand implements TabExecutor {
                 if (ServerInfoUtils.SERVER_VERSION < 14.0)
                     return mainSender.setTargets(player).send(
                             "<P> &cCommands GUI is not supported on this version.",
-                            "<P> &7Enable/disable commands in commands/commands.yml file"
+                            "<P> &7Enable/disable commands in commands/states.yml file"
                     );
 
                 main.getCommandManager().getMenu().showGui(player);

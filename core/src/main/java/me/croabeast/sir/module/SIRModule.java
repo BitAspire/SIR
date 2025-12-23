@@ -40,12 +40,20 @@ public abstract class SIRModule implements SIRExtension, Toggleable {
         this.api = api;
         this.information = information;
 
-        button = new Button(buildInformation(), this, true);
+        button = new Button(buildInformation(), this, api.getModuleManager().isEnabled(getName()));
         button.setDefaultItems();
 
         button.setOnClick(b -> event -> {
+            if (event.isRightClick()) {
+                api.getModuleManager().openConfigMenu(this, event);
+                return;
+            }
+
+            if (!event.isLeftClick()) return;
+
             api.getLibrary().getLogger().log("Module '" + getName() + "' loaded: " + b.isEnabled());
             b.toggleRegistering();
+            api.getModuleManager().setModuleEnabled(getName(), b.isEnabled());
         });
 
         this.classLoader = loader;

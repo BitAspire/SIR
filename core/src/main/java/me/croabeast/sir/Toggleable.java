@@ -23,16 +23,6 @@ public interface Toggleable {
     @NotNull
     Button getButton();
 
-    @NotNull
-    default Button createButton(Registrable registrable, boolean enabled) {
-        return new Button(getInformation(), registrable, enabled);
-    }
-
-    @NotNull
-    default Button createButton(boolean enabled) {
-        return new Button(getInformation(), enabled);
-    }
-
     class Button extends ToggleButton {
 
         private final Information information;

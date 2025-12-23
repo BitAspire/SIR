@@ -27,7 +27,7 @@ public final class CommandFile {
     final boolean hasParent;
     final String parentName;
 
-    CommandFile(String name, ConfigurationSection section, SIRCommand parent) {
+    CommandFile(String name, ConfigurationSection section, SIRCommand parent, boolean override) {
         Objects.requireNonNull(section, "Configuration section cannot be null");
 
         this.name = Objects.requireNonNull(name, "Command name cannot be null");
@@ -50,13 +50,12 @@ public final class CommandFile {
         this.hasParent = section.getBoolean("depends.enabled");
         parentName = section.getString("depends.parent");
 
-        boolean override = section.getBoolean("override-existing", false);
-
         SIRCommand resolved = hasParent() && parent != null &&
                 !parent.getName().equalsIgnoreCase(parentName) ? parent : null;
 
-        if (hasParent() && resolved != null) override = resolved.isOverriding();
-        this.override = override;
+        boolean resolvedOverride = override;
+        if (hasParent() && resolved != null) resolvedOverride = resolved.isOverriding();
+        this.override = resolvedOverride;
     }
 
     boolean hasParent() {

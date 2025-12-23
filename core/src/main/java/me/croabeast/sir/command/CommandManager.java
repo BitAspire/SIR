@@ -30,6 +30,7 @@ public final class CommandManager {
 
     private final Map<String, SIRCommand> commands = new LinkedHashMap<>();
     private final Map<String, LoadedProvider> providers = new LinkedHashMap<>();
+    private final Map<String, ProviderState> states = new LinkedHashMap<>();
     private final Set<SIRModule> processedModules = Collections.newSetFromMap(new IdentityHashMap<>());
 
     private int slotCount = 0;
@@ -43,6 +44,16 @@ public final class CommandManager {
     private static class LoadedProvider {
         final ProviderLoader loader;
         final CommandProvider provider;
+        final ProviderInformation information;
+    }
+
+    private static class ProviderState {
+        boolean enabled;
+        final Map<String, Boolean> overrides = new LinkedHashMap<>();
+
+        ProviderState(boolean enabled) {
+            this.enabled = enabled;
+        }
     }
 
     private void log(LogLevel level, String... messages) {
@@ -92,9 +103,10 @@ public final class CommandManager {
     private void registerProvider(CommandProvider provider, ProviderInformation file) {
         if (provider == null || file == null) return;
 
+        ProviderState state = ensureProviderState(file.getName());
         Set<SIRCommand> set = provider.getCommands();
         if (set.isEmpty()) {
-            log(LogLevel.WARN, "No commands declared for provider '" + file.getMain() + "'.");
+            log(LogLevel.WARN, "No commands declared for provider '" + file.getName() + "'.");
             return;
         }
 
@@ -107,7 +119,7 @@ public final class CommandManager {
             }
 
             if (StringUtils.isBlank(commandKey)) {
-                log(LogLevel.WARN, "Command with empty name found in provider '" + file.getMain() + "', skipping.");
+                log(LogLevel.WARN, "Command with empty name found in provider '" + file.getName() + "', skipping.");
                 continue;
             }
 
@@ -123,6 +135,7 @@ public final class CommandManager {
                 continue;
             }
 
+            boolean override = resolveOverrideState(state, nameKey, section);
             boolean depends = section.getBoolean("depends.enabled");
             String parentName = section.getString("depends.parent");
             SIRCommand parent = null;
@@ -140,7 +153,7 @@ public final class CommandManager {
                 }
             }
 
-            command.applyFile(new CommandFile(nameKey, section, parent));
+            command.applyFile(new CommandFile(nameKey, section, parent, override));
             registerCommand(command);
         }
     }
@@ -162,6 +175,13 @@ public final class CommandManager {
         }
 
         CommandProvider provider = (CommandProvider) module;
+        ProviderState state = ensureProviderState(file.getName());
+        if (!state.enabled) {
+            log(LogLevel.INFO, "Command provider '" + file.getName() + "' is disabled, skipping registration.");
+            processedModules.add(module);
+            return;
+        }
+
         registerProvider(provider, file);
         processedModules.add(module);
     }
@@ -193,8 +213,8 @@ public final class CommandManager {
         ProviderInformation file = readExternalCommandsFile(jarFile);
         if (file == null) return;
 
-        if (providers.containsKey(file.getMain())) {
-            log(LogLevel.WARN, "Command provider '" + file.getMain() + "' already loaded, skipping.");
+        if (providers.containsKey(file.getName())) {
+            log(LogLevel.WARN, "Command provider '" + file.getName() + "' already loaded, skipping.");
             return;
         }
 
@@ -215,8 +235,17 @@ public final class CommandManager {
             if (provider instanceof StandaloneProvider)
                 ((StandaloneProvider) provider).init(api, loader, file);
 
+            boolean enabled = provider.isEnabled();
+            providers.put(file.getName(), new LoadedProvider(loader, provider, file));
+
+            if (!enabled) {
+                if (provider instanceof StandaloneProvider) ((StandaloneProvider) provider).registered = false;
+                log(LogLevel.INFO, "Command provider '" + file.getName() + "' is disabled, skipping registration.");
+                return;
+            }
+
             if (!provider.register()) {
-                log(LogLevel.WARN, "Failed to register command provider '" + file.getMain() + "'.");
+                log(LogLevel.WARN, "Failed to register command provider '" + file.getName() + "'.");
                 unload(provider);
                 return;
             }
@@ -224,7 +253,6 @@ public final class CommandManager {
             if (provider instanceof StandaloneProvider)
                 ((StandaloneProvider) provider).registered = true;
 
-            providers.put(file.getMain(), new LoadedProvider(loader, provider));
             registerProvider(provider, file);
         } catch (Exception e) {
             log(LogLevel.ERROR, "Failed to load command provider from " + jarFile.getName());
@@ -233,6 +261,9 @@ public final class CommandManager {
     }
 
     public void loadAll() {
+        loadStates();
+        loadBundledJars(api.getConfiguration().loadDefaultJars("commands"));
+
         moduleManager.getModules().forEach(this::loadFromModule);
 
         File dir = new File(api.getPlugin().getDataFolder(), "commands");
@@ -244,12 +275,10 @@ public final class CommandManager {
         File[] jars = dir.listFiles((d, name) -> name.endsWith(".jar"));
         if (jars == null || jars.length == 0) {
             log(LogLevel.INFO, "No command providers found in " + dir.getPath());
-        } else {
-            for (File jar : jars) load(jar);
+            return;
         }
 
-        boolean saveDefaults = api.getConfiguration().loadDefaultJars("commands");
-        loadBundledJars(saveDefaults);
+        for (File jar : jars) load(jar);
     }
 
     @NotNull
@@ -332,16 +361,6 @@ public final class CommandManager {
         }
     }
 
-    public void reloadFromModule(@NotNull SIRModule module) {
-        if (!(module instanceof CommandProvider))
-            return;
-
-        unload((CommandProvider) module);
-        processedModules.remove(module);
-
-        if (module.isEnabled()) loadFromModule(module);
-    }
-
     public void unloadAll() {
         for (String name : new ArrayList<>(commands.keySet()))
             unload(name);
@@ -359,7 +378,146 @@ public final class CommandManager {
         processedModules.clear();
     }
 
-    private List<String> findBundledJars(String folder) {
+    public void saveStates() {
+        File dir = new File(api.getPlugin().getDataFolder(), "commands");
+        if (!dir.exists() && !dir.mkdirs()) {
+            log(LogLevel.WARN, "Could not create commands directory: " + dir.getPath());
+            return;
+        }
+
+        File file = new File(dir, "states.yml");
+        YamlConfiguration configuration = getConfiguration();
+
+        try {
+            configuration.save(file);
+        } catch (Exception e) {
+            log(LogLevel.ERROR, "Failed to save command states to " + file.getPath());
+            e.printStackTrace();
+        }
+    }
+
+    private YamlConfiguration getConfiguration() {
+        YamlConfiguration configuration = new YamlConfiguration();
+
+        for (Map.Entry<String, ProviderState> entry : states.entrySet()) {
+            String main = entry.getKey();
+            ProviderState state = entry.getValue();
+            String base = "providers." + main;
+            configuration.set(base + ".enabled", state.enabled);
+
+            for (Map.Entry<String, Boolean> overrideEntry : state.overrides.entrySet()) {
+                configuration.set(base + ".commands." + overrideEntry.getKey(), overrideEntry.getValue());
+            }
+        }
+        return configuration;
+    }
+
+    public void setProviderEnabled(String main, boolean enabled) {
+        ensureProviderState(main).enabled = enabled;
+    }
+
+    public boolean isProviderEnabled(String main) {
+        return ensureProviderState(main).enabled;
+    }
+
+    public void toggleOverrides(CommandProvider provider) {
+        if (provider == null) return;
+
+        LoadedProvider loaded = providers.values().stream()
+                .filter(entry -> entry.provider == provider)
+                .findFirst()
+                .orElse(null);
+
+        if (loaded == null) return;
+
+        ProviderInformation info = loaded.information;
+        ProviderState state = ensureProviderState(info.getMain());
+
+        for (SIRCommand command : provider.getCommands()) {
+            if (command == null) continue;
+
+            String commandKey = command.getCommandKey();
+            if (StringUtils.isBlank(commandKey)) {
+                commandKey = command.getName();
+            }
+            if (StringUtils.isBlank(commandKey)) continue;
+
+            String nameKey = commandKey.toLowerCase(Locale.ENGLISH);
+            ConfigurationSection section = info.getCommandSection(nameKey);
+            if (section == null) continue;
+
+            boolean current = resolveOverrideState(state, nameKey, section);
+            boolean next = !current;
+            state.overrides.put(nameKey, next);
+
+            SIRCommand parent = null;
+            boolean depends = section.getBoolean("depends.enabled");
+            String parentName = section.getString("depends.parent");
+            if (depends && StringUtils.isNotBlank(parentName)) {
+                parent = getCommand(parentName);
+            }
+
+            command.applyFile(new CommandFile(nameKey, section, parent, next));
+            if (!commands.containsKey(nameKey)) continue;
+            try {
+                command.unregister(true);
+                command.register(true);
+            } catch (Exception e) {
+                log(LogLevel.ERROR, "Failed to re-register command '" + commandKey + "' after override change.");
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void loadStates() {
+        states.clear();
+
+        File file = new File(api.getPlugin().getDataFolder(), "commands" + File.separator + "states.yml");
+        if (!file.exists()) return;
+
+        YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
+        ConfigurationSection providersSection = configuration.getConfigurationSection("providers");
+        if (providersSection == null) return;
+
+        for (String name : providersSection.getKeys(false)) {
+            if (StringUtils.isBlank(name)) continue;
+
+            ConfigurationSection providerSection = providersSection.getConfigurationSection(name);
+            if (providerSection == null) continue;
+
+            ProviderState state = ensureProviderState(name);
+            state.enabled = providerSection.getBoolean("enabled", true);
+
+            ConfigurationSection commandsSection = providerSection.getConfigurationSection("commands");
+            if (commandsSection == null) continue;
+
+            for (String commandKey : commandsSection.getKeys(false)) {
+                if (StringUtils.isBlank(commandKey)) continue;
+                state.overrides.put(commandKey.toLowerCase(Locale.ENGLISH),
+                        commandsSection.getBoolean(commandKey));
+            }
+        }
+    }
+
+    private ProviderState ensureProviderState(String main) {
+        return states.computeIfAbsent(main, key -> new ProviderState(true));
+    }
+
+    private boolean resolveOverrideState(ProviderState state, String commandKey, ConfigurationSection section) {
+        if (state == null || StringUtils.isBlank(commandKey)) {
+            return section.getBoolean("override-existing", false);
+        }
+
+        String key = commandKey.toLowerCase(Locale.ENGLISH);
+        Boolean override = state.overrides.get(key);
+        if (override == null) {
+            override = section.getBoolean("override-existing", false);
+            state.overrides.put(key, override);
+        }
+        return override;
+    }
+
+    private List<String> findBundledJars() {
         List<String> results = new ArrayList<>();
         try {
             URL location = api.getPlugin().getClass().getProtectionDomain().getCodeSource().getLocation();
@@ -374,17 +532,17 @@ public final class CommandManager {
                         if (entry.isDirectory()) continue;
 
                         String name = entry.getName();
-                        if (name.startsWith(folder + "/") && name.endsWith(".jar")) {
+                        if (name.startsWith("commands" + "/") && name.endsWith(".jar")) {
                             results.add(name);
                         }
                     }
                 }
             } else if (source.isDirectory()) {
-                File resourceDir = new File(source, folder);
+                File resourceDir = new File(source, "commands");
                 File[] jars = resourceDir.listFiles((dir, name) -> name.endsWith(".jar"));
                 if (jars != null) {
                     for (File jar : jars) {
-                        results.add(folder + "/" + jar.getName());
+                        results.add("commands" + "/" + jar.getName());
                     }
                 }
             }
@@ -397,7 +555,7 @@ public final class CommandManager {
     }
 
     private void loadBundledJars(boolean saveDefaults) {
-        List<String> bundled = findBundledJars("commands");
+        List<String> bundled = findBundledJars();
         if (bundled.isEmpty()) return;
 
         File outputDir = new File(api.getPlugin().getDataFolder(), "commands");

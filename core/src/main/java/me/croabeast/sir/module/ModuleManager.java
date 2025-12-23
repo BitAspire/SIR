@@ -6,6 +6,7 @@ import me.croabeast.sir.PluginDependant;
 import me.croabeast.sir.SIRApi;
 import me.croabeast.sir.command.CommandProvider;
 import me.croabeast.takion.logger.LogLevel;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
 
@@ -30,6 +31,7 @@ public final class ModuleManager {
 
     private final SIRApi api;
     private final Map<String, LoadedModule> modules = new LinkedHashMap<>();
+    private final Map<String, Boolean> moduleStates = new LinkedHashMap<>();
 
     @RequiredArgsConstructor
     private static class ModuleCandidate {
@@ -46,11 +48,6 @@ public final class ModuleManager {
     @NotNull
     public List<SIRModule> getModules() {
         return modules.values().stream().map(l -> l.module).collect(Collectors.toList());
-    }
-
-    public boolean isEnabled(@NotNull String name) {
-        LoadedModule module = modules.get(name);
-        return module != null && module.module.isRegistered();
     }
 
     public <M extends SIRModule> M getModule(@NotNull String name) {
@@ -157,6 +154,11 @@ public final class ModuleManager {
             module.init(api, classLoader, file);
             modules.put(name, new LoadedModule(module, classLoader));
 
+            if (!module.isEnabled()) {
+                log(LogLevel.INFO, "Module '" + name + "' is disabled, skipping registration.");
+                return;
+            }
+
             if (module.register()) {
                 classLoader.module = module;
                 module.setRegistered(true);
@@ -210,6 +212,9 @@ public final class ModuleManager {
     }
 
     public void loadAll() {
+        loadStates();
+        loadBundledJars(api.getConfiguration().loadDefaultJars("modules"));
+
         File dir = new File(api.getPlugin().getDataFolder(), "modules");
         if (!dir.exists() && !dir.mkdirs())
             log(LogLevel.WARN, "Could not create modules directory: " + dir.getPath());
@@ -217,95 +222,93 @@ public final class ModuleManager {
         File[] jars = dir.listFiles((d, name) -> name.endsWith(".jar"));
         if (jars == null || jars.length == 0) {
             log(LogLevel.INFO, "No modules found in " + dir.getPath());
+            return;
         }
-        else {
-            Map<String, ModuleCandidate> candidates = new LinkedHashMap<>();
-            for (File jarFile : jars) {
-                ModuleCandidate candidate = createCandidate(jarFile);
-                if (candidate == null) continue;
 
-                String key = candidate.file.getName();
-                if (modules.containsKey(key)) {
-                    log(LogLevel.WARN, "Module with name '" + candidate.file.getName()
-                            + "' already loaded, skipping '" + jarFile.getName() + "'.");
-                    continue;
-                }
+        Map<String, ModuleCandidate> candidates = new LinkedHashMap<>();
+        for (File jarFile : jars) {
+            ModuleCandidate candidate = createCandidate(jarFile);
+            if (candidate == null) continue;
 
-                if (candidates.containsKey(key)) {
-                    log(LogLevel.WARN, "Duplicate module name '" + candidate.file.getName()
-                            + "' between '" + candidates.get(key).jarFile.getName()
-                            + "' and '" + jarFile.getName() + "', skipping the latter.");
-                    continue;
-                }
-
-                candidates.put(key, candidate);
+            String key = candidate.file.getName();
+            if (modules.containsKey(key)) {
+                log(LogLevel.WARN, "Module with name '" + candidate.file.getName()
+                        + "' already loaded, skipping '" + jarFile.getName() + "'.");
+                continue;
             }
 
-            if (candidates.isEmpty()) {
-                log(LogLevel.INFO, "No valid modules found in " + dir.getPath());
-            } else {
-                Set<String> failed = new HashSet<>();
-                boolean progress;
+            if (candidates.containsKey(key)) {
+                log(LogLevel.WARN, "Duplicate module name '" + candidate.file.getName()
+                        + "' between '" + candidates.get(key).jarFile.getName()
+                        + "' and '" + jarFile.getName() + "', skipping the latter.");
+                continue;
+            }
 
-                do {
-                    progress = false;
+            candidates.put(key, candidate);
+        }
 
-                    for (Map.Entry<String, ModuleCandidate> entry : candidates.entrySet()) {
-                        String nameKey = entry.getKey();
-                        if (modules.containsKey(nameKey) || failed.contains(nameKey)) continue;
+        if (candidates.isEmpty()) {
+            log(LogLevel.INFO, "No valid modules found in " + dir.getPath());
+            return;
+        }
 
-                        ModuleInformation file = entry.getValue().file;
+        Set<String> failed = new HashSet<>();
+        boolean progress;
 
-                        boolean wait = false;
-                        boolean hardMissing = false;
+        do {
+            progress = false;
 
-                        for (String dep : file.getDepend()) {
-                            if (modules.containsKey(dep)) continue;
+            for (Map.Entry<String, ModuleCandidate> entry : candidates.entrySet()) {
+                String nameKey = entry.getKey();
+                if (modules.containsKey(nameKey) || failed.contains(nameKey)) continue;
 
-                            if (candidates.containsKey(dep) && !failed.contains(dep)) {
-                                wait = true;
-                            } else {
-                                log(LogLevel.WARN, "Module '" + file.getName()
-                                        + "' can't be loaded: missing hard dependency '" + dep + "'.");
-                                hardMissing = true;
-                                break;
-                            }
-                        }
+                ModuleInformation file = entry.getValue().file;
 
-                        if (hardMissing) {
-                            failed.add(nameKey);
-                            continue;
-                        }
+                boolean wait = false;
+                boolean hardMissing = false;
 
-                        if (wait) continue;
+                for (String dep : file.getDepend()) {
+                    if (modules.containsKey(dep)) continue;
 
-                        for (String dep : file.getSoftDepend()) {
-                            if (modules.containsKey(dep)) continue;
-
-                            if (candidates.containsKey(dep) && !failed.contains(dep)) {
-                                wait = true;
-                                break;
-                            }
-                        }
-                        if (wait) continue;
-
-                        load(entry.getValue().jarFile);
-                        progress = true;
+                    if (candidates.containsKey(dep) && !failed.contains(dep)) {
+                        wait = true;
+                    } else {
+                        log(LogLevel.WARN, "Module '" + file.getName()
+                                + "' can't be loaded: missing hard dependency '" + dep + "'.");
+                        hardMissing = true;
+                        break;
                     }
-                } while (progress);
+                }
 
-                List<String> unresolved = candidates.keySet()
-                        .stream()
-                        .filter(name -> !modules.containsKey(name) && !failed.contains(name))
-                        .collect(Collectors.toList());
+                if (hardMissing) {
+                    failed.add(nameKey);
+                    continue;
+                }
 
-                if (!unresolved.isEmpty())
-                    log(LogLevel.ERROR, "Unresolved module dependency loop: " + String.join(", ", unresolved));
+                if (wait) continue;
+
+                for (String dep : file.getSoftDepend()) {
+                    if (modules.containsKey(dep)) continue;
+
+                    if (candidates.containsKey(dep) && !failed.contains(dep)) {
+                        wait = true;
+                        break;
+                    }
+                }
+                if (wait) continue;
+
+                load(entry.getValue().jarFile);
+                progress = true;
             }
-        }
+        } while (progress);
 
-        boolean saveDefaults = api.getConfiguration().loadDefaultJars("modules");
-        loadBundledJars("modules", saveDefaults);
+        List<String> unresolved = candidates.keySet()
+                .stream()
+                .filter(name -> !modules.containsKey(name) && !failed.contains(name))
+                .collect(Collectors.toList());
+
+        if (!unresolved.isEmpty())
+            log(LogLevel.ERROR, "Unresolved module dependency loop: " + String.join(", ", unresolved));
     }
 
     public void unload(String name) {
@@ -342,7 +345,43 @@ public final class ModuleManager {
         throw new UnsupportedOperationException();
     }
 
-    private List<String> findBundledJars(String folder) {
+    public void saveStates() {
+        File dir = new File(api.getPlugin().getDataFolder(), "modules");
+        if (!dir.exists() && !dir.mkdirs()) {
+            log(LogLevel.WARN, "Could not create modules directory: " + dir.getPath());
+            return;
+        }
+
+        File file = new File(dir, "states.yml");
+        YamlConfiguration configuration = new YamlConfiguration();
+
+        for (Map.Entry<String, Boolean> entry : moduleStates.entrySet()) {
+            configuration.set("modules." + entry.getKey() + ".enabled", entry.getValue());
+        }
+
+        try {
+            configuration.save(file);
+        } catch (Exception e) {
+            log(LogLevel.ERROR, "Failed to save module states to " + file.getPath());
+            e.printStackTrace();
+        }
+    }
+
+    public void setModuleEnabled(String name, boolean enabled) {
+        if (name != null) moduleStates.put(name, enabled);
+    }
+
+    public boolean isEnabled(String name) {
+        return name != null && moduleStates.computeIfAbsent(name, key -> true);
+    }
+
+    public void openConfigMenu(@NotNull SIRModule module, @NotNull org.bukkit.event.inventory.InventoryClickEvent event) {
+        File configFile = new File(module.getDataFolder(), "config.yml");
+        if (!configFile.exists()) return;
+        // Placeholder for config menu opening logic.
+    }
+
+    private List<String> findBundledJars() {
         List<String> results = new ArrayList<>();
         try {
             URL location = api.getPlugin().getClass().getProtectionDomain().getCodeSource().getLocation();
@@ -357,17 +396,17 @@ public final class ModuleManager {
                         if (entry.isDirectory()) continue;
 
                         String name = entry.getName();
-                        if (name.startsWith(folder + "/") && name.endsWith(".jar")) {
+                        if (name.startsWith("modules" + "/") && name.endsWith(".jar")) {
                             results.add(name);
                         }
                     }
                 }
             } else if (source.isDirectory()) {
-                File resourceDir = new File(source, folder);
+                File resourceDir = new File(source, "modules");
                 File[] jars = resourceDir.listFiles((dir, name) -> name.endsWith(".jar"));
                 if (jars != null) {
                     for (File jar : jars) {
-                        results.add(folder + "/" + jar.getName());
+                        results.add("modules" + "/" + jar.getName());
                     }
                 }
             }
@@ -379,24 +418,24 @@ public final class ModuleManager {
         return results;
     }
 
-    private void loadBundledJars(String folder, boolean saveDefaults) {
-        List<String> bundled = findBundledJars(folder);
+    private void loadBundledJars(boolean saveDefaults) {
+        List<String> bundled = findBundledJars();
         if (bundled.isEmpty()) return;
 
-        File outputDir = new File(api.getPlugin().getDataFolder(), folder);
+        File outputDir = new File(api.getPlugin().getDataFolder(), "modules");
         if (saveDefaults && !outputDir.exists() && !outputDir.mkdirs()) {
             log(LogLevel.WARN, "Could not create default modules directory: " + outputDir.getPath());
             saveDefaults = false;
         }
 
         for (String resource : bundled) {
-            String fileName = resource.substring((folder + "/").length());
+            String fileName = resource.substring(("modules" + "/").length());
             File target;
             try {
                 if (saveDefaults) {
                     target = new File(outputDir, fileName);
                 } else {
-                    target = File.createTempFile("sir-" + folder + "-", ".jar", api.getPlugin().getDataFolder());
+                    target = File.createTempFile("sir-" + "modules" + "-", ".jar", api.getPlugin().getDataFolder());
                     target.deleteOnExit();
                 }
             } catch (Exception e) {
@@ -421,6 +460,22 @@ public final class ModuleManager {
             }
 
             load(target);
+        }
+    }
+
+    private void loadStates() {
+        moduleStates.clear();
+
+        File file = new File(api.getPlugin().getDataFolder(), "modules" + File.separator + "states.yml");
+        if (!file.exists()) return;
+
+        YamlConfiguration configuration = YamlConfiguration.loadConfiguration(file);
+        ConfigurationSection section = configuration.getConfigurationSection("modules");
+        if (section == null) return;
+
+        for (String name : section.getKeys(false)) {
+            if (name == null || name.trim().isEmpty()) continue;
+            moduleStates.put(name, section.getBoolean(name + ".enabled", true));
         }
     }
 }
