@@ -29,7 +29,7 @@ public abstract class StandaloneProvider implements CommandProvider {
         button.setDefaultItems();
         button.setOnClick(b -> event -> {
             if (event.isRightClick()) {
-                api.getCommandManager().toggleOverrides(this);
+                api.getCommandManager().openOverrideMenu(this, event);
                 return;
             }
 

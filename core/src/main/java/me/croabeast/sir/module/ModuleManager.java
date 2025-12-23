@@ -1,13 +1,33 @@
 package me.croabeast.sir.module;
 
-import lombok.RequiredArgsConstructor;
+import com.github.stefvanschie.inventoryframework.gui.GuiItem;
+import com.github.stefvanschie.inventoryframework.gui.InventoryComponent;
+import com.github.stefvanschie.inventoryframework.gui.type.AnvilGui;
+import com.github.stefvanschie.inventoryframework.pane.Pane;
+import com.github.stefvanschie.inventoryframework.pane.util.Slot;
+import me.croabeast.common.gui.ButtonBuilder;
 import me.croabeast.common.gui.ChestBuilder;
+import me.croabeast.common.gui.ItemCreator;
+import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.sir.PluginDependant;
 import me.croabeast.sir.SIRApi;
+import me.croabeast.sir.SlotCalculator;
+import me.croabeast.sir.Toggleable;
 import me.croabeast.sir.command.CommandProvider;
+import me.croabeast.takion.character.SmallCaps;
 import me.croabeast.takion.logger.LogLevel;
+import org.apache.commons.lang.StringUtils;
+import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.HumanEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.player.PlayerEditBookEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BookMeta;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -26,28 +46,80 @@ import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("unchecked")
-@RequiredArgsConstructor
 public final class ModuleManager {
 
     private final SIRApi api;
     private final Map<String, LoadedModule> modules = new LinkedHashMap<>();
     private final Map<String, Boolean> moduleStates = new LinkedHashMap<>();
+    private final Map<UUID, BookEditSession> pendingBookEdits = new HashMap<>();
 
-    @RequiredArgsConstructor
+    public ModuleManager(SIRApi api) {
+        this.api = api;
+        api.getPlugin().getServer().getPluginManager().registerEvents(new BookEditListener(), api.getPlugin());
+    }
+
     private static class ModuleCandidate {
         final File jarFile;
         final ModuleInformation file;
+
+        ModuleCandidate(File jarFile, ModuleInformation file) {
+            this.jarFile = jarFile;
+            this.file = file;
+        }
     }
 
-    @RequiredArgsConstructor
     private static class LoadedModule {
         final SIRModule module;
         final URLClassLoader classLoader;
+
+        LoadedModule(SIRModule module, URLClassLoader classLoader) {
+            this.module = module;
+            this.classLoader = classLoader;
+        }
+    }
+
+    private static class BookEditSession {
+        final SIRModule module;
+        final File configFile;
+        final String key;
+
+        BookEditSession(SIRModule module, File configFile, String key) {
+            this.module = module;
+            this.configFile = configFile;
+            this.key = key;
+        }
+    }
+
+    private final class BookEditListener implements Listener {
+        @EventHandler
+        void onEditBook(PlayerEditBookEvent event) {
+            BookEditSession session = pendingBookEdits.remove(event.getPlayer().getUniqueId());
+            if (session == null) return;
+
+            BookMeta meta = event.getNewBookMeta();
+            List<String> values = parseBookValues(meta.getPages());
+
+            YamlConfiguration configuration = YamlConfiguration.loadConfiguration(session.configFile);
+            configuration.set(session.key, values);
+            saveConfiguration(configuration, session.configFile);
+
+            api.getPlugin().getServer().getScheduler().runTask(api.getPlugin(),
+                    () -> showConfigMenu(session.module, event.getPlayer()));
+        }
     }
 
     @NotNull
     public List<SIRModule> getModules() {
         return modules.values().stream().map(l -> l.module).collect(Collectors.toList());
+    }
+
+    @NotNull
+    public Set<String> getModuleNames() {
+        Set<String> names = new LinkedHashSet<>(moduleStates.keySet());
+        for (LoadedModule module : modules.values()) {
+            names.add(module.module.getName());
+        }
+        return names;
     }
 
     public <M extends SIRModule> M getModule(@NotNull String name) {
@@ -342,7 +414,47 @@ public final class ModuleManager {
 
     @NotNull
     public ChestBuilder getMenu() {
-        throw new UnsupportedOperationException();
+        List<SIRModule> loadedModules = getModules();
+
+        int rows = SlotCalculator.EXTENSION_LAYOUT.getTotalRows(loadedModules.size()) / 9;
+        String title = "&8" + SmallCaps.toSmallCaps("Loaded SIR Modules:");
+        ChestBuilder menu = ChestBuilder.of(api.getPlugin(), rows, title);
+
+        menu.addSingleItem(
+                0, 1, 1,
+                ItemCreator.of(Material.BARREL)
+                        .modifyLore(
+                                "&7Opens a new menu with all the available",
+                                "&7options from each module.",
+                                "&eComing soon in SIR+. &8" +
+                                        SmallCaps.toSmallCaps("[Paid Version]")
+                        )
+                        .modifyName("&f&lModules Options:")
+                        .setActionToEmpty()
+                        .create(api.getPlugin()),
+                pane -> pane.setPriority(Pane.Priority.LOW)
+        );
+
+        int infoRow = Math.min(rows - 1, 3);
+        menu.addSingleItem(
+                0, 6, infoRow,
+                ItemCreator.of(Material.BARRIER)
+                        .modifyLore("&8More modules will be added soon.")
+                        .modifyName("&c&lCOMING SOON...")
+                        .setActionToEmpty()
+                        .create(api.getPlugin()),
+                pane -> pane.setPriority(Pane.Priority.LOW)
+        );
+
+        for (SIRModule module : loadedModules) {
+            Toggleable.Button button = module.getButton();
+            boolean hasConfig = hasConfigFile(module);
+            button.setEnabledItem(buildModuleItem(module, true, hasConfig));
+            button.setDisabledItem(buildModuleItem(module, false, hasConfig));
+            menu.addPane(0, button);
+        }
+
+        return menu;
     }
 
     public void saveStates() {
@@ -375,10 +487,292 @@ public final class ModuleManager {
         return name != null && moduleStates.computeIfAbsent(name, key -> true);
     }
 
-    public void openConfigMenu(@NotNull SIRModule module, @NotNull org.bukkit.event.inventory.InventoryClickEvent event) {
+    public void updateModuleEnabled(String name, boolean enabled) {
+        SIRModule module = getModule(name);
+        if (module == null) return;
+
+        if (module.isEnabled() != enabled)
+            module.getButton().toggleAll();
+
+        setModuleEnabled(module.getName(), enabled);
+    }
+
+    public void openConfigMenu(@NotNull SIRModule module, @NotNull InventoryClickEvent event) {
+        event.setCancelled(true);
+        showConfigMenu(module, event.getWhoClicked());
+    }
+
+    private boolean hasConfigFile(SIRModule module) {
+        return new File(module.getDataFolder(), "config.yml").exists();
+    }
+
+    private GuiItem buildModuleItem(SIRModule module, boolean enabled, boolean hasConfig) {
+        ModuleInformation info = module.getInformation();
+
+        List<String> lore = new ArrayList<>();
+        for (String line : info.getDescription()) {
+            if (StringUtils.isBlank(line)) continue;
+            lore.add("&7 " + SmallCaps.toSmallCaps(line));
+        }
+
+        lore.add("");
+        lore.add("&f➤ &7Left-click: toggle module");
+        if (hasConfig)
+            lore.add("&f➤ &7Right-click: open config");
+
+        Material material = enabled ? Material.LIME_STAINED_GLASS_PANE : Material.RED_STAINED_GLASS_PANE;
+        String title = SmallCaps.toSmallCaps(info.getTitle());
+        String status = enabled ? " &a&l✔" : " &c&l❌";
+
+        return ItemCreator.of(material)
+                .modifyName("&7• &f" + title + ":" + status)
+                .modifyLore(lore)
+                .create(api.getPlugin());
+    }
+
+    private void showConfigMenu(@NotNull SIRModule module, @NotNull HumanEntity viewer) {
         File configFile = new File(module.getDataFolder(), "config.yml");
         if (!configFile.exists()) return;
-        // Placeholder for config menu opening logic.
+
+        YamlConfiguration configuration = YamlConfiguration.loadConfiguration(configFile);
+        List<String> keys = new ArrayList<>(configuration.getKeys(false));
+        keys.removeIf(StringUtils::isBlank);
+        keys.sort(String.CASE_INSENSITIVE_ORDER);
+
+        int itemsPerPage = 28;
+        int rows = SlotCalculator.CENTER_LAYOUT.getTotalRows(keys.size()) / 9;
+        String title = "&8" + SmallCaps.toSmallCaps(module.getName() + " Config:");
+        ChestBuilder menu = ChestBuilder.of(api.getPlugin(), rows, title);
+
+        for (int index = 0; index < keys.size(); index++) {
+            String key = keys.get(index);
+            Object value = configuration.get(key);
+
+            int page = index / itemsPerPage, indexOnPage = index % itemsPerPage;
+            Slot slot = SlotCalculator.CENTER_LAYOUT.toSlot(indexOnPage);
+            if (slot == null) continue;
+
+            if (value instanceof Boolean) {
+                boolean enabled = (Boolean) value;
+                menu.addPane(page, ButtonBuilder
+                        .of(api.getPlugin(), slot, enabled)
+                        .setItem(
+                                ItemCreator.of(Material.LIME_STAINED_GLASS_PANE)
+                                        .modifyName("&7• &f" + SmallCaps.toSmallCaps(key) + ": &a&l✔")
+                                        .modifyLore("&f➤ &7Toggle option", "&7Current: &aEnabled")
+                                        .create(api.getPlugin()),
+                                true
+                        )
+                        .setItem(
+                                ItemCreator.of(Material.RED_STAINED_GLASS_PANE)
+                                        .modifyName("&7• &f" + SmallCaps.toSmallCaps(key) + ": &c&l❌")
+                                        .modifyLore("&f➤ &7Toggle option", "&7Current: &cDisabled")
+                                        .create(api.getPlugin()),
+                                false
+                        )
+                        .modify(button -> button.allowToggle(false))
+                        .setAction(button -> click -> {
+                            click.setCancelled(true);
+                            boolean next = !button.isEnabled();
+                            configuration.set(key, next);
+                            saveConfiguration(configuration, configFile);
+                            showConfigMenu(module, click.getWhoClicked());
+                        })
+                        .getValue());
+            } else if (value instanceof List) {
+                List<String> values = configuration.getStringList(key);
+                menu.addSingleItem(
+                        page, slot.getX(9), slot.getY(9),
+                        ItemCreator.of(Material.WRITABLE_BOOK)
+                                .modifyName("&7• &f" + SmallCaps.toSmallCaps(key) + ":")
+                                .modifyLore(
+                                        "&7Values: &f" + values.size(),
+                                        "&f➤ &7Open book editor"
+                                )
+                                .setAction(click -> {
+                                    click.setCancelled(true);
+                                    openListEditor(module, configFile, key, values, click.getWhoClicked());
+                                })
+                                .create(api.getPlugin()),
+                        pane -> pane.setPriority(Pane.Priority.LOW)
+                );
+            } else {
+                String current = configuration.getString(key, "");
+                menu.addSingleItem(
+                        page, slot.getX(9), slot.getY(9),
+                        ItemCreator.of(Material.PAPER)
+                                .modifyName("&7• &f" + SmallCaps.toSmallCaps(key) + ":")
+                                .modifyLore(
+                                        "&7Current: &f" + (StringUtils.isBlank(current) ? "<empty>" : current),
+                                        "&f➤ &7Edit value"
+                                )
+                                .setAction(click -> {
+                                    click.setCancelled(true);
+                                    openStringEditor(module, configFile, key, current, click.getWhoClicked());
+                                })
+                                .create(api.getPlugin()),
+                        pane -> pane.setPriority(Pane.Priority.LOW)
+                );
+            }
+        }
+
+        int totalPages = Math.max(1, (keys.size() + itemsPerPage - 1) / itemsPerPage);
+        int bottomRow = rows - 1;
+
+        for (int page = 0; page < totalPages; page++) {
+            if (page > 0) {
+                int target = page - 1;
+                menu.addSingleItem(
+                        page, 1, bottomRow,
+                        ItemCreator.of(Material.ARROW)
+                                .modifyLore("&7Go to previous page.")
+                                .modifyName("&e&lPrevious")
+                                .setAction(click -> {
+                                    click.setCancelled(true);
+                                    menu.setDisplayedPage(target);
+                                    menu.showGui(click.getWhoClicked());
+                                })
+                                .create(api.getPlugin()),
+                        pane -> pane.setPriority(Pane.Priority.LOW)
+                );
+            }
+
+            if (page < totalPages - 1) {
+                int target = page + 1;
+                menu.addSingleItem(
+                        page, 7, bottomRow,
+                        ItemCreator.of(Material.ARROW)
+                                .modifyLore("&7Go to next page.")
+                                .modifyName("&e&lNext")
+                                .setAction(click -> {
+                                    click.setCancelled(true);
+                                    menu.setDisplayedPage(target);
+                                    menu.showGui(click.getWhoClicked());
+                                })
+                                .create(api.getPlugin()),
+                        pane -> pane.setPriority(Pane.Priority.LOW)
+                );
+            }
+
+            menu.addSingleItem(
+                    page, 3, bottomRow,
+                    ItemCreator.of(Material.ARROW)
+                            .modifyLore("&7Return to the modules menu.")
+                            .modifyName("&a&lBack to Modules")
+                            .setAction(e -> {
+                                e.setCancelled(true);
+                                getMenu().showGui(e.getWhoClicked());
+                            })
+                            .create(api.getPlugin()),
+                    pane -> pane.setPriority(Pane.Priority.LOW)
+            );
+
+            menu.addSingleItem(
+                    page, 5, bottomRow,
+                    ItemCreator.of(Material.BARRIER)
+                            .modifyName("&c&lClose")
+                            .modifyLore("&7Close this menu.")
+                            .setAction(e -> {
+                                e.setCancelled(true);
+                                e.getWhoClicked().closeInventory();
+                            })
+                            .create(api.getPlugin()),
+                    pane -> pane.setPriority(Pane.Priority.LOW)
+            );
+        }
+
+        menu.showGui(viewer);
+    }
+
+    private void openStringEditor(SIRModule module, File configFile, String key, String current, HumanEntity viewer) {
+        if (!(viewer instanceof Player)) return;
+
+        AnvilGui anvilGui = new AnvilGui(PrismaticAPI.colorize("&8" + key), api.getPlugin());
+        anvilGui.setCost((short) 0);
+
+        InventoryComponent input = anvilGui.getFirstItemComponent();
+        ItemStack base = new ItemStack(Material.PAPER);
+        input.setItem(ItemCreator.of(base)
+                .modifyName("&f" + (StringUtils.isBlank(current) ? "<empty>" : current)).create(), 0, 0);
+
+        InventoryComponent result = anvilGui.getResultComponent();
+        GuiItem resultItem = ItemCreator.of(Material.LIME_STAINED_GLASS_PANE)
+                .modifyName("&a&lSave")
+                .modifyLore("&7Click to save the value.")
+                .setAction(click -> {
+                    click.setCancelled(true);
+                    String value = anvilGui.getRenameText();
+                    YamlConfiguration configuration = YamlConfiguration.loadConfiguration(configFile);
+                    configuration.set(key, value);
+                    saveConfiguration(configuration, configFile);
+                    showConfigMenu(module, click.getWhoClicked());
+                })
+                .create(api.getPlugin());
+        result.setItem(resultItem, 0, 0);
+
+        anvilGui.show(viewer);
+    }
+
+    private void openListEditor(SIRModule module, File configFile, String key, List<String> values, HumanEntity viewer) {
+        if (!(viewer instanceof Player)) return;
+
+        Player player = (Player) viewer;
+        ItemStack book = new ItemStack(Material.WRITABLE_BOOK);
+
+        BookMeta meta = (BookMeta) book.getItemMeta();
+        if (meta == null) return;
+
+        meta.setTitle(PrismaticAPI.colorize("&8" + key));
+        meta.setAuthor(player.getName());
+        meta.setPages(buildBookPages(values));
+        book.setItemMeta(meta);
+
+        pendingBookEdits.put(player.getUniqueId(), new BookEditSession(module, configFile, key));
+        player.openBook(book);
+    }
+
+    private List<String> buildBookPages(List<String> values) {
+        List<String> pages = new ArrayList<>();
+        StringBuilder current = new StringBuilder("# One value per line");
+        int lineCount = 1;
+
+        for (String value : values) {
+            if (lineCount >= 12) {
+                pages.add(current.toString());
+                current = new StringBuilder();
+                lineCount = 0;
+            }
+            if (lineCount > 0) {
+                current.append("\n");
+            }
+            current.append(value == null ? "" : value);
+            lineCount++;
+        }
+
+        pages.add(current.toString());
+        return pages;
+    }
+
+    private List<String> parseBookValues(List<String> pages) {
+        List<String> values = new ArrayList<>();
+        for (String page : pages) {
+            if (page == null) continue;
+            for (String line : page.split("\n")) {
+                if (StringUtils.isBlank(line)) continue;
+                if (line.startsWith("#")) continue;
+                values.add(line.trim());
+            }
+        }
+        return values;
+    }
+
+    private void saveConfiguration(YamlConfiguration configuration, File configFile) {
+        try {
+            configuration.save(configFile);
+        } catch (Exception e) {
+            log(LogLevel.ERROR, "Failed to save config file: " + configFile.getPath());
+            e.printStackTrace();
+        }
     }
 
     private List<String> findBundledJars() {

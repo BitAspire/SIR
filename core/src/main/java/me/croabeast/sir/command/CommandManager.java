@@ -1,15 +1,23 @@
 package me.croabeast.sir.command;
 
+import com.github.stefvanschie.inventoryframework.pane.Pane;
+import com.github.stefvanschie.inventoryframework.pane.util.Slot;
 import lombok.RequiredArgsConstructor;
+import me.croabeast.common.gui.ButtonBuilder;
 import me.croabeast.common.gui.ChestBuilder;
+import me.croabeast.common.gui.ItemCreator;
 import me.croabeast.sir.SIRApi;
 import me.croabeast.sir.SlotCalculator;
+import me.croabeast.sir.Toggleable;
 import me.croabeast.sir.module.ModuleManager;
 import me.croabeast.sir.module.SIRModule;
+import me.croabeast.takion.character.SmallCaps;
 import me.croabeast.takion.logger.LogLevel;
 import org.apache.commons.lang.StringUtils;
+import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -22,6 +30,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.stream.Collectors;
 
 public final class CommandManager {
 
@@ -305,8 +314,268 @@ public final class CommandManager {
     }
 
     @NotNull
+    public Set<String> getProviderNames() {
+        return new LinkedHashSet<>(providers.keySet());
+    }
+
+    public ProviderInformation getInformation(String name) {
+        LoadedProvider loaded = getLoadedProvider(name);
+        return loaded == null ? null : loaded.information;
+    }
+
+    @NotNull
+    public Set<String> getProviderCommands(String providerName) {
+        ProviderInformation info = getInformation(providerName);
+        if (info == null || info.getCommands().isEmpty()) return Collections.emptySet();
+        return new LinkedHashSet<>(info.getCommands().keySet());
+    }
+
+    public boolean updateProviderEnabled(String providerName, boolean enabled) {
+        LoadedProvider loaded = getLoadedProvider(providerName);
+        if (loaded == null) return false;
+
+        ProviderInformation info = loaded.information;
+        boolean current = isProviderEnabled(info.getName());
+        if (current == enabled) return true;
+
+        setProviderEnabled(info.getName(), enabled);
+        if (enabled) {
+            registerProvider(loaded.provider, info);
+        } else {
+            unload(loaded.provider);
+        }
+        return true;
+    }
+
+    public Boolean getCommandOverride(String providerName, String commandKey) {
+        LoadedProvider loaded = getLoadedProvider(providerName);
+        if (loaded == null || StringUtils.isBlank(commandKey)) return null;
+
+        String nameKey = commandKey.toLowerCase(Locale.ENGLISH);
+        ProviderInformation info = loaded.information;
+        ConfigurationSection section = info.getCommandSection(nameKey);
+        if (section == null) return null;
+
+        ProviderState state = ensureProviderState(info.getName());
+        return resolveOverrideState(state, nameKey, section);
+    }
+
+    public boolean updateCommandOverride(String providerName, String commandKey, boolean override) {
+        LoadedProvider loaded = getLoadedProvider(providerName);
+        if (loaded == null || StringUtils.isBlank(commandKey)) return false;
+
+        String nameKey = commandKey.toLowerCase(Locale.ENGLISH);
+        ProviderInformation info = loaded.information;
+        ConfigurationSection section = info.getCommandSection(nameKey);
+        if (section == null) return false;
+
+        ProviderState state = ensureProviderState(info.getName());
+        state.overrides.put(nameKey, override);
+
+        SIRCommand command = getProviderCommand(loaded.provider, nameKey);
+        if (command == null) return true;
+
+        SIRCommand parent = null;
+        boolean depends = section.getBoolean("depends.enabled");
+        String parentName = section.getString("depends.parent");
+        if (depends && StringUtils.isNotBlank(parentName))
+            parent = getCommand(parentName);
+
+        command.applyFile(new CommandFile(nameKey, section, parent, override));
+        if (!commands.containsKey(nameKey)) return true;
+
+        try {
+            command.unregister(true);
+            command.register(true);
+        } catch (Exception e) {
+            log(LogLevel.ERROR, "Failed to re-register command '" + commandKey + "' after override change.");
+            e.printStackTrace();
+        }
+
+        return true;
+    }
+
+    @NotNull
     public ChestBuilder getMenu() {
-        throw new IllegalStateException();
+        List<Toggleable.Button> buttons = providers.values().stream()
+                .map(entry -> entry.provider)
+                .filter(StandaloneProvider.class::isInstance)
+                .map(StandaloneProvider.class::cast)
+                .map(StandaloneProvider::getButton)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        int rows = SlotCalculator.EXTENSION_LAYOUT.getTotalRows(buttons.size()) / 9;
+        String title = "&8" + SmallCaps.toSmallCaps("Loaded SIR Commands:");
+        ChestBuilder menu = ChestBuilder.of(api.getPlugin(), rows, title);
+
+        menu.addSingleItem(
+                0, 1, 1,
+                ItemCreator.of(Material.BARREL)
+                        .modifyLore(
+                                "&7Opens a new menu with all the available",
+                                "&7options from each command.",
+                                "&eComing soon in SIR+. &8" +
+                                        SmallCaps.toSmallCaps("[Paid Version]")
+                        )
+                        .modifyName("&f&lCommands Options:")
+                        .setActionToEmpty()
+                        .create(api.getPlugin()),
+                pane -> pane.setPriority(Pane.Priority.LOW)
+        );
+
+        menu.addSingleItem(
+                0, 7, 2,
+                ItemCreator.of(Material.BARRIER)
+                        .modifyLore("&8More commands will be added soon.")
+                        .modifyName("&c&lCOMING SOON...")
+                        .setActionToEmpty()
+                        .create(api.getPlugin()),
+                pane -> pane.setPriority(Pane.Priority.LOW)
+        );
+
+        for (Toggleable.Button button : buttons) {
+            menu.addPane(0, button);
+        }
+
+        return menu;
+    }
+
+    public void openOverrideMenu(@NotNull StandaloneProvider provider, @NotNull InventoryClickEvent event) {
+        event.setCancelled(true);
+        if (!provider.isEnabled()) return;
+
+        ProviderInformation info = provider.getInformation();
+
+        Map<String, ConfigurationSection> commandSections = info.getCommands();
+        if (commandSections.isEmpty()) return;
+
+        Map<String, SIRCommand> commandMap = new LinkedHashMap<>();
+        for (SIRCommand command : provider.getCommands()) {
+            if (command == null) continue;
+
+            String commandKey = StringUtils.isBlank(command.getCommandKey()) ? command.getName() : command.getCommandKey();
+            if (StringUtils.isBlank(commandKey)) continue;
+
+            commandMap.put(commandKey.toLowerCase(Locale.ENGLISH), command);
+        }
+
+        if (commandSections.size() == 1) {
+            Map.Entry<String, ConfigurationSection> entry = commandSections.entrySet().iterator().next();
+
+            String commandKey = entry.getKey();
+            SIRCommand command = commandMap.get(commandKey.toLowerCase(Locale.ENGLISH));
+            toggleOverride(info, commandKey, entry.getValue(), command);
+            return;
+        }
+
+        showOverrideMenu(provider, info, commandSections, commandMap, event.getWhoClicked());
+    }
+
+    private void showOverrideMenu(StandaloneProvider provider,
+                                  ProviderInformation info,
+                                  Map<String, ConfigurationSection> commandSections,
+                                  Map<String, SIRCommand> commandMap,
+                                  org.bukkit.entity.HumanEntity viewer)
+    {
+        int itemsPerPage = 28;
+        List<String> commandKeys = new ArrayList<>(commandSections.keySet());
+        commandKeys.sort(String.CASE_INSENSITIVE_ORDER);
+
+        int rows = SlotCalculator.CENTER_LAYOUT.getTotalRows(commandKeys.size()) / 9;
+        String title = "&8" + SmallCaps.toSmallCaps(provider.getName() + " Overrides:");
+        ChestBuilder menu = ChestBuilder.of(api.getPlugin(), rows, title);
+
+        for (int index = 0; index < commandKeys.size(); index++) {
+            String commandKey = commandKeys.get(index);
+
+            ConfigurationSection section = commandSections.get(commandKey);
+            if (section == null) continue;
+
+            int page = index / itemsPerPage, indexOnPage = index % itemsPerPage;
+            Slot slot = SlotCalculator.CENTER_LAYOUT.toSlot(indexOnPage);
+            if (slot == null) continue;
+
+            ProviderState state = ensureProviderState(info.getMain());
+            boolean override = resolveOverrideState(state, commandKey, section);
+
+            String titleName = "/" + commandKey;
+            String actionLine = "&f➤ &7Toggle override-existing";
+
+            menu.addPane(page, ButtonBuilder
+                    .of(api.getPlugin(), slot, override)
+                    .setItem(
+                            ItemCreator.of(Material.LIME_STAINED_GLASS_PANE)
+                                    .modifyName("&7• &f" + SmallCaps.toSmallCaps(titleName) + ": &a&l✔")
+                                    .modifyLore(actionLine, "&7Current: &aEnabled")
+                                    .create(api.getPlugin()),
+                            true
+                    )
+                    .setItem(
+                            ItemCreator.of(Material.RED_STAINED_GLASS_PANE)
+                                    .modifyName("&7• &f" + SmallCaps.toSmallCaps(titleName) + ": &c&l❌")
+                                    .modifyLore(actionLine, "&7Current: &cDisabled")
+                                    .create(api.getPlugin()),
+                            false
+                    )
+                    .modify(button -> button.allowToggle(false))
+                    .setAction(button -> click -> {
+                        click.setCancelled(true);
+                        toggleOverride(info, commandKey, section, commandMap.get(commandKey.toLowerCase(Locale.ENGLISH)));
+                        showOverrideMenu(provider, info, commandSections, commandMap, click.getWhoClicked());
+                    })
+                    .getValue());
+        }
+
+        int bottomRow = rows - 1;
+        menu.addSingleItem(
+                0, 7, bottomRow,
+                ItemCreator.of(Material.BARRIER).modifyName("&c&lClose")
+                        .modifyLore("&7Close this menu.")
+                        .setAction(e -> {
+                            e.setCancelled(true);
+                            e.getWhoClicked().closeInventory();
+                        })
+                        .create(api.getPlugin()),
+                pane -> pane.setPriority(Pane.Priority.LOW)
+        );
+
+        menu.showGui(viewer);
+    }
+
+    private void toggleOverride(ProviderInformation info,
+                                String commandKey,
+                                ConfigurationSection section,
+                                SIRCommand command)
+    {
+        if (info == null || section == null) return;
+
+        ProviderState state = ensureProviderState(info.getMain());
+        String normalized = commandKey.toLowerCase(Locale.ENGLISH);
+
+        boolean current = resolveOverrideState(state, normalized, section);
+        boolean next = !current;
+        state.overrides.put(normalized, next);
+
+        if (command == null) command = getCommand(normalized);
+        if (command == null) return;
+
+        SIRCommand parent = null;
+
+        boolean depends = section.getBoolean("depends.enabled");
+        String parentName = section.getString("depends.parent");
+        if (depends && StringUtils.isNotBlank(parentName)) parent = getCommand(parentName);
+
+        command.applyFile(new CommandFile(normalized, section, parent, next));
+        if (!commands.containsKey(normalized)) return;
+
+        try {
+            command.unregister(true);
+            command.register(true);
+        } catch (Exception e) {
+            log(LogLevel.ERROR, "Failed to re-register command '" + normalized + "' after override change.");
+            e.printStackTrace();
+        }
     }
 
     public boolean isEnabled(String name) {
@@ -431,7 +700,7 @@ public final class CommandManager {
         if (loaded == null) return;
 
         ProviderInformation info = loaded.information;
-        ProviderState state = ensureProviderState(info.getMain());
+        ProviderState state = ensureProviderState(info.getName());
 
         for (SIRCommand command : provider.getCommands()) {
             if (command == null) continue;
@@ -497,6 +766,34 @@ public final class CommandManager {
                         commandsSection.getBoolean(commandKey));
             }
         }
+    }
+
+    private LoadedProvider getLoadedProvider(String name) {
+        if (StringUtils.isBlank(name)) return null;
+
+        for (Map.Entry<String, LoadedProvider> entry : providers.entrySet()) {
+            if (entry.getKey().equalsIgnoreCase(name)) return entry.getValue();
+        }
+
+        return null;
+    }
+
+    private SIRCommand getProviderCommand(CommandProvider provider, String nameKey) {
+        if (provider == null || StringUtils.isBlank(nameKey)) return null;
+
+        for (SIRCommand command : provider.getCommands()) {
+            if (command == null) continue;
+
+            String commandKey = command.getCommandKey();
+            if (StringUtils.isBlank(commandKey)) {
+                commandKey = command.getName();
+            }
+            if (StringUtils.isBlank(commandKey)) continue;
+
+            if (nameKey.equalsIgnoreCase(commandKey)) return command;
+        }
+
+        return null;
     }
 
     private ProviderState ensureProviderState(String main) {
