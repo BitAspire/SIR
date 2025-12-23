@@ -25,11 +25,10 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
     private Config configuration;
 
     private ModuleManager moduleManager;
-    private UserManager userManager;
+    private UserManagerImpl userManager;
     private CommandManager commandManager;
 
     private ConfigurableFile commandLang;
-    private ConfigurableFile moduleLang;
 
     @SneakyThrows
     public void onEnable() {
@@ -46,6 +45,10 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
         commandLang.saveDefaults();
 
         moduleManager = new ModuleManager(this);
+
+        userManager = new UserManagerImpl(this);
+        userManager.register();
+
         commandManager = new CommandManager(this);
 
         PluginCommand command = getCommand("sir");
@@ -64,8 +67,13 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
 
     @Override
     public void onDisable() {
-        if (commandManager != null) commandManager.unloadAll();
-        if (moduleManager != null) moduleManager.unloadAll();
+        userManager.shutdown();
+
+        commandManager.saveStates();
+        moduleManager.saveStates();
+
+        commandManager.unloadAll();
+        moduleManager.unloadAll();
     }
 
     @NotNull
@@ -76,6 +84,11 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
     @NotNull
     public Plugin getPlugin() {
         return this;
+    }
+
+    @NotNull
+    public UserManager getUserManager() {
+        return userManager;
     }
 
     @Override
