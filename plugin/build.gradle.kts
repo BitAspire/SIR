@@ -6,7 +6,7 @@ repositories {
 }
 
 val coreProject = project(":core")
-val takionShaded by configurations.creating
+val takionShaded: Configuration by configurations.creating
 
 dependencies {
     implementation(coreProject)
@@ -19,6 +19,7 @@ dependencies {
     compileOnly("com.github.DevLeoko:AdvancedBan:2.3.0")
     compileOnly(files("libraries/CMI.jar"))
     takionShaded("me.croabeast.takion:shaded-all:1.3")
+    implementation("org.bstats:bstats-bukkit:3.0.2")
 }
 
 val coreMainOutput = coreProject.extensions.getByType<SourceSetContainer>()["main"].output

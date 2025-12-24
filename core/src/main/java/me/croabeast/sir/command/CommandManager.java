@@ -119,6 +119,8 @@ public final class CommandManager {
             return;
         }
 
+        List<SIRCommand> pending = new ArrayList<>();
+
         for (SIRCommand command : set) {
             if (command == null) continue;
 
@@ -144,24 +146,52 @@ public final class CommandManager {
                 continue;
             }
 
-            boolean override = resolveOverrideState(state, nameKey, section);
-            boolean depends = section.getBoolean("depends.enabled");
-            String parentName = section.getString("depends.parent");
-            SIRCommand parent = null;
-
-            if (depends && StringUtils.isNotBlank(parentName)) {
-                parent = getCommand(parentName);
-                if (parent == null) {
-                    log(LogLevel.WARN, "Command '" + commandKey + "' depends on '" + parentName + "', but it isn't loaded.");
-                    continue;
-                }
-
-                if (!parent.isEnabled()) {
-                    log(LogLevel.INFO, "Command '" + commandKey + "' depends on disabled command '" + parentName + "', skipping.");
-                    continue;
-                }
+            if (section.getBoolean("depends.enabled") && StringUtils.isNotBlank(section.getString("depends.parent"))) {
+                pending.add(command);
+                continue;
             }
 
+            boolean override = resolveOverrideState(state, nameKey, section);
+            command.applyFile(new CommandFile(nameKey, section, null, override));
+            registerCommand(command);
+        }
+
+        for (SIRCommand command : pending) {
+            String commandKey = command.getCommandKey();
+            if (StringUtils.isBlank(commandKey)) {
+                commandKey = command.getName();
+            }
+
+            if (StringUtils.isBlank(commandKey)) {
+                log(LogLevel.WARN, "Command with empty name found in provider '" + file.getName() + "', skipping.");
+                continue;
+            }
+
+            String nameKey = commandKey.toLowerCase(Locale.ENGLISH);
+            if (!file.hasCommand(nameKey)) {
+                log(LogLevel.WARN, "Command '" + commandKey + "' not declared in commands.yml, skipping.");
+                continue;
+            }
+
+            ConfigurationSection section = file.getCommandSection(nameKey);
+            if (section == null) {
+                log(LogLevel.WARN, "Command '" + commandKey + "' section is missing in commands.yml, skipping.");
+                continue;
+            }
+
+            String parentName = section.getString("depends.parent");
+            SIRCommand parent = getCommand(parentName);
+            if (parent == null) {
+                log(LogLevel.WARN, "Command '" + commandKey + "' depends on '" + parentName + "', but it isn't loaded.");
+                continue;
+            }
+
+            if (!parent.isEnabled()) {
+                log(LogLevel.INFO, "Command '" + commandKey + "' depends on disabled command '" + parentName + "', skipping.");
+                continue;
+            }
+
+            boolean override = resolveOverrideState(state, nameKey, section);
             command.applyFile(new CommandFile(nameKey, section, parent, override));
             registerCommand(command);
         }
@@ -876,7 +906,7 @@ public final class CommandManager {
                 }
             }
 
-            load(target);
+            if (!saveDefaults) load(target);
         }
     }
 }

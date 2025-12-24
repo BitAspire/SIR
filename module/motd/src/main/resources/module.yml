@@ -2,5 +2,5 @@ main: me.croabeast.sir.module.motd.MOTD
 name: MOTD
 title: "&7MOTD"
 description:
-  - "Handles the motd of the server and having",
+  - "Handles the motd of the server and having"
   - "multiple motd at order/random."

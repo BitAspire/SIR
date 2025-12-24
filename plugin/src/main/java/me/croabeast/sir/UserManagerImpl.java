@@ -29,6 +29,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -68,9 +69,32 @@ final class UserManagerImpl implements UserManager, Registrable {
 
     private ConfigurableFile createFile(String name) {
         try {
+            ensureUserFile(name);
             return new ConfigurableFile(plugin, "users", name);
         } catch (Exception ignored) {
             return null;
+        }
+    }
+
+    private void ensureUserFile(String name) {
+        File dataFolder = plugin.getDataFolder();
+        if (!dataFolder.exists() && !dataFolder.mkdirs()) {
+            return;
+        }
+
+        File usersFolder = new File(dataFolder, "users");
+        if (!usersFolder.exists() && !usersFolder.mkdirs()) {
+            return;
+        }
+
+        File userFile = new File(usersFolder, name + ".yml");
+        if (userFile.exists()) {
+            return;
+        }
+
+        try {
+            userFile.createNewFile();
+        } catch (Exception ignored) {
         }
     }
 

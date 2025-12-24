@@ -6,7 +6,6 @@ import me.croabeast.command.BukkitCommand;
 import me.croabeast.command.CommandPredicate;
 import me.croabeast.command.TabBuilder;
 import me.croabeast.common.CollectionBuilder;
-import me.croabeast.common.reflect.Reflector;
 import me.croabeast.file.ConfigurableFile;
 import me.croabeast.sir.SIRApi;
 import me.croabeast.sir.user.UserManager;
@@ -226,10 +225,9 @@ public abstract class SIRCommand extends BukkitCommand {
         if (StringUtils.isBlank(name) || predicate == null)
             return;
 
-        final BaseCommand subCommand = getSubCommand(name);
-        if (subCommand == null) return;
-
-        ((me.croabeast.command.SubCommand) subCommand).setPredicate(predicate);
+        BaseCommand subCommand = getSubCommand(name);
+        if (subCommand != null)
+            ((me.croabeast.command.SubCommand) subCommand).setPredicate(predicate);
     }
 
     // ----------------------------------------------------------------------
@@ -265,10 +263,9 @@ public abstract class SIRCommand extends BukkitCommand {
         if (file == null) return false;
 
         try {
-            Reflector.from(() -> this).set("name", file.getName());
+            super.setName(file.getName());
         } catch (Exception e) {
             e.printStackTrace();
-            return false;
         }
 
         super.setPermission(file.getPermission());
