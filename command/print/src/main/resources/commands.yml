@@ -2,7 +2,7 @@ main: me.croabeast.sir.command.print.PrintProvider
 title: "&7Print"
 
 commands:
-  announce:
+  print:
     permission: sir.print
     override-existing: true
     aliases: [ raw-message, raw-msg, rawmsg ]

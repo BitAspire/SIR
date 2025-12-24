@@ -20,7 +20,7 @@ final class Config {
 
     Config(Channels main) {
         try {
-            ExtensionFile file = new ExtensionFile(main, "config.yml", true);
+            ExtensionFile file = new ExtensionFile(main, "config", true);
 
             useBukkitFormat = file.get("default-bukkit-format", false);
             allowsEmpty = file.get("allow-empty.enabled", false);

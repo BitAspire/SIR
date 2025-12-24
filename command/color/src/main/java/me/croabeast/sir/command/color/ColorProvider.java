@@ -1,8 +1,6 @@
 package me.croabeast.sir.command.color;
 
 import lombok.Getter;
-import me.croabeast.file.ConfigurableFile;
-import me.croabeast.sir.ExtensionFile;
 import me.croabeast.sir.command.SIRCommand;
 import me.croabeast.sir.command.StandaloneProvider;
 import org.bukkit.Bukkit;
@@ -15,20 +13,16 @@ public final class ColorProvider extends StandaloneProvider {
     @Getter
     private final Set<SIRCommand> commands = new HashSet<>();
 
-    ConfigurableFile data;
     Expansion expansion;
 
     @Override
     public boolean register() {
         try {
-            data = new ExtensionFile(this, "data", true);
-        } catch (Exception ignored) {}
-        try {
             commands.add(new Command(this));
         } catch (Exception ignored) {}
 
         if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI"))
-            (expansion = new Expansion(this)).register();
+            (expansion = new Expansion()).register();
         return true;
     }
 

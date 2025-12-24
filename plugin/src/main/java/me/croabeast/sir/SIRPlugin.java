@@ -175,6 +175,7 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
                 "==================================="
         ).sendLines();
 
+        System.setProperty("bstats.relocatecheck", "false");
         MetricsLoader.initialize(this, 25264)
                 .addSimplePie("hasPAPI", Exceptions.isPluginEnabled("PlaceholderAPI"))
                 .addSimplePie("hasInteractive", Exceptions.isPluginEnabled("InteractiveChat"))

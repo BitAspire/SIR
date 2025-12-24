@@ -47,7 +47,7 @@ final class MainCommand implements TabExecutor {
 
         private CommandDisplayer(CommandSender sender) {
             super(main.getLibrary().getLoadedSender());
-            setLogger(sender instanceof Player).setTargets(sender);
+            setLogger(!(sender instanceof Player)).setTargets(sender);
         }
 
         @NotNull
@@ -96,47 +96,54 @@ final class MainCommand implements TabExecutor {
         }
     }
 
-    private boolean handleLegacyModules(CommandSender sender, String[] args, MessageSender mainSender) {
+    private boolean handleLegacyModules(CommandSender s, String[] args) {
         ModuleManager moduleManager = main.getModuleManager();
 
+        MessageSender sender = main.getLibrary().getLoadedSender()
+                .setTargets(s)
+                .setLogger(!(s instanceof Player));
+
         if (args.length < 2)
-            return mainSender.setTargets(sender).send(
+            return sender.send(
                     "<P> &7Usage: &f/sir modules <module> [enable|disable|toggle]",
                     "<P> &7Available: &f" + String.join(", ", moduleManager.getModuleNames())
             );
 
         SIRModule module = moduleManager.getModule(args[1]);
         if (module == null)
-            return mainSender.setTargets(sender).send("<P> &cModule not found: &f" + args[1]);
+            return sender.send("<P> &cModule not found: &f" + args[1]);
 
         boolean current = moduleManager.isEnabled(module.getName());
         Boolean next = resolveState(args.length > 2 ? args[2] : null, current);
         if (next == null)
-            return mainSender.setTargets(sender).send("<P> &cInvalid state. Use: enable, disable, toggle.");
+            return sender.send("<P> &cInvalid state. Use: enable, disable, toggle.");
 
         moduleManager.updateModuleEnabled(module.getName(), next);
         moduleManager.saveStates();
 
-        return mainSender.setTargets(sender).send(
+        return sender.send(
                 "<P> &7Module &f" + module.getName() + " &7is now " + (next ? "&aenabled" : "&cdisabled") + "&7."
         );
     }
 
-    private boolean handleLegacyCommands(CommandSender sender, String[] args, MessageSender mainSender) {
+    private boolean handleLegacyCommands(CommandSender s, String[] args) {
         CommandManager commandManager = main.getCommandManager();
+        MessageSender sender = main.getLibrary().getLoadedSender()
+                .setTargets(s)
+                .setLogger(!(s instanceof Player));
 
         if (args.length < 2)
-            return mainSender.setTargets(sender).send(
+            return sender.send(
                     "<P> &7Usage: &f/sir commands <provider> <enabled|override> [command] [state]",
                     "<P> &7Available: &f" + String.join(", ", commandManager.getProviderNames())
             );
 
         ProviderInformation info = commandManager.getInformation(args[1]);
         if (info == null)
-            return mainSender.setTargets(sender).send("<P> &cCommand provider not found: &f" + args[1]);
+            return sender.send("<P> &cCommand provider not found: &f" + args[1]);
 
         if (args.length < 3)
-            return mainSender.setTargets(sender).send(
+            return sender.send(
                     "<P> &7Usage: &f/sir commands " + info.getName() + " <enabled|override> [command] [state]"
             );
 
@@ -145,42 +152,42 @@ final class MainCommand implements TabExecutor {
             boolean current = commandManager.isProviderEnabled(info.getName());
             Boolean next = resolveState(args.length > 3 ? args[3] : null, current);
             if (next == null)
-                return mainSender.setTargets(sender).send("<P> &cInvalid state. Use: enable, disable, toggle.");
+                return sender.send("<P> &cInvalid state. Use: enable, disable, toggle.");
 
             if (!commandManager.updateProviderEnabled(info.getName(), next))
-                return mainSender.setTargets(sender).send("<P> &cFailed to update provider state.");
+                return sender.send("<P> &cFailed to update provider state.");
 
             commandManager.saveStates();
-            return mainSender.setTargets(sender).send(
+            return sender.send(
                     "<P> &7Provider &f" + info.getName() + " &7is now " + (next ? "&aenabled" : "&cdisabled") + "&7."
             );
         }
 
         if (mode.equals("override")) {
             if (args.length < 4)
-                return mainSender.setTargets(sender).send(
+                return sender.send(
                         "<P> &7Usage: &f/sir commands " + info.getName() + " override <command> [state]"
                 );
 
             String commandKey = args[3];
             Boolean current = commandManager.getCommandOverride(info.getName(), commandKey);
             if (current == null)
-                return mainSender.setTargets(sender).send("<P> &cCommand not found: &f" + commandKey);
+                return sender.send("<P> &cCommand not found: &f" + commandKey);
 
             Boolean next = resolveState(args.length > 4 ? args[4] : null, current);
             if (next == null)
-                return mainSender.setTargets(sender).send("<P> &cInvalid state. Use: enable, disable, toggle.");
+                return sender.send("<P> &cInvalid state. Use: enable, disable, toggle.");
 
             if (!commandManager.updateCommandOverride(info.getName(), commandKey, next))
-                return mainSender.setTargets(sender).send("<P> &cFailed to update command override.");
+                return sender.send("<P> &cFailed to update command override.");
 
             commandManager.saveStates();
-            return mainSender.setTargets(sender).send(
+            return sender.send(
                     "<P> &7Command &f" + commandKey + " &7override is now " + (next ? "&aenabled" : "&cdisabled") + "&7."
             );
         }
 
-        return mainSender.setTargets(sender).send("<P> &cInvalid mode. Use enabled or override.");
+        return sender.send("<P> &cInvalid mode. Use enabled or override.");
     }
 
     @Override
@@ -200,7 +207,7 @@ final class MainCommand implements TabExecutor {
         Player player = sender instanceof Player ? (Player) sender : null;
         switch (first) {
             case "about":
-                return mainSender.setTargets(sender).send(
+                return mainSender.send(
                         "",
                         " &eSIR &7- &f" + main.getDescription().getVersion() + "&7:",
                         "   &8• &7Server Software: &f" + ServerInfoUtils.SERVER_FORK,
@@ -211,7 +218,7 @@ final class MainCommand implements TabExecutor {
 
             case "modules":
                 if (ServerInfoUtils.SERVER_VERSION < 14.0)
-                    return handleLegacyModules(sender, args, mainSender);
+                    return handleLegacyModules(sender, args);
 
                 if (player == null)
                     return mainSender.send("&cThis command is only for players.");
@@ -221,7 +228,7 @@ final class MainCommand implements TabExecutor {
 
             case "commands":
                 if (ServerInfoUtils.SERVER_VERSION < 14.0)
-                    return handleLegacyCommands(sender, args, mainSender);
+                    return handleLegacyCommands(sender, args);
 
                 if (player == null)
                     return mainSender.send("&cThis command is only for players.");
@@ -248,10 +255,8 @@ final class MainCommand implements TabExecutor {
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
         TabBuilder builder = new TabBuilder().setPermissionPredicate(main.getUserManager()::hasPermission);
 
-        for (String arg : SUB_COMMANDS) {
-            String permission = PERMISSION_PREFIX + arg;
-            builder.addArgument(0, (s, a) -> main.getUserManager().hasPermission(s, permission), permission);
-        }
+        for (String arg : SUB_COMMANDS)
+            builder.addArgument(0, (s, a) -> main.getUserManager().hasPermission(s, PERMISSION_PREFIX + arg), arg);
 
         if (ServerInfoUtils.SERVER_VERSION < 14.0) {
             ModuleManager moduleManager = main.getModuleManager();

@@ -42,11 +42,17 @@ public final class ModuleInformation implements Information {
         this.title = configuration.getString("title", String.join(" ", list));
 
         this.description = Configurable.toStringList(configuration, "description").toArray(new String[0]);
-        this.slot = SlotCalculator.EXTENSION_LAYOUT.toSlot(slotCount++);
+
+        Slot resolved = SlotCalculator.EXTENSION_LAYOUT.toSlot(slotCount++);
+        this.slot = resolved != null ? resolved : Slot.fromIndex(0);
 
         this.depend = Collections.unmodifiableList(Configurable.toStringList(configuration, "depend"));
 
         List<String> soft = Configurable.toStringList(configuration, "soft-depend");
         this.softDepend = Collections.unmodifiableList(soft.stream().distinct().collect(Collectors.toList()));
+    }
+
+    static void resetSlotCounter() {
+        slotCount = 0;
     }
 }

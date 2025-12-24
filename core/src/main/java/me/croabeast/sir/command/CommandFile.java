@@ -39,7 +39,11 @@ public final class CommandFile {
         Map<String, String> subCommands = new LinkedHashMap<>();
         ConfigurationSection sub = section.getConfigurationSection("sub-commands");
         if (sub != null)
-            sub.getKeys(false).forEach(key -> subCommands.put(key, sub.getString(key, permission + "." + key)));
+            sub.getKeys(false).forEach(key -> {
+                String temp = sub.getString(key);
+                if (StringUtils.isBlank(temp)) temp = permission + "." + key;
+                subCommands.put(key, temp);
+            });
 
         this.subCommands = new LinkedHashMap<>(subCommands);
 

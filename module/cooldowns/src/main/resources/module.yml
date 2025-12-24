@@ -3,7 +3,7 @@ name: Cooldowns
 title: "&7Cooldowns"
 description:
   - "Handles if a cooldown will be applied in"
-  - "each chat message to avoid spamming.",
+  - "each chat message to avoid spamming."
   - "Commands can be executed if the player keeps"
   - "spamming messages for a custom time depending"
   - "on its permission."

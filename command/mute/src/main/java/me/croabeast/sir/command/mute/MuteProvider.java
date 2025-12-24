@@ -15,13 +15,10 @@ public final class MuteProvider extends StandaloneProvider {
     @Getter
     private final Set<SIRCommand> commands = new HashSet<>();
 
-    ConfigurableFile data, lang;
+    ConfigurableFile lang;
 
     @SneakyThrows
     public boolean register() {
-        try {
-            data = new ExtensionFile(this, "data", true);
-        } catch (Exception ignored) {}
         lang = new ExtensionFile(this, "lang", true);
 
         try {

@@ -196,7 +196,7 @@ public final class ModuleManager {
                 }).apply(plugins) + "n't installed in the server.";
     }
 
-    private void loadCandidate(ModuleCandidate candidate) {
+    private boolean loadCandidate(ModuleCandidate candidate) {
         ModuleInformation file = candidate.file;
         String name = file.getName();
         File jarFile = candidate.jarFile;
@@ -210,7 +210,7 @@ public final class ModuleManager {
             if (!SIRModule.class.isAssignableFrom(clazz)) {
                 log(LogLevel.ERROR, "Main class '" + file.getMain() + "' does not extend SIRModule, skipping...");
                 classLoader.close();
-                return;
+                return false;
             }
 
             Constructor<?> constructor = clazz.getDeclaredConstructor();
@@ -220,7 +220,7 @@ public final class ModuleManager {
             if (module instanceof PluginDependant && !((PluginDependant) module).isPluginEnabled()) {
                 log(LogLevel.INFO, hookMessage(name, ((PluginDependant) module).getDependencies()));
                 classLoader.close();
-                return;
+                return false;
             }
 
             module.init(api, classLoader, file);
@@ -228,7 +228,7 @@ public final class ModuleManager {
 
             if (!module.isEnabled()) {
                 log(LogLevel.INFO, "Module '" + name + "' is disabled, skipping registration.");
-                return;
+                return true;
             }
 
             if (module.register()) {
@@ -244,32 +244,35 @@ public final class ModuleManager {
                         e.printStackTrace();
                     }
                 }
+                return true;
             } else {
                 unload(module.getName());
+                return false;
             }
         } catch (Exception e) {
             log(LogLevel.ERROR, "Failed to load module from " + jarFile.getName());
             e.printStackTrace();
+            return false;
         }
     }
 
-    public void load(File jarFile) {
+    public boolean load(File jarFile) {
         log(LogLevel.INFO, "Loading module from " + jarFile.getName() + "...");
 
         ModuleCandidate candidate = createCandidate(jarFile);
-        if (candidate == null) return;
+        if (candidate == null) return false;
 
         String key = candidate.file.getName();
         if (modules.containsKey(key)) {
             log(LogLevel.WARN, "Module with name '" + key + "' already loaded, skipping...");
-            return;
+            return false;
         }
 
         for (String dep : candidate.file.getDepend()) {
             if (!modules.containsKey(dep)) {
                 log(LogLevel.WARN, "Module '" + candidate.file.getName()
                         + "' can't be loaded: missing hard dependency '" + dep + "'.");
-                return;
+                return false;
             }
         }
 
@@ -280,10 +283,12 @@ public final class ModuleManager {
             }
         }
 
-        loadCandidate(candidate);
+        return loadCandidate(candidate);
     }
 
     public void loadAll() {
+        ModuleInformation.resetSlotCounter();
+
         loadStates();
         loadBundledJars(api.getConfiguration().loadDefaultJars("modules"));
 
@@ -369,7 +374,7 @@ public final class ModuleManager {
                 }
                 if (wait) continue;
 
-                load(entry.getValue().jarFile);
+                if (!load(entry.getValue().jarFile)) failed.add(nameKey);
                 progress = true;
             }
         } while (progress);
@@ -838,7 +843,7 @@ public final class ModuleManager {
                 }
             }
 
-            load(target);
+            if (!saveDefaults) load(target);
         }
     }
 
