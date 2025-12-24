@@ -16,6 +16,7 @@ allprojects {
         maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
         maven("https://oss.sonatype.org/content/repositories/snapshots/")
         maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
+        maven("https://jitpack.io")
         maven("https://croabeast.github.io/repo/")
         maven("https://repo.papermc.io/repository/maven-public/")
     }
@@ -64,7 +65,7 @@ subprojects {
         compileOnly("com.zaxxer:HikariCP:3.4.5")
         compileOnly("me.clip:placeholderapi:2.11.6")
 
-        compileOnly("com.github.stefvanschie.inventoryframework:IF:0.11.5")
+        compileOnly("com.github.stefvanschie.inventoryframework:IF:0.11.6")
         implementation("me.croabeast.takion:shaded-all:1.3")
     }
 }

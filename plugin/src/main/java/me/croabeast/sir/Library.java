@@ -2,9 +2,6 @@ package me.croabeast.sir;
 
 import lombok.SneakyThrows;
 import me.croabeast.file.ConfigurableFile;
-import me.croabeast.sir.module.ModuleManager;
-import me.croabeast.sir.module.emoji.Emojis;
-import me.croabeast.sir.module.tag.Tags;
 import me.croabeast.takion.TakionLib;
 import me.croabeast.takion.logger.TakionLogger;
 import me.croabeast.takion.message.MessageSender;
@@ -61,18 +58,7 @@ final class Library extends TakionLib {
 
         super.setLoadedSender(new MessageSender(this) {
             {
-                ModuleManager manager = instance.getModuleManager();
-
-                if (manager.isEnabled("Emojis")) {
-                    Emojis emojis = manager.getModule(Emojis.class);
-                    if (emojis != null) addFunctions(emojis::parseEmojis);
-                }
-
-                if (manager.isEnabled("Tags")) {
-                    Tags tags = manager.getModule(Tags.class);
-                    if (tags != null) addFunctions(tags::parseTags);
-                }
-
+                LibFunction.applyFunctions(this);
                 setSensitive(false);
                 setErrorPrefix("&c[X]&7 ");
             }
