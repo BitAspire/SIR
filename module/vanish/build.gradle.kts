@@ -1,6 +1,5 @@
 repositories {
     maven("https://repo.essentialsx.net/releases/")
-    maven("https://jitpack.io")
     flatDir {
         dirs("libraries")
     }

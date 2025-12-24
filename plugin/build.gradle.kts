@@ -1,13 +1,12 @@
 repositories {
     maven("https://repo.essentialsx.net/releases/")
-    maven("https://jitpack.io")
     flatDir {
         dirs("libraries")
     }
 }
 
 val coreProject = project(":core")
-val coreMainOutput = coreProject.extensions.getByType<SourceSetContainer>()["main"].output
+val takionShaded by configurations.creating
 
 dependencies {
     implementation(coreProject)
@@ -19,17 +18,18 @@ dependencies {
     }
     compileOnly("com.github.DevLeoko:AdvancedBan:2.3.0")
     compileOnly(files("libraries/CMI.jar"))
+    takionShaded("me.croabeast.takion:shaded-all:1.3")
 }
 
-val moduleProjects = rootProject.subprojects.filter { it.path.startsWith(":module:") }
-val moduleJarTasks = moduleProjects.map { it.tasks.named<Jar>("jar") }
+val coreMainOutput = coreProject.extensions.getByType<SourceSetContainer>()["main"].output
 
-val commandProjects = rootProject.subprojects.filter { it.path.startsWith(":command:") }
-val commandJarTasks = commandProjects.map { it.tasks.named<Jar>("jar") }
+val moduleJarTasks = rootProject.subprojects.filter { it.path.startsWith(":module:") }.map { it.tasks.named<Jar>("jar") }
+val commandJarTasks = rootProject.subprojects.filter { it.path.startsWith(":command:") }.map { it.tasks.named<Jar>("jar") }
 
 tasks.named<Jar>("jar") {
     dependsOn(coreProject.tasks.named("classes"))
     from(coreMainOutput)
+    from(takionShaded.files.map { if (it.isDirectory) it else zipTree(it) })
 
     dependsOn(moduleJarTasks)
     moduleJarTasks.forEach { jarTask ->
@@ -44,25 +44,8 @@ tasks.named<Jar>("jar") {
             into("commands")
         }
     }
-}
 
-tasks.named<Jar>("shadowJar") {
-    dependsOn(coreProject.tasks.named("classes"))
-    from(coreMainOutput)
-
-    dependsOn(moduleJarTasks)
-    moduleJarTasks.forEach { jarTask ->
-        from(jarTask.flatMap { it.archiveFile }) {
-            into("modules")
-        }
-    }
-
-    dependsOn(commandJarTasks)
-    commandJarTasks.forEach { jarTask ->
-        from(jarTask.flatMap { it.archiveFile }) {
-            into("commands")
-        }
-    }
+    archiveBaseName.set("SIR")
 }
 
 tasks.processResources {

@@ -410,21 +410,6 @@ public final class CommandManager {
         ChestBuilder menu = ChestBuilder.of(api.getPlugin(), rows, title);
 
         menu.addSingleItem(
-                0, 1, 1,
-                ItemCreator.of(Material.BARREL)
-                        .modifyLore(
-                                "&7Opens a new menu with all the available",
-                                "&7options from each command.",
-                                "&eComing soon in SIR+. &8" +
-                                        SmallCaps.toSmallCaps("[Paid Version]")
-                        )
-                        .modifyName("&f&lCommands Options:")
-                        .setActionToEmpty()
-                        .create(api.getPlugin()),
-                pane -> pane.setPriority(Pane.Priority.LOW)
-        );
-
-        menu.addSingleItem(
                 0, 7, 2,
                 ItemCreator.of(Material.BARRIER)
                         .modifyLore("&8More commands will be added soon.")

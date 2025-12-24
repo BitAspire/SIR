@@ -420,21 +420,6 @@ public final class ModuleManager {
         String title = "&8" + SmallCaps.toSmallCaps("Loaded SIR Modules:");
         ChestBuilder menu = ChestBuilder.of(api.getPlugin(), rows, title);
 
-        menu.addSingleItem(
-                0, 1, 1,
-                ItemCreator.of(Material.BARREL)
-                        .modifyLore(
-                                "&7Opens a new menu with all the available",
-                                "&7options from each module.",
-                                "&eComing soon in SIR+. &8" +
-                                        SmallCaps.toSmallCaps("[Paid Version]")
-                        )
-                        .modifyName("&f&lModules Options:")
-                        .setActionToEmpty()
-                        .create(api.getPlugin()),
-                pane -> pane.setPriority(Pane.Priority.LOW)
-        );
-
         int infoRow = Math.min(rows - 1, 3);
         menu.addSingleItem(
                 0, 6, infoRow,
