@@ -21,15 +21,9 @@ public final class MuteProvider extends StandaloneProvider {
     public boolean register() {
         lang = new ExtensionFile(this, "lang", true);
 
-        try {
-            commands.add(new MuteCommand(this));
-        } catch (Exception ignored) {}
-        try {
-            commands.add(new TempCommand(this));
-        } catch (Exception ignored) {}
-        try {
-            commands.add(new UnmuteCommand(this));
-        } catch (Exception ignored) {}
+        commands.add(new MuteCommand(this));
+        commands.add(new TempCommand(this));
+        commands.add(new UnmuteCommand(this));
         return true;
     }
 

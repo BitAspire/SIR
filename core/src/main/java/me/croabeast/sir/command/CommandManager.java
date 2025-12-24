@@ -7,7 +7,6 @@ import me.croabeast.common.gui.ButtonBuilder;
 import me.croabeast.common.gui.ChestBuilder;
 import me.croabeast.common.gui.ItemCreator;
 import me.croabeast.sir.SIRApi;
-import me.croabeast.sir.SlotCalculator;
 import me.croabeast.sir.Toggleable;
 import me.croabeast.sir.module.ModuleManager;
 import me.croabeast.sir.module.SIRModule;
@@ -17,6 +16,7 @@ import org.apache.commons.lang.StringUtils;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.jetbrains.annotations.NotNull;
 
@@ -41,8 +41,6 @@ public final class CommandManager {
     private final Map<String, LoadedProvider> providers = new LinkedHashMap<>();
     private final Map<String, ProviderState> states = new LinkedHashMap<>();
     private final Set<SIRModule> processedModules = Collections.newSetFromMap(new IdentityHashMap<>());
-
-    private int slotCount = 0;
 
     public CommandManager(SIRApi api) {
         this.api = api;
@@ -69,7 +67,7 @@ public final class CommandManager {
         api.getLibrary().getLogger().log(level, messages);
     }
 
-    private void registerCommand(SIRCommand command) {
+    private void registerCommand(SIRCommand command, boolean syncCommands) {
         if (command == null) return;
 
         String name = command.getName();
@@ -82,7 +80,7 @@ public final class CommandManager {
         }
 
         try {
-            if (command.register(true)) {
+            if (command.register(syncCommands)) {
                 commands.put(key, command);
                 return;
             }
@@ -109,7 +107,7 @@ public final class CommandManager {
         }
     }
 
-    private void registerProvider(CommandProvider provider, ProviderInformation file) {
+    private void registerProvider(CommandProvider provider, ProviderInformation file, boolean syncCommands) {
         if (provider == null || file == null) return;
 
         ProviderState state = ensureProviderState(file.getName());
@@ -135,7 +133,7 @@ public final class CommandManager {
             }
 
             String nameKey = commandKey.toLowerCase(Locale.ENGLISH);
-            if (!file.hasCommand(nameKey)) {
+            if (file.hasNoCommand(nameKey)) {
                 log(LogLevel.WARN, "Command '" + commandKey + "' not declared in commands.yml, skipping.");
                 continue;
             }
@@ -153,7 +151,7 @@ public final class CommandManager {
 
             boolean override = resolveOverrideState(state, nameKey, section);
             command.applyFile(new CommandFile(nameKey, section, null, override));
-            registerCommand(command);
+            registerCommand(command, syncCommands);
         }
 
         for (SIRCommand command : pending) {
@@ -168,7 +166,7 @@ public final class CommandManager {
             }
 
             String nameKey = commandKey.toLowerCase(Locale.ENGLISH);
-            if (!file.hasCommand(nameKey)) {
+            if (file.hasNoCommand(nameKey)) {
                 log(LogLevel.WARN, "Command '" + commandKey + "' not declared in commands.yml, skipping.");
                 continue;
             }
@@ -193,11 +191,11 @@ public final class CommandManager {
 
             boolean override = resolveOverrideState(state, nameKey, section);
             command.applyFile(new CommandFile(nameKey, section, parent, override));
-            registerCommand(command);
+            registerCommand(command, syncCommands);
         }
     }
 
-    public void loadFromModule(@NotNull SIRModule module) {
+    public void loadFromModule(@NotNull SIRModule module, boolean syncCommands) {
         if (processedModules.contains(module)) return;
 
         InputStream stream = module.getClass().getClassLoader().getResourceAsStream("commands.yml");
@@ -221,7 +219,7 @@ public final class CommandManager {
             return;
         }
 
-        registerProvider(provider, file);
+        registerProvider(provider, file, syncCommands);
         processedModules.add(module);
     }
 
@@ -246,7 +244,7 @@ public final class CommandManager {
         }
     }
 
-    public void load(File jarFile) {
+    public void load(File jarFile, boolean syncCommands) {
         log(LogLevel.INFO, "Loading command provider from " + jarFile.getName() + "...");
 
         ProviderInformation file = readExternalCommandsFile(jarFile);
@@ -268,8 +266,6 @@ public final class CommandManager {
                 return;
             }
 
-            file.setSlot(SlotCalculator.EXTENSION_LAYOUT.toSlot(slotCount++));
-
             CommandProvider provider = (CommandProvider) clazz.getDeclaredConstructor().newInstance();
             if (provider instanceof StandaloneProvider)
                 ((StandaloneProvider) provider).init(api, loader, file);
@@ -285,14 +281,14 @@ public final class CommandManager {
 
             if (!provider.register()) {
                 log(LogLevel.WARN, "Failed to register command provider '" + file.getName() + "'.");
-                unload(provider);
+                unload(provider, syncCommands);
                 return;
             }
 
             if (provider instanceof StandaloneProvider)
                 ((StandaloneProvider) provider).registered = true;
 
-            registerProvider(provider, file);
+            registerProvider(provider, file, syncCommands);
         } catch (Exception e) {
             log(LogLevel.ERROR, "Failed to load command provider from " + jarFile.getName());
             e.printStackTrace();
@@ -303,7 +299,7 @@ public final class CommandManager {
         loadStates();
         loadBundledJars(api.getConfiguration().loadDefaultJars("commands"));
 
-        moduleManager.getModules().forEach(this::loadFromModule);
+        moduleManager.getModules().forEach(m -> loadFromModule(m, false));
 
         File dir = new File(api.getPlugin().getDataFolder(), "commands");
         if (!dir.exists() && !dir.mkdirs()) {
@@ -317,7 +313,8 @@ public final class CommandManager {
             return;
         }
 
-        for (File jar : jars) load(jar);
+        for (File jar : jars) load(jar, false);
+        SIRCommand.syncCommands();
     }
 
     @NotNull
@@ -328,19 +325,6 @@ public final class CommandManager {
     public SIRCommand getCommand(String name) {
         if (name == null) return null;
         return commands.get(name.toLowerCase(Locale.ENGLISH));
-    }
-
-    public <C extends SIRCommand> C getCommand(Class<C> clazz) {
-        try {
-            if (!SIRCommand.class.isAssignableFrom(clazz)) return null;
-        } catch (Exception e) {
-            return null;
-        }
-
-        for (SIRCommand command : commands.values())
-            if (clazz.isInstance(command)) return clazz.cast(command);
-
-        return null;
     }
 
     @NotNull
@@ -360,7 +344,7 @@ public final class CommandManager {
         return new LinkedHashSet<>(info.getCommands().keySet());
     }
 
-    public boolean updateProviderEnabled(String providerName, boolean enabled) {
+    public boolean updateProviderEnabled(String providerName, boolean enabled, boolean syncCommands) {
         LoadedProvider loaded = getLoadedProvider(providerName);
         if (loaded == null) return false;
 
@@ -370,9 +354,9 @@ public final class CommandManager {
 
         setProviderEnabled(info.getName(), enabled);
         if (enabled) {
-            registerProvider(loaded.provider, info);
+            registerProvider(loaded.provider, info, syncCommands);
         } else {
-            unload(loaded.provider);
+            unload(loaded.provider, syncCommands);
         }
         return true;
     }
@@ -390,7 +374,7 @@ public final class CommandManager {
         return resolveOverrideState(state, nameKey, section);
     }
 
-    public boolean updateCommandOverride(String providerName, String commandKey, boolean override) {
+    public boolean updateCommandOverride(String providerName, String commandKey, boolean override, boolean syncCommands) {
         LoadedProvider loaded = getLoadedProvider(providerName);
         if (loaded == null || StringUtils.isBlank(commandKey)) return false;
 
@@ -415,8 +399,8 @@ public final class CommandManager {
         if (!commands.containsKey(nameKey)) return true;
 
         try {
-            command.unregister(true);
-            command.register(true);
+            command.unregister(syncCommands);
+            command.register(syncCommands);
         } catch (Exception e) {
             log(LogLevel.ERROR, "Failed to re-register command '" + commandKey + "' after override change.");
             e.printStackTrace();
@@ -435,12 +419,15 @@ public final class CommandManager {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-        int rows = SlotCalculator.EXTENSION_LAYOUT.getTotalRows(buttons.size()) / 9;
+        int itemsPerRow = 5;
+        int rowsOfItems = (buttons.size() + itemsPerRow - 1) / itemsPerRow;
+        int rows = Math.min(6, Math.max(3, rowsOfItems + 2));
+
         String title = "&8" + SmallCaps.toSmallCaps("Loaded SIR Commands:");
         ChestBuilder menu = ChestBuilder.of(api.getPlugin(), rows, title);
 
         menu.addSingleItem(
-                0, 7, 2,
+                0, 1, 1,
                 ItemCreator.of(Material.BARRIER)
                         .modifyLore("&8More commands will be added soon.")
                         .modifyName("&c&lCOMING SOON...")
@@ -449,14 +436,23 @@ public final class CommandManager {
                 pane -> pane.setPriority(Pane.Priority.LOW)
         );
 
-        for (Toggleable.Button button : buttons) {
+        for (int index = 0; index < buttons.size(); index++) {
+            int row = index / itemsPerRow;
+            if (row >= 4) break;
+
+            int column = index % itemsPerRow;
+            int x = 3 + column;
+            int y = 1 + row;
+
+            Toggleable.Button button = buttons.get(index);
+            button.setSlot(Slot.fromXY(x, y));
             menu.addPane(0, button);
         }
 
         return menu;
     }
 
-    public void openOverrideMenu(@NotNull StandaloneProvider provider, @NotNull InventoryClickEvent event) {
+    public void openOverrideMenu(@NotNull StandaloneProvider provider, @NotNull InventoryClickEvent event, boolean syncCommands) {
         event.setCancelled(true);
         if (!provider.isEnabled()) return;
 
@@ -480,24 +476,24 @@ public final class CommandManager {
 
             String commandKey = entry.getKey();
             SIRCommand command = commandMap.get(commandKey.toLowerCase(Locale.ENGLISH));
-            toggleOverride(info, commandKey, entry.getValue(), command);
+            toggleOverride(info, commandKey, entry.getValue(), command, syncCommands);
             return;
         }
 
-        showOverrideMenu(provider, info, commandSections, commandMap, event.getWhoClicked());
+        showOverrideMenu(provider, info, commandSections, commandMap, event.getWhoClicked(), syncCommands);
     }
 
     private void showOverrideMenu(StandaloneProvider provider,
                                   ProviderInformation info,
                                   Map<String, ConfigurationSection> commandSections,
                                   Map<String, SIRCommand> commandMap,
-                                  org.bukkit.entity.HumanEntity viewer)
+                                  HumanEntity viewer, boolean syncCommands)
     {
         int itemsPerPage = 28;
         List<String> commandKeys = new ArrayList<>(commandSections.keySet());
         commandKeys.sort(String.CASE_INSENSITIVE_ORDER);
 
-        int rows = SlotCalculator.CENTER_LAYOUT.getTotalRows(commandKeys.size()) / 9;
+        int rows = getCenterMenuRows(commandKeys.size());
         String title = "&8" + SmallCaps.toSmallCaps(provider.getName() + " Overrides:");
         ChestBuilder menu = ChestBuilder.of(api.getPlugin(), rows, title);
 
@@ -508,7 +504,7 @@ public final class CommandManager {
             if (section == null) continue;
 
             int page = index / itemsPerPage, indexOnPage = index % itemsPerPage;
-            Slot slot = SlotCalculator.CENTER_LAYOUT.toSlot(indexOnPage);
+            Slot slot = getCenterMenuSlot(indexOnPage);
             if (slot == null) continue;
 
             ProviderState state = ensureProviderState(info.getMain());
@@ -536,8 +532,8 @@ public final class CommandManager {
                     .modify(button -> button.allowToggle(false))
                     .setAction(button -> click -> {
                         click.setCancelled(true);
-                        toggleOverride(info, commandKey, section, commandMap.get(commandKey.toLowerCase(Locale.ENGLISH)));
-                        showOverrideMenu(provider, info, commandSections, commandMap, click.getWhoClicked());
+                        toggleOverride(info, commandKey, section, commandMap.get(commandKey.toLowerCase(Locale.ENGLISH)), syncCommands);
+                        showOverrideMenu(provider, info, commandSections, commandMap, click.getWhoClicked(), syncCommands);
                     })
                     .getValue());
         }
@@ -558,11 +554,26 @@ public final class CommandManager {
         menu.showGui(viewer);
     }
 
-    private void toggleOverride(ProviderInformation info,
-                                String commandKey,
-                                ConfigurationSection section,
-                                SIRCommand command)
-    {
+    private static int getCenterMenuRows(int itemCount) {
+        int itemsPerRow = 7;
+        int rowsOfItems = (itemCount + itemsPerRow - 1) / itemsPerRow;
+        return Math.max(1, Math.min(4, rowsOfItems)) + 2;
+    }
+
+    private static Slot getCenterMenuSlot(int index) {
+        int itemsPerRow = 7;
+        int row = index / itemsPerRow;
+        if (row >= 4) {
+            return null;
+        }
+
+        int column = index % itemsPerRow;
+        int x = 1 + column;
+        int y = 1 + row;
+        return Slot.fromXY(x, y);
+    }
+
+    private void toggleOverride(ProviderInformation info, String commandKey, ConfigurationSection section, SIRCommand command, boolean syncCommands) {
         if (info == null || section == null) return;
 
         ProviderState state = ensureProviderState(info.getMain());
@@ -585,8 +596,8 @@ public final class CommandManager {
         if (!commands.containsKey(normalized)) return;
 
         try {
-            command.unregister(true);
-            command.register(true);
+            command.unregister(syncCommands);
+            command.register(syncCommands);
         } catch (Exception e) {
             log(LogLevel.ERROR, "Failed to re-register command '" + normalized + "' after override change.");
             e.printStackTrace();
@@ -598,7 +609,7 @@ public final class CommandManager {
         return command != null && command.isEnabled();
     }
 
-    public void unload(String name) {
+    public void unload(String name, boolean syncCommands) {
         SIRCommand command = getCommand(name);
         if (command == null) {
             log(LogLevel.WARN, "Command '" + name + "' not found, skipping unload.");
@@ -614,7 +625,7 @@ public final class CommandManager {
                 continue;
 
             try {
-                loaded.unregister(true);
+                loaded.unregister(syncCommands);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -624,7 +635,7 @@ public final class CommandManager {
         }
 
         try {
-            command.unregister(true);
+            command.unregister(syncCommands);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -632,7 +643,7 @@ public final class CommandManager {
         commands.remove(name.toLowerCase(Locale.ENGLISH));
     }
 
-    public void unload(CommandProvider provider) {
+    public void unload(CommandProvider provider, boolean syncCommands) {
         if (provider == null) return;
 
         for (SIRCommand command : provider.getCommands()) {
@@ -641,13 +652,13 @@ public final class CommandManager {
             String name = StringUtils.isBlank(command.getName()) ? command.getCommandKey() : command.getName();
             if (StringUtils.isBlank(name)) continue;
 
-            unload(name);
+            unload(name, syncCommands);
         }
     }
 
     public void unloadAll() {
         for (String name : new ArrayList<>(commands.keySet()))
-            unload(name);
+            unload(name, false);
 
         for (LoadedProvider entry : providers.values()) {
             ProviderLoader loader = entry.loader;
@@ -660,6 +671,8 @@ public final class CommandManager {
         }
         providers.clear();
         processedModules.clear();
+
+        SIRCommand.syncCommands();
     }
 
     public void saveStates() {
@@ -704,7 +717,7 @@ public final class CommandManager {
         return ensureProviderState(main).enabled;
     }
 
-    public void toggleOverrides(CommandProvider provider) {
+    public void toggleOverrides(CommandProvider provider, boolean syncCommands) {
         if (provider == null) return;
 
         LoadedProvider loaded = providers.values().stream()
@@ -744,8 +757,8 @@ public final class CommandManager {
             command.applyFile(new CommandFile(nameKey, section, parent, next));
             if (!commands.containsKey(nameKey)) continue;
             try {
-                command.unregister(true);
-                command.register(true);
+                command.unregister(syncCommands);
+                command.register(syncCommands);
             } catch (Exception e) {
                 log(LogLevel.ERROR, "Failed to re-register command '" + commandKey + "' after override change.");
                 e.printStackTrace();
@@ -906,7 +919,7 @@ public final class CommandManager {
                 }
             }
 
-            if (!saveDefaults) load(target);
+            if (!saveDefaults) load(target, false);
         }
     }
 }

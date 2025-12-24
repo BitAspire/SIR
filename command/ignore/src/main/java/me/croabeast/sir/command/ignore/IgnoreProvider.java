@@ -1,6 +1,7 @@
 package me.croabeast.sir.command.ignore;
 
 import lombok.Getter;
+import lombok.SneakyThrows;
 import me.croabeast.sir.command.SIRCommand;
 import me.croabeast.sir.command.StandaloneProvider;
 
@@ -12,11 +13,9 @@ public final class IgnoreProvider extends StandaloneProvider {
 
     private final Set<SIRCommand> commands = new HashSet<>();
 
-    @Override
+    @SneakyThrows
     public boolean register() {
-        try {
-            commands.add(new Command(this));
-        } catch (Exception ignored) {}
+        commands.add(new Command(this));
         return true;
     }
 

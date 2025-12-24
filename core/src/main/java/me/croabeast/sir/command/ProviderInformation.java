@@ -26,7 +26,7 @@ public final class ProviderInformation implements Information {
     private final String[] description;
 
     @Setter(AccessLevel.PACKAGE)
-    private Slot slot;
+    private Slot slot = Slot.fromXY(0, 0);
 
     ProviderInformation(@NotNull YamlConfiguration configuration) {
         main = configuration.getString("main");
@@ -60,8 +60,8 @@ public final class ProviderInformation implements Information {
         commands = Collections.unmodifiableMap(map);
     }
 
-    boolean hasCommand(@Nullable String name) {
-        return name != null && commands.containsKey(name.toLowerCase(Locale.ENGLISH));
+    boolean hasNoCommand(@Nullable String name) {
+        return name == null || !commands.containsKey(name.toLowerCase(Locale.ENGLISH));
     }
 
     ConfigurationSection getCommandSection(@Nullable String name) {

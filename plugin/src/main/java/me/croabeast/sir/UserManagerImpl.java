@@ -71,7 +71,7 @@ final class UserManagerImpl implements UserManager, Registrable {
         try {
             ensureUserFile(name);
             return new ConfigurableFile(plugin, "users", name);
-        } catch (Exception ignored) {
+        } catch (Exception e) {
             return null;
         }
     }
@@ -94,8 +94,7 @@ final class UserManagerImpl implements UserManager, Registrable {
 
         try {
             userFile.createNewFile();
-        } catch (Exception ignored) {
-        }
+        } catch (Exception ignored) {}
     }
 
     void shutdown() {

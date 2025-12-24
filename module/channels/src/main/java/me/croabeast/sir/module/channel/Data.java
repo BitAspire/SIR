@@ -1,6 +1,7 @@
 package me.croabeast.sir.module.channel;
 
 import lombok.Getter;
+import lombok.SneakyThrows;
 import me.croabeast.sir.ChatChannel;
 import me.croabeast.sir.ExtensionFile;
 import me.croabeast.sir.PermissibleUnit;
@@ -19,29 +20,28 @@ final class Data {
     private final Map<String, ChatChannel> locals = new LinkedHashMap<>();
     private final Map<String, ChatChannel> globals = new LinkedHashMap<>();
 
+    @SneakyThrows
     Data(Channels main) {
-        try {
-            ExtensionFile file = new ExtensionFile(main, "channels", true);
+        ExtensionFile file = new ExtensionFile(main, "channels", true);
 
-            ConfigurationSection section = file.getSection("default-channel");
-            if (section != null && section.getBoolean("enabled", true))
-                defaultChannel = new Factory.BaseChannel(main, section, null) {
+        ConfigurationSection section = file.getSection("default-channel");
+        if (section != null && section.getBoolean("enabled", true))
+            defaultChannel = new Factory.BaseChannel(main, section, null) {
 
-                    @Override
-                    public boolean isGlobal() {
-                        return true;
-                    }
+                @Override
+                public boolean isGlobal() {
+                    return true;
+                }
 
-                    @Nullable
-                    public ChatChannel getSubChannel() {
-                        return null;
-                    }
-                };
+                @Nullable
+                public ChatChannel getSubChannel() {
+                    return null;
+                }
+            };
 
-            PermissibleUnit
-                    .loadUnits(file.getSection("channels"), s -> new ChannelImpl(main, s))
-                    .forEach(c -> (c.isLocal() ? locals : globals).put(c.getName(), c));
-        } catch (Exception ignored) {}
+        PermissibleUnit
+                .loadUnits(file.getSection("channels"), s -> new ChannelImpl(main, s))
+                .forEach(c -> (c.isLocal() ? locals : globals).put(c.getName(), c));
     }
 
     ChatChannel getLocal(SIRUser user, String string, boolean usePrefix) {

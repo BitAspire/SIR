@@ -1,5 +1,6 @@
 package me.croabeast.sir.module.join;
 
+import lombok.SneakyThrows;
 import me.croabeast.sir.ExtensionFile;
 import me.croabeast.sir.PermissibleUnit;
 import me.croabeast.sir.user.SIRUser;
@@ -17,15 +18,13 @@ final class Messages {
         units.put(type, set);
     }
 
+    @SneakyThrows
     Messages(JoinQuit main) {
-        this.main = main;
-        try {
-            ExtensionFile file = new ExtensionFile(main, "messages", true);
+        ExtensionFile file = new ExtensionFile(this.main = main, "messages", true);
 
-            loadUnits(file, "first-join", Type.FIRST_JOIN);
-            loadUnits(file, "join", Type.JOIN);
-            loadUnits(file, "quit", Type.QUIT);
-        } catch (Exception ignored) {}
+        loadUnits(file, "first-join", Type.FIRST_JOIN);
+        loadUnits(file, "join", Type.JOIN);
+        loadUnits(file, "quit", Type.QUIT);
     }
 
     MessageUnit get(SIRUser user, boolean join) {

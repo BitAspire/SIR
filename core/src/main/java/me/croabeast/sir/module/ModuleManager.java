@@ -11,7 +11,6 @@ import me.croabeast.common.gui.ItemCreator;
 import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.sir.PluginDependant;
 import me.croabeast.sir.SIRApi;
-import me.croabeast.sir.SlotCalculator;
 import me.croabeast.sir.Toggleable;
 import me.croabeast.sir.command.CommandProvider;
 import me.croabeast.takion.character.SmallCaps;
@@ -23,12 +22,13 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerEditBookEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.InputStream;
@@ -52,10 +52,12 @@ public final class ModuleManager {
     private final Map<String, LoadedModule> modules = new LinkedHashMap<>();
     private final Map<String, Boolean> moduleStates = new LinkedHashMap<>();
     private final Map<UUID, BookEditSession> pendingBookEdits = new HashMap<>();
+    private final Map<UUID, StringEditSession> pendingStringEdits = new HashMap<>();
 
     public ModuleManager(SIRApi api) {
         this.api = api;
-        api.getPlugin().getServer().getPluginManager().registerEvents(new BookEditListener(), api.getPlugin());
+        new BookEditListener().register();
+        new StringEditListener().register();
     }
 
     private static class ModuleCandidate {
@@ -90,7 +92,19 @@ public final class ModuleManager {
         }
     }
 
-    private final class BookEditListener implements Listener {
+    private static class StringEditSession {
+        final SIRModule module;
+        final File configFile;
+        final String key;
+
+        StringEditSession(SIRModule module, File configFile, String key) {
+            this.module = module;
+            this.configFile = configFile;
+            this.key = key;
+        }
+    }
+
+    private final class BookEditListener extends me.croabeast.sir.Listener {
         @EventHandler
         void onEditBook(PlayerEditBookEvent event) {
             BookEditSession session = pendingBookEdits.remove(event.getPlayer().getUniqueId());
@@ -105,6 +119,31 @@ public final class ModuleManager {
 
             api.getPlugin().getServer().getScheduler().runTask(api.getPlugin(),
                     () -> showConfigMenu(session.module, event.getPlayer()));
+        }
+    }
+
+    private final class StringEditListener extends me.croabeast.sir.Listener {
+        @EventHandler
+        void onChatEdit(AsyncPlayerChatEvent event) {
+            StringEditSession session = pendingStringEdits.remove(event.getPlayer().getUniqueId());
+            if (session == null) return;
+
+            event.setCancelled(true);
+            String message = event.getMessage();
+
+            api.getPlugin().getServer().getScheduler().runTask(api.getPlugin(), () -> {
+                Player player = event.getPlayer();
+                if ("cancel".equalsIgnoreCase(message)) {
+                    player.sendMessage(PrismaticAPI.colorize("&cEdit cancelled."));
+                    showConfigMenu(session.module, player);
+                    return;
+                }
+
+                YamlConfiguration configuration = YamlConfiguration.loadConfiguration(session.configFile);
+                configuration.set(session.key, message);
+                saveConfiguration(configuration, session.configFile);
+                showConfigMenu(session.module, player);
+            });
         }
     }
 
@@ -196,7 +235,7 @@ public final class ModuleManager {
                 }).apply(plugins) + "n't installed in the server.";
     }
 
-    private boolean loadCandidate(ModuleCandidate candidate) {
+    private boolean loadCandidate(ModuleCandidate candidate, boolean syncCommands) {
         ModuleInformation file = candidate.file;
         String name = file.getName();
         File jarFile = candidate.jarFile;
@@ -238,7 +277,7 @@ public final class ModuleManager {
 
                 if (module instanceof CommandProvider) {
                     try {
-                        api.getCommandManager().loadFromModule(module);
+                        api.getCommandManager().loadFromModule(module, syncCommands);
                     } catch (Exception e) {
                         log(LogLevel.ERROR, "Failed to load commands for module '" + name + "'.");
                         e.printStackTrace();
@@ -256,7 +295,7 @@ public final class ModuleManager {
         }
     }
 
-    public boolean load(File jarFile) {
+    public boolean load(File jarFile, boolean syncCommands) {
         log(LogLevel.INFO, "Loading module from " + jarFile.getName() + "...");
 
         ModuleCandidate candidate = createCandidate(jarFile);
@@ -283,12 +322,10 @@ public final class ModuleManager {
             }
         }
 
-        return loadCandidate(candidate);
+        return loadCandidate(candidate, syncCommands);
     }
 
     public void loadAll() {
-        ModuleInformation.resetSlotCounter();
-
         loadStates();
         loadBundledJars(api.getConfiguration().loadDefaultJars("modules"));
 
@@ -374,7 +411,7 @@ public final class ModuleManager {
                 }
                 if (wait) continue;
 
-                if (!load(entry.getValue().jarFile)) failed.add(nameKey);
+                if (!load(entry.getValue().jarFile, false)) failed.add(nameKey);
                 progress = true;
             }
         } while (progress);
@@ -421,13 +458,14 @@ public final class ModuleManager {
     public ChestBuilder getMenu() {
         List<SIRModule> loadedModules = getModules();
 
-        int rows = SlotCalculator.EXTENSION_LAYOUT.getTotalRows(loadedModules.size()) / 9;
+        int itemsPerRow = 5;
+        int rowsOfItems = (loadedModules.size() + itemsPerRow - 1) / itemsPerRow;
+        int rows = Math.min(6, Math.max(3, rowsOfItems + 2));
         String title = "&8" + SmallCaps.toSmallCaps("Loaded SIR Modules:");
         ChestBuilder menu = ChestBuilder.of(api.getPlugin(), rows, title);
 
-        int infoRow = Math.min(rows - 1, 3);
         menu.addSingleItem(
-                0, 6, infoRow,
+                0, 1, 1,
                 ItemCreator.of(Material.BARRIER)
                         .modifyLore("&8More modules will be added soon.")
                         .modifyName("&c&lCOMING SOON...")
@@ -436,11 +474,23 @@ public final class ModuleManager {
                 pane -> pane.setPriority(Pane.Priority.LOW)
         );
 
-        for (SIRModule module : loadedModules) {
+        for (int index = 0; index < loadedModules.size(); index++) {
+            int row = index / itemsPerRow;
+            if (row >= 4) break;
+
+            int column = index % itemsPerRow;
+            int x = 3 + column;
+            int y = 1 + row;
+
+            SIRModule module = loadedModules.get(index);
+
             Toggleable.Button button = module.getButton();
             boolean hasConfig = hasConfigFile(module);
+
             button.setEnabledItem(buildModuleItem(module, true, hasConfig));
             button.setDisabledItem(buildModuleItem(module, false, hasConfig));
+
+            button.setSlot(Slot.fromXY(x, y));
             menu.addPane(0, button);
         }
 
@@ -521,29 +571,37 @@ public final class ModuleManager {
     }
 
     private void showConfigMenu(@NotNull SIRModule module, @NotNull HumanEntity viewer) {
+        showConfigMenu(module, viewer, null);
+    }
+
+    private void showConfigMenu(@NotNull SIRModule module, @NotNull HumanEntity viewer, @Nullable String rootPath) {
         File configFile = new File(module.getDataFolder(), "config.yml");
         if (!configFile.exists()) return;
 
         YamlConfiguration configuration = YamlConfiguration.loadConfiguration(configFile);
-        List<String> keys = new ArrayList<>(configuration.getKeys(false));
+        ConfigurationSection section = rootPath == null ? configuration : configuration.getConfigurationSection(rootPath);
+        if (section == null) return;
+
+        List<String> keys = new ArrayList<>(section.getKeys(false));
         keys.removeIf(StringUtils::isBlank);
         keys.sort(String.CASE_INSENSITIVE_ORDER);
 
         int itemsPerPage = 28;
-        int rows = SlotCalculator.CENTER_LAYOUT.getTotalRows(keys.size()) / 9;
-        String title = "&8" + SmallCaps.toSmallCaps(module.getName() + " Config:");
+        int rows = getCenterMenuRows(keys.size());
+        String title = "&8" + SmallCaps.toSmallCaps(module.getName() + " Config" + (rootPath == null ? ":" : " - " + rootPath + ":"));
         ChestBuilder menu = ChestBuilder.of(api.getPlugin(), rows, title);
 
         for (int index = 0; index < keys.size(); index++) {
             String key = keys.get(index);
-            Object value = configuration.get(key);
+            String path = rootPath == null ? key : rootPath + "." + key;
+            Object value = section.get(key);
 
             int page = index / itemsPerPage, indexOnPage = index % itemsPerPage;
-            Slot slot = SlotCalculator.CENTER_LAYOUT.toSlot(indexOnPage);
+            Slot slot = getCenterMenuSlot(indexOnPage);
             if (slot == null) continue;
 
             if (value instanceof Boolean) {
-                boolean enabled = (Boolean) value;
+                boolean enabled = configuration.getBoolean(path);
                 menu.addPane(page, ButtonBuilder
                         .of(api.getPlugin(), slot, enabled)
                         .setItem(
@@ -564,13 +622,13 @@ public final class ModuleManager {
                         .setAction(button -> click -> {
                             click.setCancelled(true);
                             boolean next = !button.isEnabled();
-                            configuration.set(key, next);
+                            configuration.set(path, next);
                             saveConfiguration(configuration, configFile);
-                            showConfigMenu(module, click.getWhoClicked());
+                            showConfigMenu(module, click.getWhoClicked(), rootPath);
                         })
                         .getValue());
             } else if (value instanceof List) {
-                List<String> values = configuration.getStringList(key);
+                List<String> values = configuration.getStringList(path);
                 menu.addSingleItem(
                         page, slot.getX(9), slot.getY(9),
                         ItemCreator.of(Material.WRITABLE_BOOK)
@@ -581,13 +639,31 @@ public final class ModuleManager {
                                 )
                                 .setAction(click -> {
                                     click.setCancelled(true);
-                                    openListEditor(module, configFile, key, values, click.getWhoClicked());
+                                    openListEditor(module, configFile, path, values, click.getWhoClicked());
+                                })
+                                .create(api.getPlugin()),
+                        pane -> pane.setPriority(Pane.Priority.LOW)
+                );
+            } else if (value instanceof ConfigurationSection) {
+                ConfigurationSection child = section.getConfigurationSection(key);
+                int childCount = child == null ? 0 : child.getKeys(false).size();
+                menu.addSingleItem(
+                        page, slot.getX(9), slot.getY(9),
+                        ItemCreator.of(Material.BOOKSHELF)
+                                .modifyName("&7• &f" + SmallCaps.toSmallCaps(key) + ":")
+                                .modifyLore(
+                                        "&7Keys: &f" + childCount,
+                                        "&f➤ &7Open section"
+                                )
+                                .setAction(click -> {
+                                    click.setCancelled(true);
+                                    showConfigMenu(module, click.getWhoClicked(), path);
                                 })
                                 .create(api.getPlugin()),
                         pane -> pane.setPriority(Pane.Priority.LOW)
                 );
             } else {
-                String current = configuration.getString(key, "");
+                String current = configuration.getString(path, "");
                 menu.addSingleItem(
                         page, slot.getX(9), slot.getY(9),
                         ItemCreator.of(Material.PAPER)
@@ -598,7 +674,7 @@ public final class ModuleManager {
                                 )
                                 .setAction(click -> {
                                     click.setCancelled(true);
-                                    openStringEditor(module, configFile, key, current, click.getWhoClicked());
+                                    openStringEditor(module, configFile, path, current, click.getWhoClicked());
                                 })
                                 .create(api.getPlugin()),
                         pane -> pane.setPriority(Pane.Priority.LOW)
@@ -644,18 +720,49 @@ public final class ModuleManager {
                 );
             }
 
-            menu.addSingleItem(
-                    page, 3, bottomRow,
-                    ItemCreator.of(Material.ARROW)
-                            .modifyLore("&7Return to the modules menu.")
-                            .modifyName("&a&lBack to Modules")
-                            .setAction(e -> {
-                                e.setCancelled(true);
-                                getMenu().showGui(e.getWhoClicked());
-                            })
-                            .create(api.getPlugin()),
-                    pane -> pane.setPriority(Pane.Priority.LOW)
-            );
+            if (rootPath != null) {
+                String parentPath = rootPath.contains(".")
+                        ? rootPath.substring(0, rootPath.lastIndexOf('.'))
+                        : null;
+                menu.addSingleItem(
+                        page, 3, bottomRow,
+                        ItemCreator.of(Material.ARROW)
+                                .modifyLore("&7Return to the previous section.")
+                                .modifyName("&a&lBack")
+                                .setAction(e -> {
+                                    e.setCancelled(true);
+                                    showConfigMenu(module, e.getWhoClicked(), parentPath);
+                                })
+                                .create(api.getPlugin()),
+                        pane -> pane.setPriority(Pane.Priority.LOW)
+                );
+
+                menu.addSingleItem(
+                        page, 4, bottomRow,
+                        ItemCreator.of(Material.ARROW)
+                                .modifyLore("&7Return to the modules menu.")
+                                .modifyName("&a&lBack to Modules")
+                                .setAction(e -> {
+                                    e.setCancelled(true);
+                                    getMenu().showGui(e.getWhoClicked());
+                                })
+                                .create(api.getPlugin()),
+                        pane -> pane.setPriority(Pane.Priority.LOW)
+                );
+            } else {
+                menu.addSingleItem(
+                        page, 3, bottomRow,
+                        ItemCreator.of(Material.ARROW)
+                                .modifyLore("&7Return to the modules menu.")
+                                .modifyName("&a&lBack to Modules")
+                                .setAction(e -> {
+                                    e.setCancelled(true);
+                                    getMenu().showGui(e.getWhoClicked());
+                                })
+                                .create(api.getPlugin()),
+                        pane -> pane.setPriority(Pane.Priority.LOW)
+                );
+            }
 
             menu.addSingleItem(
                     page, 5, bottomRow,
@@ -674,33 +781,63 @@ public final class ModuleManager {
         menu.showGui(viewer);
     }
 
+    private static int getCenterMenuRows(int itemCount) {
+        int itemsPerRow = 7;
+        int rowsOfItems = (itemCount + itemsPerRow - 1) / itemsPerRow;
+        return Math.max(1, Math.min(4, rowsOfItems)) + 2;
+    }
+
+    private static Slot getCenterMenuSlot(int index) {
+        int itemsPerRow = 7;
+        int row = index / itemsPerRow;
+        if (row >= 4) return null;
+
+        int column = index % itemsPerRow;
+        int x = 1 + column;
+        int y = 1 + row;
+        return Slot.fromXY(x, y);
+    }
+
     private void openStringEditor(SIRModule module, File configFile, String key, String current, HumanEntity viewer) {
         if (!(viewer instanceof Player)) return;
 
-        AnvilGui anvilGui = new AnvilGui(PrismaticAPI.colorize("&8" + key), api.getPlugin());
-        anvilGui.setCost((short) 0);
+        Player player = (Player) viewer;
+        try {
+            AnvilGui anvilGui = new AnvilGui(PrismaticAPI.colorize("&8" + key), api.getPlugin());
+            anvilGui.setCost((short) 0);
 
-        InventoryComponent input = anvilGui.getFirstItemComponent();
-        ItemStack base = new ItemStack(Material.PAPER);
-        input.setItem(ItemCreator.of(base)
-                .modifyName("&f" + (StringUtils.isBlank(current) ? "<empty>" : current)).create(), 0, 0);
+            InventoryComponent input = anvilGui.getFirstItemComponent();
+            ItemStack base = new ItemStack(Material.PAPER);
+            input.setItem(ItemCreator.of(base)
+                    .modifyName("&f" + (StringUtils.isBlank(current) ? "<empty>" : current)).create(), 0, 0);
 
-        InventoryComponent result = anvilGui.getResultComponent();
-        GuiItem resultItem = ItemCreator.of(Material.LIME_STAINED_GLASS_PANE)
-                .modifyName("&a&lSave")
-                .modifyLore("&7Click to save the value.")
-                .setAction(click -> {
-                    click.setCancelled(true);
-                    String value = anvilGui.getRenameText();
-                    YamlConfiguration configuration = YamlConfiguration.loadConfiguration(configFile);
-                    configuration.set(key, value);
-                    saveConfiguration(configuration, configFile);
-                    showConfigMenu(module, click.getWhoClicked());
-                })
-                .create(api.getPlugin());
-        result.setItem(resultItem, 0, 0);
+            InventoryComponent result = anvilGui.getResultComponent();
+            GuiItem resultItem = ItemCreator.of(Material.LIME_STAINED_GLASS_PANE)
+                    .modifyName("&a&lSave")
+                    .modifyLore("&7Click to save the value.")
+                    .setAction(click -> {
+                        click.setCancelled(true);
+                        String value = anvilGui.getRenameText();
+                        YamlConfiguration configuration = YamlConfiguration.loadConfiguration(configFile);
+                        configuration.set(key, value);
+                        saveConfiguration(configuration, configFile);
+                        showConfigMenu(module, click.getWhoClicked());
+                    })
+                    .create(api.getPlugin());
+            result.setItem(resultItem, 0, 0);
 
-        anvilGui.show(viewer);
+            anvilGui.show(viewer);
+        } catch (NoClassDefFoundError error) {
+            startStringChatEditor(module, configFile, key, current, player);
+        }
+    }
+
+    private void startStringChatEditor(SIRModule module, File configFile, String key, String current, Player player) {
+        pendingStringEdits.put(player.getUniqueId(), new StringEditSession(module, configFile, key));
+        player.closeInventory();
+        player.sendMessage(PrismaticAPI.colorize("&7Type the new value for &f" + key + "&7."));
+        player.sendMessage(PrismaticAPI.colorize("&7Current: &f" + (StringUtils.isBlank(current) ? "<empty>" : current)));
+        player.sendMessage(PrismaticAPI.colorize("&7Type &c'cancel' &7to abort."));
     }
 
     private void openListEditor(SIRModule module, File configFile, String key, List<String> values, HumanEntity viewer) {
@@ -843,7 +980,7 @@ public final class ModuleManager {
                 }
             }
 
-            if (!saveDefaults) load(target);
+            if (!saveDefaults) load(target, false);
         }
     }
 

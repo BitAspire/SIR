@@ -1,7 +1,6 @@
 package me.croabeast.sir.command;
 
 import lombok.Getter;
-import me.croabeast.command.BaseCommand;
 import me.croabeast.command.BukkitCommand;
 import me.croabeast.command.CommandPredicate;
 import me.croabeast.command.TabBuilder;
@@ -225,9 +224,17 @@ public abstract class SIRCommand extends BukkitCommand {
         if (StringUtils.isBlank(name) || predicate == null)
             return;
 
-        BaseCommand subCommand = getSubCommand(name);
-        if (subCommand != null)
-            ((me.croabeast.command.SubCommand) subCommand).setPredicate(predicate);
+        SubCommand subCommand = (SubCommand) getSubCommand(name);
+        if (subCommand != null) {
+            subCommand.setPredicate(predicate);
+            return;
+        }
+
+        if (!file.getSubCommands().containsKey(name)) return;
+
+        subCommand = new SubCommand(name, file.getSubCommands().get(name));
+        subCommand.setPredicate(predicate);
+        addSubCommand(subCommand);
     }
 
     // ----------------------------------------------------------------------

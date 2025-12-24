@@ -4,12 +4,12 @@ import me.croabeast.sir.module.SIRModule;
 
 public final class Cooldowns extends SIRModule {
 
-    CooldownData data;
+    Data data;
     Listener listener;
 
     @Override
     public boolean register() {
-        data = new CooldownData(this);
+        data = new Data(this);
         return (listener = new Listener(this)).register();
     }
 

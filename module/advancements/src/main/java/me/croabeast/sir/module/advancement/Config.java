@@ -1,5 +1,6 @@
 package me.croabeast.sir.module.advancement;
 
+import lombok.SneakyThrows;
 import me.croabeast.file.Configurable;
 import me.croabeast.sir.ExtensionFile;
 import org.bukkit.configuration.ConfigurationSection;
@@ -21,15 +22,13 @@ final class Config {
         values.put(type, Configurable.toStringList(section, "list"));
     }
 
+    @SneakyThrows
     Config(Advancements main) {
-        try {
-            ExtensionFile file = new ExtensionFile(main, "config", true);
+        ExtensionFile file = new ExtensionFile(main, "config", true);
 
-            loadEntries(Type.GAME_MODE, file.getSection("game-modes"));
-            loadEntries(Type.WORLD, file.getSection("worlds"));
-            loadEntries(Type.ADVANCEMENT, file.getSection("advancements"));
-        }
-        catch (Exception ignored) {}
+        loadEntries(Type.GAME_MODE, file.getSection("game-modes"));
+        loadEntries(Type.WORLD, file.getSection("worlds"));
+        loadEntries(Type.ADVANCEMENT, file.getSection("advancements"));
     }
 
     boolean isProhibited(Type type, String value) {

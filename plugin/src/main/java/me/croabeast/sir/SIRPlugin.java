@@ -70,6 +70,9 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
         moduleManager.loadAll();
         commandManager.loadAll();
 
+        moduleManager.saveStates();
+        commandManager.saveStates();
+
         library.reload();
 
         DelayLogger logger = new DelayLogger();

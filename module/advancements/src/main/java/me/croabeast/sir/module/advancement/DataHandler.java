@@ -1,5 +1,6 @@
 package me.croabeast.sir.module.advancement;
 
+import lombok.SneakyThrows;
 import me.croabeast.advancement.AdvancementInfo;
 import me.croabeast.common.CollectionBuilder;
 import me.croabeast.common.Loadable;
@@ -22,12 +23,13 @@ final class DataHandler implements Loadable {
     final Map<Advancement, AdvancementInfo> information = new HashMap<>();
     final Map<Advancement, ConfigurationSection> sections = new HashMap<>();
 
-    private ExtensionFile data;
+    private final ExtensionFile data;
     private GlobalTask task;
 
     private int tasks = 0, challenges = 0, goals = 0, custom = 0;
     private final Set<World> processedWorlds = new HashSet<>();
 
+    @SneakyThrows
     DataHandler(Advancements main) {
         this.main = main;
 
@@ -65,9 +67,7 @@ final class DataHandler implements Loadable {
                     this.information.put(advancement, info);
                 });
 
-        try {
-            data = new ExtensionFile(main, "data", true);
-        } catch (Exception ignored) {}
+        data = new ExtensionFile(main, "data", true);
     }
 
     @Override

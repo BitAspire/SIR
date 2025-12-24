@@ -27,14 +27,17 @@ public abstract class StandaloneProvider implements CommandProvider {
 
         button = new Toggleable.Button(information, this, api.getCommandManager().isProviderEnabled(information.getName()));
         button.setDefaultItems();
+        button.allowToggle(false);
+
         button.setOnClick(b -> event -> {
             if (event.isRightClick()) {
-                api.getCommandManager().openOverrideMenu(this, event);
+                api.getCommandManager().openOverrideMenu(this, event, true);
                 return;
             }
 
             if (!event.isLeftClick()) return;
 
+            b.toggle();
             api.getLibrary().getLogger().log("Provider '" + getName() + "' loaded: " + b.isEnabled());
             b.toggleRegistering();
             api.getCommandManager().setProviderEnabled(information.getName(), b.isEnabled());

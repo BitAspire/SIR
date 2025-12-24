@@ -13,12 +13,14 @@ public final class JoinQuit extends SIRModule {
     public boolean register() {
         config = new Config(this);
         messages = new Messages(this);
-        return (listener = new Listener(this)).register();
+        (listener = new Listener(this)).register();
+        return true;
     }
 
     @Override
     public boolean unregister() {
-        return listener.unregister();
+        listener.unregister();
+        return true;
     }
 
     public boolean isStillOnCooldown(SIRUser user, boolean join) {

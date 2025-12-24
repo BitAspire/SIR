@@ -6,6 +6,7 @@ import github.scarsz.discordsrv.dependencies.jda.api.entities.Guild;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.MessageEmbed;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
 import github.scarsz.discordsrv.util.DiscordUtil;
+import lombok.SneakyThrows;
 import me.croabeast.common.applier.StringApplier;
 import me.croabeast.common.reflect.Reflector;
 import me.croabeast.common.util.ArrayUtils;
@@ -43,13 +44,12 @@ final class Config {
         load(main);
     }
 
+    @SneakyThrows
     private void load(Discord main) {
-        try {
-            ExtensionFile file = new ExtensionFile(main, "config", true);
-            defaultServer = file.get("default-server", "");
-            loadEmbeds(file);
-            loadChannelIds(file);
-        } catch (Exception ignored) {}
+        ExtensionFile file = new ExtensionFile(main, "config", true);
+        defaultServer = file.get("default-server", "");
+        loadEmbeds(file);
+        loadChannelIds(file);
     }
 
     private void loadChannelIds(ExtensionFile file) {

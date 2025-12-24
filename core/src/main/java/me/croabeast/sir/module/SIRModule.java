@@ -42,6 +42,7 @@ public abstract class SIRModule implements SIRExtension, Toggleable {
 
         button = new Button(buildInformation(), this, api.getModuleManager().isEnabled(getName()));
         button.setDefaultItems();
+        button.allowToggle(false);
 
         button.setOnClick(b -> event -> {
             if (event.isRightClick()) {
@@ -51,13 +52,16 @@ public abstract class SIRModule implements SIRExtension, Toggleable {
 
             if (!event.isLeftClick()) return;
 
+            b.toggle();
             api.getLibrary().getLogger().log("Module '" + getName() + "' loaded: " + b.isEnabled());
             b.toggleRegistering();
             api.getModuleManager().setModuleEnabled(getName(), b.isEnabled());
         });
 
         this.classLoader = loader;
+
         dataFolder = new File(api.getPlugin().getDataFolder(), "modules" + File.separator + getName());
+        if (!dataFolder.exists()) dataFolder.mkdirs();
     }
 
     private Information buildInformation() {
@@ -102,6 +106,17 @@ public abstract class SIRModule implements SIRExtension, Toggleable {
                 return information.getSlot();
             }
         };
+    }
+
+    @NotNull
+    public final File getDataFolder() {
+        if (dataFolder == null && api != null)
+            dataFolder = new File(api.getPlugin().getDataFolder(), "modules" + File.separator + getName());
+
+        if (dataFolder != null && !dataFolder.exists())
+            dataFolder.mkdirs();
+
+        return Objects.requireNonNull(dataFolder);
     }
 
     @Setter(AccessLevel.PACKAGE)

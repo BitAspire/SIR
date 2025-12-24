@@ -30,11 +30,14 @@ public final class Channels extends SIRModule implements CommandProvider {
             getLogger().log(LogLevel.ERROR, "Command 'chat-view' cannot be loaded due to lang.yml was missing");
             e.printStackTrace();
         }
-        return (listener = new Listener(this)).register();
+
+        (listener = new Listener(this)).register();
+        return true;
     }
 
     @Override
     public boolean unregister() {
-        return listener.unregister();
+        listener.unregister();
+        return true;
     }
 }

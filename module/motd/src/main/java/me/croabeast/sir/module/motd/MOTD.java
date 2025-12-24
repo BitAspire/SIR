@@ -15,12 +15,14 @@ public final class MOTD extends SIRModule {
         data = new Data(this);
 
         (loader = new IconLoader(this)).load();
-        return (listener = new Listener(this)).register();
+        (listener = new Listener(this)).register();
+        return true;
     }
 
     @Override
     public boolean unregister() {
         loader.unload();
-        return listener.unregister();
+        listener.unregister();
+        return true;
     }
 }
