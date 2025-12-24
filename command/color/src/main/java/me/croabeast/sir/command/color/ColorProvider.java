@@ -1,6 +1,7 @@
 package me.croabeast.sir.command.color;
 
 import lombok.Getter;
+import lombok.SneakyThrows;
 import me.croabeast.sir.command.SIRCommand;
 import me.croabeast.sir.command.StandaloneProvider;
 import org.bukkit.Bukkit;
@@ -15,11 +16,9 @@ public final class ColorProvider extends StandaloneProvider {
 
     Expansion expansion;
 
-    @Override
+    @SneakyThrows
     public boolean register() {
-        try {
-            commands.add(new Command(this));
-        } catch (Exception ignored) {}
+        commands.add(new Command(this));
 
         if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI"))
             (expansion = new Expansion()).register();

@@ -1,12 +1,13 @@
 package me.croabeast.sir.module.motd;
 
 import lombok.Getter;
+import lombok.SneakyThrows;
 import me.croabeast.sir.ExtensionFile;
 
 @Getter
 final class Config {
 
-    private boolean alwaysLoadDefaultIcon = true;
+    private final boolean alwaysLoadDefaultIcon, randomMotd;
 
     private String maxPlayersType = "DEFAULT";
     private int maxPlayersCount = 69420;
@@ -14,21 +15,18 @@ final class Config {
     private String serverIconUsage = "SINGLE";
     private String serverIconImage = "server-icon.png";
 
-    private boolean randomMotd = false;
-
+    @SneakyThrows
     Config(MOTD main) {
-        try {
-            ExtensionFile file = new ExtensionFile(main, "config", true);
+        ExtensionFile file = new ExtensionFile(main, "config", true);
 
-            alwaysLoadDefaultIcon = file.get("always-load-default-icon", true);
+        alwaysLoadDefaultIcon = file.get("always-load-default-icon", true);
 
-            maxPlayersType = file.get("max-players.type", maxPlayersType);
-            maxPlayersCount = file.get("max-players.count", maxPlayersCount);
+        maxPlayersType = file.get("max-players.type", maxPlayersType);
+        maxPlayersCount = file.get("max-players.count", maxPlayersCount);
 
-            serverIconUsage = file.get("server-icon.usage", serverIconUsage);
-            serverIconImage = file.get("server-icon.image", serverIconImage);
+        serverIconUsage = file.get("server-icon.usage", serverIconUsage);
+        serverIconImage = file.get("server-icon.image", serverIconImage);
 
-            randomMotd = file.get("random-motd", false);
-        } catch (Exception ignored) {}
+        randomMotd = file.get("random-motd", false);
     }
 }

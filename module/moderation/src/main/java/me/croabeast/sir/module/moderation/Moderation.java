@@ -13,27 +13,19 @@ public final class Moderation extends SIRModule {
     @Override
     public boolean register() {
         config = new Config(this);
-        try {
-            (swearing = new Swearing(this)).register();
-        } catch (Exception ignored) {}
-        try {
-            (caps = new Caps(this)).register();
-        } catch (Exception ignored) {}
-        try {
-            (format = new Format(this)).register();
-        } catch (Exception ignored) {}
-        try {
-            (links = new Links(this)).register();
-        } catch (Exception ignored) {}
+        (swearing = new Swearing(this)).register();
+        (caps = new Caps(this)).register();
+        (format = new Format(this)).register();
+        (links = new Links(this)).register();
         return true;
     }
 
     @Override
     public boolean unregister() {
-        if (swearing != null) swearing.unregister();
-        if (caps != null) caps.unregister();
-        if (format != null) format.unregister();
-        if (links != null) links.unregister();
+        swearing.unregister();
+        caps.unregister();
+        format.unregister();
+        links.unregister();
         return true;
     }
 }

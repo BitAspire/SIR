@@ -154,7 +154,7 @@ final class MainCommand implements TabExecutor {
             if (next == null)
                 return sender.send("<P> &cInvalid state. Use: enable, disable, toggle.");
 
-            if (!commandManager.updateProviderEnabled(info.getName(), next))
+            if (!commandManager.updateProviderEnabled(info.getName(), next, true))
                 return sender.send("<P> &cFailed to update provider state.");
 
             commandManager.saveStates();
@@ -178,7 +178,7 @@ final class MainCommand implements TabExecutor {
             if (next == null)
                 return sender.send("<P> &cInvalid state. Use: enable, disable, toggle.");
 
-            if (!commandManager.updateCommandOverride(info.getName(), commandKey, next))
+            if (!commandManager.updateCommandOverride(info.getName(), commandKey, next, true))
                 return sender.send("<P> &cFailed to update command override.");
 
             commandManager.saveStates();
@@ -207,7 +207,7 @@ final class MainCommand implements TabExecutor {
         Player player = sender instanceof Player ? (Player) sender : null;
         switch (first) {
             case "about":
-                return mainSender.send(
+                return mainSender.setTargets(player).send(
                         "",
                         " &eSIR &7- &f" + main.getDescription().getVersion() + "&7:",
                         "   &8• &7Server Software: &f" + ServerInfoUtils.SERVER_FORK,
@@ -258,19 +258,17 @@ final class MainCommand implements TabExecutor {
         for (String arg : SUB_COMMANDS)
             builder.addArgument(0, (s, a) -> main.getUserManager().hasPermission(s, PERMISSION_PREFIX + arg), arg);
 
-        if (ServerInfoUtils.SERVER_VERSION < 14.0) {
-            ModuleManager moduleManager = main.getModuleManager();
-            CommandManager commandManager = main.getCommandManager();
+        ModuleManager moduleManager = main.getModuleManager();
+        CommandManager commandManager = main.getCommandManager();
 
-            builder.addArguments(1, (s, a) -> a.length > 0 && a[0].equalsIgnoreCase("modules"), moduleManager.getModuleNames());
-            builder.addArguments(2, (s, a) -> a.length > 0 && a[0].equalsIgnoreCase("modules"), STATE_ARGUMENTS);
+        builder.addArguments(1, (s, a) -> a[0].equalsIgnoreCase("modules"), moduleManager.getModuleNames());
+        builder.addArguments(2, (s, a) -> a[0].equalsIgnoreCase("modules"), STATE_ARGUMENTS);
 
-            builder.addArguments(1, (s, a) -> a.length > 0 && a[0].equalsIgnoreCase("commands"), commandManager.getProviderNames());
-            builder.addArguments(2, (s, a) -> a.length > 0 && a[0].equalsIgnoreCase("commands"), Arrays.asList("enabled", "override"));
-            builder.addArguments(3, (s, a) -> a.length > 2 && a[0].equalsIgnoreCase("commands") && a[2].equalsIgnoreCase("override"), commandManager.getProviderCommands(args.length > 1 ? args[1] : null));
-            builder.addArguments(3, (s, a) -> a.length > 2 && a[0].equalsIgnoreCase("commands") && a[2].equalsIgnoreCase("enabled"), STATE_ARGUMENTS);
-            builder.addArguments(4, (s, a) -> a.length > 2 && a[0].equalsIgnoreCase("commands") && a[2].equalsIgnoreCase("override"), STATE_ARGUMENTS);
-        }
+        builder.addArguments(1, (s, a) -> a[0].equalsIgnoreCase("commands"), commandManager.getProviderNames());
+        builder.addArguments(2, (s, a) -> a[0].equalsIgnoreCase("commands"), Arrays.asList("enabled", "override"));
+        builder.addArguments(3, (s, a) -> a[0].equalsIgnoreCase("commands") && a[2].equalsIgnoreCase("override"), commandManager.getProviderCommands(args.length > 1 ? args[1] : null));
+        builder.addArguments(3, (s, a) -> a[0].equalsIgnoreCase("commands") && a[2].equalsIgnoreCase("enabled"), STATE_ARGUMENTS);
+        builder.addArguments(4, (s, a) -> a[0].equalsIgnoreCase("commands") && a[2].equalsIgnoreCase("override"), STATE_ARGUMENTS);
 
         return builder.build(sender, args);
     }

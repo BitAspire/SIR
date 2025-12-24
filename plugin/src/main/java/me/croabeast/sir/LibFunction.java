@@ -30,13 +30,12 @@ class LibFunction {
             BiFunction<SIRUser, String, String> function = (user, message) -> {
                 try {
                     return (String) method.invoke(module, user, message);
-                } catch (Exception ignored) {
+                } catch (Exception e) {
                     return message;
                 }
             };
 
             sender.addFunctions((u, s) -> function.apply(SIRApi.instance().getUserManager().getUser(u), s));
-        } catch (Exception ignored) {
-        }
+        } catch (Exception ignored) {}
     }
 }

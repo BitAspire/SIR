@@ -1,6 +1,7 @@
 package me.croabeast.sir.module.announcement;
 
 import lombok.Getter;
+import lombok.SneakyThrows;
 import me.croabeast.sir.ExtensionFile;
 import me.croabeast.sir.PermissibleUnit;
 
@@ -13,12 +14,11 @@ final class Data {
 
     private final Map<String, Announcement> announcements = new LinkedHashMap<>();
 
+    @SneakyThrows
     Data(Announcements main) {
-        try {
-            PermissibleUnit.loadUnits(new ExtensionFile(main, "announcements", true)
-                            .getSection("announcements"), Announcement::new)
-                    .forEach(e -> announcements.put(e.getName(), e));
-        } catch (Exception ignored) {}
+        PermissibleUnit.loadUnits(new ExtensionFile(main, "announcements", true)
+                        .getSection("announcements"), Announcement::new)
+                .forEach(e -> announcements.put(e.getName(), e));
     }
 
     Announcement fromIndex(int count) {

@@ -32,11 +32,13 @@ public final class Vanish extends SIRModule implements PluginDependant {
                 .filter(Exceptions::isPluginEnabled)
                 .map(Bukkit.getPluginManager()::getPlugin)
                 .toSet());
-        return (listeners = new Listeners(this)).register();
+        (listeners = new Listeners(this)).register();
+        return true;
     }
 
     @Override
     public boolean unregister() {
-        return listeners.unregister();
+        listeners.unregister();
+        return true;
     }
 }

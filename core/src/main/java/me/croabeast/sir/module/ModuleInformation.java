@@ -6,7 +6,6 @@ import lombok.Getter;
 import me.croabeast.common.util.ArrayUtils;
 import me.croabeast.file.Configurable;
 import me.croabeast.sir.Information;
-import me.croabeast.sir.SlotCalculator;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -18,8 +17,6 @@ import java.util.stream.Collectors;
 
 @Getter
 public final class ModuleInformation implements Information {
-
-    private static int slotCount = 0;
 
     @NotNull
     private final String main, name, title;
@@ -42,17 +39,11 @@ public final class ModuleInformation implements Information {
         this.title = configuration.getString("title", String.join(" ", list));
 
         this.description = Configurable.toStringList(configuration, "description").toArray(new String[0]);
-
-        Slot resolved = SlotCalculator.EXTENSION_LAYOUT.toSlot(slotCount++);
-        this.slot = resolved != null ? resolved : Slot.fromIndex(0);
+        this.slot = Slot.fromXY(0, 0);
 
         this.depend = Collections.unmodifiableList(Configurable.toStringList(configuration, "depend"));
 
         List<String> soft = Configurable.toStringList(configuration, "soft-depend");
         this.softDepend = Collections.unmodifiableList(soft.stream().distinct().collect(Collectors.toList()));
-    }
-
-    static void resetSlotCounter() {
-        slotCount = 0;
     }
 }

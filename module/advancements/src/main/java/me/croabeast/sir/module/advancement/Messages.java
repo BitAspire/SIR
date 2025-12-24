@@ -1,5 +1,6 @@
 package me.croabeast.sir.module.advancement;
 
+import lombok.SneakyThrows;
 import me.croabeast.advancement.AdvancementInfo;
 import me.croabeast.common.applier.StringApplier;
 import me.croabeast.common.util.ReplaceUtils;
@@ -27,18 +28,17 @@ final class Messages {
     private final Map<Type, List<String>> messages = new HashMap<>(), commands = new HashMap<>();
     private final DataHandler data;
 
+    @SneakyThrows
     Messages(Advancements main) {
         this.main = main;
 
-        try {
-            ExtensionFile file = new ExtensionFile(main, "messages", true);
+        ExtensionFile file = new ExtensionFile(main, "messages", true);
 
-            for (Type type : Type.values()) {
-                String name = type.name().toLowerCase(Locale.ENGLISH);
-                messages.put(type, file.toStringList("messages." + name));
-                commands.put(type, file.toStringList("commands." + name));
-            }
-        } catch (Exception ignored) {}
+        for (Type type : Type.values()) {
+            String name = type.name().toLowerCase(Locale.ENGLISH);
+            messages.put(type, file.toStringList("messages." + name));
+            commands.put(type, file.toStringList("commands." + name));
+        }
 
         data = main.data;
     }

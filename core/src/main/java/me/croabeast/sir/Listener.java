@@ -2,6 +2,7 @@ package me.croabeast.sir;
 
 import lombok.Getter;
 import me.croabeast.common.Registrable;
+import me.croabeast.takion.logger.LogLevel;
 import org.bukkit.Bukkit;
 import org.bukkit.event.HandlerList;
 
@@ -18,6 +19,8 @@ public abstract class Listener implements Registrable, org.bukkit.event.Listener
             Bukkit.getPluginManager().registerEvents(this, SIRApi.instance().getPlugin());
             return registered = true;
         } catch (Exception e) {
+            SIRApi.instance().getLibrary().getLogger().log(LogLevel.ERROR, "Failed to register listener: " + getClass().getName());
+            e.printStackTrace();
             registered = false;
             return false;
         }
@@ -32,6 +35,8 @@ public abstract class Listener implements Registrable, org.bukkit.event.Listener
             registered = false;
             return true;
         } catch (Exception e) {
+            SIRApi.instance().getLibrary().getLogger().log(LogLevel.ERROR, "Failed to unregister listener: " + getClass().getName());
+            e.printStackTrace();
             registered = true;
             return false;
         }
