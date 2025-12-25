@@ -12,6 +12,7 @@ import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.sir.PluginDependant;
 import me.croabeast.sir.SIRApi;
 import me.croabeast.sir.Toggleable;
+import me.croabeast.sir.UserFormatter;
 import me.croabeast.sir.command.CommandProvider;
 import me.croabeast.takion.character.SmallCaps;
 import me.croabeast.takion.logger.LogLevel;
@@ -49,10 +50,16 @@ import java.util.stream.Collectors;
 public final class ModuleManager {
 
     private final SIRApi api;
+
     private final Map<String, LoadedModule> modules = new LinkedHashMap<>();
+    private final Map<String, DeferredModule> deferredModules = new LinkedHashMap<>();
+
     private final Map<String, Boolean> moduleStates = new LinkedHashMap<>();
+
     private final Map<UUID, BookEditSession> pendingBookEdits = new HashMap<>();
     private final Map<UUID, StringEditSession> pendingStringEdits = new HashMap<>();
+
+    private boolean deferPluginDependants = false;
 
     public ModuleManager(SIRApi api) {
         this.api = api;
@@ -80,15 +87,27 @@ public final class ModuleManager {
         }
     }
 
+    private static class DeferredModule {
+        final ModuleCandidate candidate;
+        final String[] dependencies;
+
+        DeferredModule(ModuleCandidate candidate, String[] dependencies) {
+            this.candidate = candidate;
+            this.dependencies = dependencies;
+        }
+    }
+
     private static class BookEditSession {
         final SIRModule module;
         final File configFile;
         final String key;
+        final String rootPath;
 
-        BookEditSession(SIRModule module, File configFile, String key) {
+        BookEditSession(SIRModule module, File configFile, String key, String rootPath) {
             this.module = module;
             this.configFile = configFile;
             this.key = key;
+            this.rootPath = rootPath;
         }
     }
 
@@ -96,11 +115,13 @@ public final class ModuleManager {
         final SIRModule module;
         final File configFile;
         final String key;
+        final String rootPath;
 
-        StringEditSession(SIRModule module, File configFile, String key) {
+        StringEditSession(SIRModule module, File configFile, String key, String rootPath) {
             this.module = module;
             this.configFile = configFile;
             this.key = key;
+            this.rootPath = rootPath;
         }
     }
 
@@ -117,8 +138,8 @@ public final class ModuleManager {
             configuration.set(session.key, values);
             saveConfiguration(configuration, session.configFile);
 
-            api.getPlugin().getServer().getScheduler().runTask(api.getPlugin(),
-                    () -> showConfigMenu(session.module, event.getPlayer()));
+            api.getScheduler().runTask(
+                    () -> showConfigMenu(session.module, event.getPlayer(), session.rootPath));
         }
     }
 
@@ -131,7 +152,7 @@ public final class ModuleManager {
             event.setCancelled(true);
             String message = event.getMessage();
 
-            api.getPlugin().getServer().getScheduler().runTask(api.getPlugin(), () -> {
+            api.getScheduler().runTask(() -> {
                 Player player = event.getPlayer();
                 if ("cancel".equalsIgnoreCase(message)) {
                     player.sendMessage(PrismaticAPI.colorize("&cEdit cancelled."));
@@ -142,7 +163,7 @@ public final class ModuleManager {
                 YamlConfiguration configuration = YamlConfiguration.loadConfiguration(session.configFile);
                 configuration.set(session.key, message);
                 saveConfiguration(configuration, session.configFile);
-                showConfigMenu(session.module, player);
+                showConfigMenu(session.module, player, session.rootPath);
             });
         }
     }
@@ -161,32 +182,24 @@ public final class ModuleManager {
         return names;
     }
 
-    public <M extends SIRModule> M getModule(@NotNull String name) {
+    public SIRModule getModule(@NotNull String name) {
         LoadedModule module = modules.get(name);
-        try {
-            return module == null ? null : (M) module.module;
-        } catch (Exception e) {
-            return null;
-        }
+        return module == null || !isEnabled(name) ? null : module.module;
     }
 
-    public <M extends SIRModule> M getModule(Class<M> clazz) {
-        try {
-            if (!SIRModule.class.isAssignableFrom(clazz))
-                return null;
-        } catch (Exception e) {
-            return null;
-        }
+    public <T> UserFormatter<T> getFormatter(@NotNull String name) {
+        SIRModule module = getModule(name);
+        return module instanceof UserFormatter ? (UserFormatter<T>) module : null;
+    }
 
-        ClassLoader loader = clazz.getClassLoader();
-        if (!(loader instanceof ModuleLoader)) return null;
+    public JoinQuitService getJoinQuitService() {
+        SIRModule joinQuit = getModule("JoinQuit");
+        return joinQuit == null ? null : (JoinQuitService) joinQuit;
+    }
 
-        SIRModule module = ((ModuleLoader) loader).module;
-        try {
-            return module == null ? null : (M) module;
-        } catch (Exception e) {
-            return null;
-        }
+    public DiscordService getDiscordService() {
+        SIRModule discord = getModule("Discord");
+        return discord == null ? null : (DiscordService) discord;
     }
 
     void log(LogLevel level, String... messages) {
@@ -256,10 +269,20 @@ public final class ModuleManager {
             constructor.setAccessible(true);
 
             SIRModule module = (SIRModule) constructor.newInstance();
-            if (module instanceof PluginDependant && !((PluginDependant) module).isPluginEnabled()) {
-                log(LogLevel.INFO, hookMessage(name, ((PluginDependant) module).getDependencies()));
-                classLoader.close();
-                return false;
+            if (module instanceof PluginDependant) {
+                PluginDependant dependant = (PluginDependant) module;
+                if (deferPluginDependants) {
+                    deferModule(candidate, dependant.getDependencies());
+                    classLoader.close();
+                    return false;
+                }
+
+                if (!dependant.isPluginEnabled()) {
+                    log(LogLevel.INFO, hookMessage(name, dependant.getDependencies()));
+                    deferModule(candidate, dependant.getDependencies());
+                    classLoader.close();
+                    return false;
+                }
             }
 
             module.init(api, classLoader, file);
@@ -366,55 +389,60 @@ public final class ModuleManager {
             return;
         }
 
+        deferPluginDependants = true;
+
         Set<String> failed = new HashSet<>();
         boolean progress;
+        try {
+            do {
+                progress = false;
 
-        do {
-            progress = false;
+                for (Map.Entry<String, ModuleCandidate> entry : candidates.entrySet()) {
+                    String nameKey = entry.getKey();
+                    if (modules.containsKey(nameKey) || failed.contains(nameKey)) continue;
 
-            for (Map.Entry<String, ModuleCandidate> entry : candidates.entrySet()) {
-                String nameKey = entry.getKey();
-                if (modules.containsKey(nameKey) || failed.contains(nameKey)) continue;
+                    ModuleInformation file = entry.getValue().file;
 
-                ModuleInformation file = entry.getValue().file;
+                    boolean wait = false;
+                    boolean hardMissing = false;
 
-                boolean wait = false;
-                boolean hardMissing = false;
+                    for (String dep : file.getDepend()) {
+                        if (modules.containsKey(dep)) continue;
 
-                for (String dep : file.getDepend()) {
-                    if (modules.containsKey(dep)) continue;
-
-                    if (candidates.containsKey(dep) && !failed.contains(dep)) {
-                        wait = true;
-                    } else {
-                        log(LogLevel.WARN, "Module '" + file.getName()
-                                + "' can't be loaded: missing hard dependency '" + dep + "'.");
-                        hardMissing = true;
-                        break;
+                        if (candidates.containsKey(dep) && !failed.contains(dep)) {
+                            wait = true;
+                        } else {
+                            log(LogLevel.WARN, "Module '" + file.getName()
+                                    + "' can't be loaded: missing hard dependency '" + dep + "'.");
+                            hardMissing = true;
+                            break;
+                        }
                     }
-                }
 
-                if (hardMissing) {
-                    failed.add(nameKey);
-                    continue;
-                }
-
-                if (wait) continue;
-
-                for (String dep : file.getSoftDepend()) {
-                    if (modules.containsKey(dep)) continue;
-
-                    if (candidates.containsKey(dep) && !failed.contains(dep)) {
-                        wait = true;
-                        break;
+                    if (hardMissing) {
+                        failed.add(nameKey);
+                        continue;
                     }
-                }
-                if (wait) continue;
 
-                if (!load(entry.getValue().jarFile, false)) failed.add(nameKey);
-                progress = true;
-            }
-        } while (progress);
+                    if (wait) continue;
+
+                    for (String dep : file.getSoftDepend()) {
+                        if (modules.containsKey(dep)) continue;
+
+                        if (candidates.containsKey(dep) && !failed.contains(dep)) {
+                            wait = true;
+                            break;
+                        }
+                    }
+                    if (wait) continue;
+
+                    if (!load(entry.getValue().jarFile, false)) failed.add(nameKey);
+                    progress = true;
+                }
+            } while (progress);
+        } finally {
+            deferPluginDependants = false;
+        }
 
         List<String> unresolved = candidates.keySet()
                 .stream()
@@ -423,6 +451,38 @@ public final class ModuleManager {
 
         if (!unresolved.isEmpty())
             log(LogLevel.ERROR, "Unresolved module dependency loop: " + String.join(", ", unresolved));
+
+        retryDeferredModules(null, false);
+    }
+
+    private void deferModule(ModuleCandidate candidate, String[] dependencies) {
+        String key = candidate.file.getName();
+        if (deferredModules.containsKey(key) || modules.containsKey(key)) return;
+        deferredModules.put(key, new DeferredModule(candidate, dependencies));
+        log(LogLevel.INFO, "Module '" + key + "' deferred until its dependencies are ready.");
+    }
+
+    public void retryDeferredModules(String pluginName, boolean syncCommands) {
+        if (deferredModules.isEmpty()) return;
+
+        Iterator<Map.Entry<String, DeferredModule>> iterator = deferredModules.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<String, DeferredModule> entry = iterator.next();
+
+            DeferredModule deferred = entry.getValue();
+            if (pluginName != null && !matchesDependency(pluginName, deferred.dependencies))
+                continue;
+
+            if (loadCandidate(deferred.candidate, syncCommands)) iterator.remove();
+        }
+    }
+
+    private boolean matchesDependency(String pluginName, String[] dependencies) {
+        if (pluginName == null || dependencies == null) return true;
+        for (String dependency : dependencies) {
+            if (dependency.equalsIgnoreCase(pluginName)) return true;
+        }
+        return false;
     }
 
     public void unload(String name) {
@@ -438,7 +498,11 @@ public final class ModuleManager {
 
             try {
                 loadedModule.classLoader.close();
-                modules.remove(name.toLowerCase());
+                String key = modules.keySet().stream()
+                        .filter(entry -> entry.equalsIgnoreCase(name))
+                        .findFirst()
+                        .orElse(name);
+                modules.remove(key);
                 log(LogLevel.INFO, "Module '" + name + "' unloaded successfully.");
             } catch (Exception e) {
                 log(LogLevel.ERROR, "Failed to close class loader for module '" + name + "'");
@@ -524,7 +588,7 @@ public final class ModuleManager {
     }
 
     public boolean isEnabled(String name) {
-        return name != null && moduleStates.computeIfAbsent(name, key -> true);
+        return name != null && moduleStates.computeIfAbsent(name, key -> false);
     }
 
     public void updateModuleEnabled(String name, boolean enabled) {
@@ -639,7 +703,7 @@ public final class ModuleManager {
                                 )
                                 .setAction(click -> {
                                     click.setCancelled(true);
-                                    openListEditor(module, configFile, path, values, click.getWhoClicked());
+                                    openListEditor(module, configFile, path, values, click.getWhoClicked(), rootPath);
                                 })
                                 .create(api.getPlugin()),
                         pane -> pane.setPriority(Pane.Priority.LOW)
@@ -674,7 +738,7 @@ public final class ModuleManager {
                                 )
                                 .setAction(click -> {
                                     click.setCancelled(true);
-                                    openStringEditor(module, configFile, path, current, click.getWhoClicked());
+                                    openStringEditor(module, configFile, path, current, click.getWhoClicked(), rootPath);
                                 })
                                 .create(api.getPlugin()),
                         pane -> pane.setPriority(Pane.Priority.LOW)
@@ -798,7 +862,7 @@ public final class ModuleManager {
         return Slot.fromXY(x, y);
     }
 
-    private void openStringEditor(SIRModule module, File configFile, String key, String current, HumanEntity viewer) {
+    private void openStringEditor(SIRModule module, File configFile, String key, String current, HumanEntity viewer, String rootPath) {
         if (!(viewer instanceof Player)) return;
 
         Player player = (Player) viewer;
@@ -821,30 +885,30 @@ public final class ModuleManager {
                         YamlConfiguration configuration = YamlConfiguration.loadConfiguration(configFile);
                         configuration.set(key, value);
                         saveConfiguration(configuration, configFile);
-                        showConfigMenu(module, click.getWhoClicked());
+                        showConfigMenu(module, click.getWhoClicked(), rootPath);
                     })
                     .create(api.getPlugin());
             result.setItem(resultItem, 0, 0);
 
             anvilGui.show(viewer);
         } catch (NoClassDefFoundError error) {
-            startStringChatEditor(module, configFile, key, current, player);
+            startStringChatEditor(module, configFile, key, current, player, rootPath);
         }
     }
 
-    private void startStringChatEditor(SIRModule module, File configFile, String key, String current, Player player) {
-        pendingStringEdits.put(player.getUniqueId(), new StringEditSession(module, configFile, key));
+    private void startStringChatEditor(SIRModule module, File configFile, String key, String current, Player player, String rootPath) {
+        pendingStringEdits.put(player.getUniqueId(), new StringEditSession(module, configFile, key, rootPath));
         player.closeInventory();
         player.sendMessage(PrismaticAPI.colorize("&7Type the new value for &f" + key + "&7."));
         player.sendMessage(PrismaticAPI.colorize("&7Current: &f" + (StringUtils.isBlank(current) ? "<empty>" : current)));
         player.sendMessage(PrismaticAPI.colorize("&7Type &c'cancel' &7to abort."));
     }
 
-    private void openListEditor(SIRModule module, File configFile, String key, List<String> values, HumanEntity viewer) {
+    private void openListEditor(SIRModule module, File configFile, String key, List<String> values, HumanEntity viewer, String rootPath) {
         if (!(viewer instanceof Player)) return;
 
         Player player = (Player) viewer;
-        ItemStack book = new ItemStack(Material.WRITABLE_BOOK);
+        ItemStack book = new ItemStack(Material.WRITTEN_BOOK);
 
         BookMeta meta = (BookMeta) book.getItemMeta();
         if (meta == null) return;
@@ -854,7 +918,7 @@ public final class ModuleManager {
         meta.setPages(buildBookPages(values));
         book.setItemMeta(meta);
 
-        pendingBookEdits.put(player.getUniqueId(), new BookEditSession(module, configFile, key));
+        pendingBookEdits.put(player.getUniqueId(), new BookEditSession(module, configFile, key, rootPath));
         player.openBook(book);
     }
 

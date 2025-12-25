@@ -1,6 +1,6 @@
 main: me.croabeast.sir.SIRPlugin
 
-name: SIR # Simple In-game Receptionist
+name: SIR
 version: '${version}'
 prefix: SIR
 authors: [ CroaBeast ]

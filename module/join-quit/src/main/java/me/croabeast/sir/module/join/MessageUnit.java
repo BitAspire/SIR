@@ -4,7 +4,7 @@ import lombok.Getter;
 import me.croabeast.file.Configurable;
 import me.croabeast.sir.PermissibleUnit;
 import me.croabeast.sir.SIRApi;
-import me.croabeast.sir.module.discord.Discord;
+import me.croabeast.sir.module.DiscordService;
 import me.croabeast.sir.user.SIRUser;
 import me.croabeast.takion.message.MessageSender;
 import org.bukkit.Bukkit;
@@ -79,7 +79,7 @@ final class MessageUnit implements PermissibleUnit {
         SIRApi.executeCommands(type == Messages.Type.QUIT ? null : user, commands);
         if (!api.getModuleManager().isEnabled("Discord")) return;
 
-        Discord discord = api.getModuleManager().getModule(Discord.class);
+        DiscordService discord = api.getModuleManager().getDiscordService();
         if (discord != null)
             discord.sendMessage(type == Messages.Type.FIRST_JOIN ?
                     "first-join" :

@@ -3,6 +3,7 @@ package me.croabeast.sir.module.mention;
 import me.croabeast.common.util.ReplaceUtils;
 import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.sir.ChatChannel;
+import me.croabeast.sir.UserFormatter;
 import me.croabeast.sir.module.SIRModule;
 import me.croabeast.sir.user.SIRUser;
 import me.croabeast.takion.chat.MultiComponent;
@@ -14,7 +15,7 @@ import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public final class Mentions extends SIRModule {
+public final class Mentions extends SIRModule implements UserFormatter<ChatChannel> {
 
     Data data;
 
@@ -30,7 +31,7 @@ public final class Mentions extends SIRModule {
     }
 
     @NotNull
-    public String parseMentions(SIRUser user, String string, ChatChannel channel) {
+    public String format(SIRUser user, String string, ChatChannel channel) {
         if (user == null || StringUtils.isBlank(string) || !isEnabled() || !user.isOnline())
             return string;
 
@@ -109,7 +110,7 @@ public final class Mentions extends SIRModule {
     }
 
     @NotNull
-    public String parseMentions(SIRUser user, String string) {
-        return parseMentions(user, string, null);
+    public String format(SIRUser user, String string) {
+        return format(user, string, null);
     }
 }

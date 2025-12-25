@@ -2,9 +2,8 @@ package me.croabeast.sir.command.print;
 
 import lombok.RequiredArgsConstructor;
 import me.croabeast.sir.SIRApi;
+import me.croabeast.sir.UserFormatter;
 import me.croabeast.sir.module.ModuleManager;
-import me.croabeast.sir.module.emoji.Emojis;
-import me.croabeast.sir.module.tag.Tags;
 import me.croabeast.sir.user.SIRUser;
 import me.croabeast.takion.TakionLib;
 import me.croabeast.takion.channel.Channel;
@@ -27,17 +26,11 @@ final class Printer {
         ModuleManager moduleManager = api.getModuleManager();
         SIRUser user = api.getUserManager().getUser(player);
 
-        if (moduleManager.isEnabled("Emojis")) {
-            Emojis emojis = moduleManager.getModule(Emojis.class);
-            if (emojis != null)
-                string = emojis.parseEmojis(user, string);
-        }
+        UserFormatter<?> emojis = moduleManager.getFormatter("Emojis");
+        if (emojis != null) string = emojis.format(user, string);
 
-        if (moduleManager.isEnabled("Tags")) {
-            Tags tags = moduleManager.getModule(Tags.class);
-            if (tags != null)
-                string = tags.parseTags(user, string);
-        }
+        UserFormatter<?> tags = moduleManager.getFormatter("Tags");
+        if (tags != null) string = tags.format(user, string);
 
         return string;
     }
