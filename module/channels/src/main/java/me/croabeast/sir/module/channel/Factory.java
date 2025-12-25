@@ -12,9 +12,7 @@ import me.croabeast.file.Configurable;
 import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.sir.ChatChannel;
 import me.croabeast.sir.SIRApi;
-import me.croabeast.sir.module.emoji.Emojis;
-import me.croabeast.sir.module.mention.Mentions;
-import me.croabeast.sir.module.tag.Tags;
+import me.croabeast.sir.UserFormatter;
 import me.croabeast.sir.user.ColorData;
 import me.croabeast.sir.user.SIRUser;
 import me.croabeast.takion.chat.ChatComponent;
@@ -198,20 +196,14 @@ final class Factory {
 
             SIRUser user = api.getUserManager().getUser(parser);
 
-            if (api.getModuleManager().isEnabled("Emojis")) {
-                Emojis emojis = api.getModuleManager().getModule(Emojis.class);
-                if (emojis != null) applier.apply(s -> emojis.parseEmojis(user, s));
-            }
+            UserFormatter<?> emojis = api.getModuleManager().getFormatter("Emojis");
+            if (emojis != null) applier.apply(s -> emojis.format(user, s));
 
-            if (api.getModuleManager().isEnabled("Tags")) {
-                Tags tags = api.getModuleManager().getModule(Tags.class);
-                if (tags != null) applier.apply(s -> tags.parseTags(user, s));
-            }
+            UserFormatter<?> tags = api.getModuleManager().getFormatter("Tags");
+            if (tags != null) applier.apply(s -> tags.format(user, s));
 
-            if (api.getModuleManager().isEnabled("Mentions")) {
-                Mentions mentions = api.getModuleManager().getModule(Mentions.class);
-                if (mentions != null) applier.apply(s -> mentions.parseMentions(user, s, this));
-            }
+            UserFormatter<ChatChannel> mentions = api.getModuleManager().getFormatter("Mentions");
+            if (mentions != null) applier.apply(s -> mentions.format(user, s, this));
 
             if (user != null)
                 applier.apply(s -> {

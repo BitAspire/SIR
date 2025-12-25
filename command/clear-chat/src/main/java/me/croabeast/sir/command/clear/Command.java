@@ -14,7 +14,6 @@ final class Command extends SIRCommand {
 
     Command(ClearProvider main) throws IOException {
         super("clear-chat", new ExtensionFile(main, "lang", true));
-        editSubCommand("help", (s, a) -> createSender(s).send("help"));
     }
 
     @Override

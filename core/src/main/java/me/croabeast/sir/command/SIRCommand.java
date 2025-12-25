@@ -1,6 +1,7 @@
 package me.croabeast.sir.command;
 
 import lombok.Getter;
+import me.croabeast.command.BaseCommand;
 import me.croabeast.command.BukkitCommand;
 import me.croabeast.command.CommandPredicate;
 import me.croabeast.command.TabBuilder;
@@ -10,7 +11,6 @@ import me.croabeast.sir.SIRApi;
 import me.croabeast.sir.user.UserManager;
 import me.croabeast.takion.TakionLib;
 import me.croabeast.takion.message.MessageSender;
-import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.HumanEntity;
@@ -18,11 +18,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Supplier;
 
 public abstract class SIRCommand extends BukkitCommand {
@@ -220,21 +216,22 @@ public abstract class SIRCommand extends BukkitCommand {
                 .send(resolveMessages("not-player", "<P> &cPlayer not found: &f{target}&c."));
     }
 
-    protected final void editSubCommand(String name, CommandPredicate predicate) {
-        if (StringUtils.isBlank(name) || predicate == null)
-            return;
+    protected final boolean isSubCommandPermitted(CommandSender sender, String name, boolean log) {
+        if (file == null) return isPermitted(sender, log);
 
-        SubCommand subCommand = (SubCommand) getSubCommand(name);
-        if (subCommand != null) {
-            subCommand.setPredicate(predicate);
-            return;
-        }
+        String permission = file.getSubCommands().get(name);
+        if (permission == null) return isPermitted(sender, log);
 
-        if (!file.getSubCommands().containsKey(name)) return;
+        UserManager manager = api.getUserManager();
+        if (manager.hasPermission(sender, permission) ||
+                manager.hasPermission(sender, getWildcardPermission()))
+            return true;
 
-        subCommand = new SubCommand(name, file.getSubCommands().get(name));
-        subCommand.setPredicate(predicate);
-        addSubCommand(subCommand);
+        if (log)
+            createSender(sender).addPlaceholder("{perm}", permission)
+                    .send(resolveMessages("no-permission", "<P> &cYou do not have permission: &f{perm}&c."));
+
+        return false;
     }
 
     // ----------------------------------------------------------------------
@@ -242,12 +239,14 @@ public abstract class SIRCommand extends BukkitCommand {
     // ----------------------------------------------------------------------
     @Override
     public boolean register(boolean sync) {
-        return reloadOptions() && super.register(sync);
+        reloadOptions();
+        return super.register(sync);
     }
 
     @Override
     public boolean unregister(boolean sync) {
-        return reloadOptions() && super.unregister(sync);
+        reloadOptions();
+        return super.unregister(sync);
     }
 
     @Override
@@ -266,9 +265,7 @@ public abstract class SIRCommand extends BukkitCommand {
         reloadOptions();
     }
 
-    private boolean reloadOptions() {
-        if (file == null) return false;
-
+    private void reloadOptions() {
         try {
             super.setName(file.getName());
         } catch (Exception e) {
@@ -276,16 +273,10 @@ public abstract class SIRCommand extends BukkitCommand {
         }
 
         super.setPermission(file.getPermission());
-
-        file.getSubCommands().keySet().forEach(this::removeSubCommand);
-        file.getSubCommands().forEach((k, v) ->
-                addSubCommand(new SubCommand(k, v)));
-
         super.setDescription(file.getDescription());
         super.setUsage(file.getUsage());
         super.setAliases(file.getAliases());
         super.setPermissionMessage(file.getPermissionMessage());
-        return true;
     }
 
     private List<String> resolveMessages(String key, String fallback) {
@@ -315,21 +306,6 @@ public abstract class SIRCommand extends BukkitCommand {
 
     protected static List<String> getOnlineNames() {
         return CollectionBuilder.of(Bukkit.getOnlinePlayers()).map(HumanEntity::getName).toList();
-    }
-
-    private class SubCommand extends me.croabeast.command.SubCommand {
-
-        SubCommand(String name, String permission) {
-            super(SIRCommand.this, name);
-            setPermission(permission);
-        }
-
-        @Override
-        public boolean isPermitted(CommandSender sender, boolean log) {
-            UserManager manager = api.getUserManager();
-            return manager.hasPermission(sender, getWildcardPermission()) ||
-                    manager.hasPermission(sender, getPermission());
-        }
     }
 
     private class CommandDisplayer extends MessageSender {

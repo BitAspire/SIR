@@ -1,7 +1,7 @@
 package me.croabeast.sir.module.advancement;
 
 import me.croabeast.sir.SIRApi;
-import me.croabeast.sir.module.discord.Discord;
+import me.croabeast.sir.module.DiscordService;
 import me.croabeast.sir.user.SIRUser;
 import org.bukkit.advancement.Advancement;
 import org.bukkit.advancement.AdvancementProgress;
@@ -59,8 +59,8 @@ final class Listener extends me.croabeast.sir.Listener {
 
         if (!api.getModuleManager().isEnabled("Discord")) return;
 
-        Discord discord = api.getModuleManager().getModule(Discord.class);
-        if (discord == null || !discord.isEnabled()) return;
+        DiscordService discord = api.getModuleManager().getDiscordService();
+        if (discord == null) return;
 
         UnaryOperator<String> replacer = messages.getReplacer(advancement);
         discord.sendMessage("advancements", player, replacer);

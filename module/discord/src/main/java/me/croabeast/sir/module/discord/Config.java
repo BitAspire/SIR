@@ -8,23 +8,16 @@ import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
 import github.scarsz.discordsrv.util.DiscordUtil;
 import lombok.SneakyThrows;
 import me.croabeast.common.applier.StringApplier;
-import me.croabeast.common.reflect.Reflector;
 import me.croabeast.common.util.ArrayUtils;
 import me.croabeast.file.Configurable;
 import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.sir.SIRApi;
 import me.croabeast.sir.ExtensionFile;
 import me.croabeast.takion.format.PlainFormat;
-import net.essentialsx.api.v2.ChatType;
-import net.essentialsx.api.v2.events.discord.DiscordChatMessageEvent;
-import net.essentialsx.discord.EssentialsDiscord;
-import net.essentialsx.discord.JDADiscordService;
 import org.apache.commons.lang.StringUtils;
-import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.lang.reflect.Field;
 import java.time.Instant;
@@ -33,19 +26,15 @@ import java.util.function.UnaryOperator;
 
 final class Config {
 
-    private String defaultServer = "";
+    private final String defaultServer;
     final boolean restricted;
 
     private final Map<String, List<String>> channelIds = new HashMap<>();
     private final Map<String, EmbedTemplate> embeds = new HashMap<>();
 
+    @SneakyThrows
     Config(Discord main, boolean restricted) {
         this.restricted = restricted;
-        load(main);
-    }
-
-    @SneakyThrows
-    private void load(Discord main) {
         ExtensionFile file = new ExtensionFile(main, "config", true);
         defaultServer = file.get("default-server", "");
         loadEmbeds(file);
@@ -209,22 +198,7 @@ final class Config {
         }
 
         private void sendViaEssentialsDiscord(Player player, UnaryOperator<String> formatter) {
-            SIRApi.instance().getScheduler().runTask(() -> {
-                EssentialsDiscord discord;
-                try {
-                    discord = JavaPlugin.getPlugin(EssentialsDiscord.class);
-                } catch (Exception e) {
-                    return;
-                }
-
-                JDADiscordService service = Reflector.from(() -> discord).get("jda");
-                String message = StringApplier.simplified(text).apply(formatter).toString();
-
-                DiscordChatMessageEvent event = new DiscordChatMessageEvent(player, message, ChatType.UNKNOWN);
-                Bukkit.getPluginManager().callEvent(event);
-
-                service.sendChatMessage(player, event.getMessage());
-            });
+            SIRApi.instance().getScheduler().runTask(() -> Essentials.send(player, text, formatter));
         }
 
         private void sendViaDiscordSRV(List<String> ids, UnaryOperator<String> formatter) {

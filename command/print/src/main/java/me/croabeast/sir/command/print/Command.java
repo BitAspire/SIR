@@ -8,6 +8,8 @@ import me.croabeast.sir.user.SIRUser;
 import org.bukkit.command.CommandSender;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Locale;
 
 final class Command extends SIRCommand {
 
@@ -16,46 +18,55 @@ final class Command extends SIRCommand {
     Command(PrintProvider main) throws IOException {
         super("print", new ExtensionFile(main, "lang", true));
         this.main = main;
-
-        editSubCommand("targets", (sender, args) -> args.length == 0 ?
-                createSender(sender).send("help.targets") :
-                isWrongArgument(sender, args[args.length - 1]));
-
-        editSubCommand("chat", (sender, args) -> {
-            if (args.length == 0) return createSender(sender).send("help.chat");
-            if (args.length < 3) return createSender(sender).send("empty-message");
-
-            TargetLoader.sendConfirmation(this, sender, args[0]);
-
-            boolean hasArg = args[1].matches("(?i)DEFAULT|CENTERED|MIXED");
-            new Printer(args, hasArg ? 2 : 1).print(sender, args[0], "");
-            return true;
-        });
-
-        editSubCommand("action-bar", (sender, args) -> {
-            if (args.length == 0) return createSender(sender).send("help.action-bar");
-            if (args.length < 2) return createSender(sender).send("empty-message");
-
-            TargetLoader.sendConfirmation(this, sender, args[0]);
-            new Printer(args, 1).print(sender, args[0], "ACTION-BAR");
-            return true;
-        });
-
-        editSubCommand("title", (sender, args) -> {
-            if (args.length == 0)
-                return createSender(sender).send("help.title");
-            if (args.length < 2)
-                return createSender(sender).send("empty-message");
-
-            TargetLoader.sendConfirmation(this, sender, args[0]);
-            new Printer(args, 2).print(sender, args[0], "TITLE");
-            return true;
-        });
     }
 
     @Override
     protected boolean execute(CommandSender sender, String[] args) {
-        return createSender(sender).send("help.main");
+        if (!isPermitted(sender)) return true;
+        if (args.length == 0) return createSender(sender).send("help.main");
+
+        String subCommand = args[0].toLowerCase(Locale.ENGLISH);
+        String[] rest = Arrays.copyOfRange(args, 1, args.length);
+
+        switch (subCommand) {
+            case "targets":
+                if (!isSubCommandPermitted(sender, "targets", true)) return true;
+                return rest.length == 0 ?
+                        createSender(sender).send("help.targets") :
+                        isWrongArgument(sender, rest[rest.length - 1]);
+
+            case "chat":
+                if (!isSubCommandPermitted(sender, "chat", true)) return true;
+                if (rest.length == 0) return createSender(sender).send("help.chat");
+                if (rest.length < 3) return createSender(sender).send("empty-message");
+
+                TargetLoader.sendConfirmation(this, sender, rest[0]);
+
+                boolean hasArg = rest[1].matches("(?i)DEFAULT|CENTERED|MIXED");
+                new Printer(rest, hasArg ? 2 : 1).print(sender, rest[0], "");
+                return true;
+
+            case "action-bar":
+                if (!isSubCommandPermitted(sender, "action-bar", true)) return true;
+                if (rest.length == 0) return createSender(sender).send("help.action-bar");
+                if (rest.length < 2) return createSender(sender).send("empty-message");
+
+                TargetLoader.sendConfirmation(this, sender, rest[0]);
+                new Printer(rest, 1).print(sender, rest[0], "ACTION-BAR");
+                return true;
+
+            case "title":
+                if (!isSubCommandPermitted(sender, "title", true)) return true;
+                if (rest.length == 0) return createSender(sender).send("help.title");
+                if (rest.length < 2) return createSender(sender).send("empty-message");
+
+                TargetLoader.sendConfirmation(this, sender, rest[0]);
+                new Printer(rest, 2).print(sender, rest[0], "TITLE");
+                return true;
+
+            default:
+                return isWrongArgument(sender, args[0]);
+        }
     }
 
     @Override

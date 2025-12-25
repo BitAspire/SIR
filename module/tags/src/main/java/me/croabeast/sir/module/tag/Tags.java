@@ -1,6 +1,7 @@
 package me.croabeast.sir.module.tag;
 
 import me.croabeast.sir.PAPIExpansion;
+import me.croabeast.sir.UserFormatter;
 import me.croabeast.sir.module.SIRModule;
 import me.croabeast.sir.user.SIRUser;
 import org.apache.commons.lang.StringUtils;
@@ -14,7 +15,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public final class Tags extends SIRModule {
+public final class Tags extends SIRModule implements UserFormatter<Object> {
 
     Data data;
     PAPIExpansion hook;
@@ -66,7 +67,7 @@ public final class Tags extends SIRModule {
     }
 
     @NotNull
-    public String parseTags(SIRUser user, String string) {
+    public String format(SIRUser user, String string) {
         if (user == null || StringUtils.isBlank(string) || !isEnabled())
             return string;
 
@@ -83,7 +84,7 @@ public final class Tags extends SIRModule {
     }
 
     @NotNull
-    public String parseTags(Player player, String string) {
-        return parseTags(getApi().getUserManager().getUser(player), string);
+    public String format(SIRUser user, String string, Object reference) {
+        return format(user, string);
     }
 }

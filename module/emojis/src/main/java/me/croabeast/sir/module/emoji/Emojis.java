@@ -1,6 +1,7 @@
 package me.croabeast.sir.module.emoji;
 
 import me.croabeast.sir.PAPIExpansion;
+import me.croabeast.sir.UserFormatter;
 import me.croabeast.sir.module.SIRModule;
 import me.croabeast.sir.user.SIRUser;
 import org.bukkit.Bukkit;
@@ -8,7 +9,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-public final class Emojis extends SIRModule {
+public final class Emojis extends SIRModule implements UserFormatter<Object> {
 
     Data data;
     PAPIExpansion hook;
@@ -33,7 +34,7 @@ public final class Emojis extends SIRModule {
     }
 
     @NotNull
-    public String parseEmojis(SIRUser user, String string) {
+    public String format(SIRUser user, String string) {
         if (!isEnabled() || data.emojis.isEmpty())
             return string;
 
@@ -44,7 +45,7 @@ public final class Emojis extends SIRModule {
     }
 
     @NotNull
-    public String parseEmojis(Player player, String string) {
-        return parseEmojis(getApi().getUserManager().getUser(player), string);
+    public String format(SIRUser user, String string, Object reference) {
+        return format(user, string);
     }
 }

@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import me.croabeast.common.gui.ButtonBuilder;
 import me.croabeast.common.gui.ChestBuilder;
 import me.croabeast.common.gui.ItemCreator;
+import me.croabeast.sir.PluginDependant;
 import me.croabeast.sir.SIRApi;
 import me.croabeast.sir.Toggleable;
 import me.croabeast.sir.module.ModuleManager;
@@ -38,9 +39,14 @@ public final class CommandManager {
     private final ModuleManager moduleManager;
 
     private final Map<String, SIRCommand> commands = new LinkedHashMap<>();
-    private final Map<String, LoadedProvider> providers = new LinkedHashMap<>();
     private final Map<String, ProviderState> states = new LinkedHashMap<>();
+
+    private final Map<String, LoadedProvider> providers = new LinkedHashMap<>();
+    private final Map<String, DeferredProvider> deferredProviders = new LinkedHashMap<>();
+
     private final Set<SIRModule> processedModules = Collections.newSetFromMap(new IdentityHashMap<>());
+
+    private boolean deferPluginDependants = false;
 
     public CommandManager(SIRApi api) {
         this.api = api;
@@ -52,6 +58,16 @@ public final class CommandManager {
         final ProviderLoader loader;
         final CommandProvider provider;
         final ProviderInformation information;
+    }
+
+    private static class DeferredProvider {
+        final File jarFile;
+        final String[] dependencies;
+
+        DeferredProvider(File jarFile, String[] dependencies) {
+            this.jarFile = jarFile;
+            this.dependencies = dependencies;
+        }
     }
 
     private static class ProviderState {
@@ -270,6 +286,21 @@ public final class CommandManager {
             if (provider instanceof StandaloneProvider)
                 ((StandaloneProvider) provider).init(api, loader, file);
 
+            if (provider instanceof PluginDependant) {
+                PluginDependant dependant = (PluginDependant) provider;
+                if (deferPluginDependants) {
+                    deferProvider(file.getName(), jarFile, dependant.getDependencies());
+                    loader.close();
+                    return;
+                }
+
+                if (!dependant.isPluginEnabled()) {
+                    deferProvider(file.getName(), jarFile, dependant.getDependencies());
+                    loader.close();
+                    return;
+                }
+            }
+
             boolean enabled = provider.isEnabled();
             providers.put(file.getName(), new LoadedProvider(loader, provider, file));
 
@@ -313,8 +344,44 @@ public final class CommandManager {
             return;
         }
 
+        deferPluginDependants = true;
         for (File jar : jars) load(jar, false);
+
+        deferPluginDependants = false;
+        retryDeferredProviders(null, false);
         SIRCommand.syncCommands();
+    }
+
+    private void deferProvider(String providerName, File jarFile, String[] dependencies) {
+        if (deferredProviders.containsKey(providerName) || providers.containsKey(providerName))
+            return;
+
+        deferredProviders.put(providerName, new DeferredProvider(jarFile, dependencies));
+        log(LogLevel.INFO, "Command provider '" + providerName + "' deferred until its dependencies are ready.");
+    }
+
+    public void retryDeferredProviders(String pluginName, boolean syncCommands) {
+        if (deferredProviders.isEmpty()) return;
+
+        Iterator<Map.Entry<String, DeferredProvider>> iterator = deferredProviders.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<String, DeferredProvider> entry = iterator.next();
+            DeferredProvider deferred = entry.getValue();
+            if (pluginName != null && !matchesDependency(pluginName, deferred.dependencies)) continue;
+
+            load(deferred.jarFile, syncCommands);
+            if (providers.containsKey(entry.getKey())) {
+                iterator.remove();
+            }
+        }
+    }
+
+    private boolean matchesDependency(String pluginName, String[] dependencies) {
+        if (pluginName == null || dependencies == null) return true;
+        for (String dependency : dependencies) {
+            if (dependency.equalsIgnoreCase(pluginName)) return true;
+        }
+        return false;
     }
 
     @NotNull
@@ -650,7 +717,7 @@ public final class CommandManager {
             if (command == null) continue;
 
             String name = StringUtils.isBlank(command.getName()) ? command.getCommandKey() : command.getName();
-            if (StringUtils.isBlank(name)) continue;
+            if (StringUtils.isBlank(name) || getCommand(name) == null) continue;
 
             unload(name, syncCommands);
         }

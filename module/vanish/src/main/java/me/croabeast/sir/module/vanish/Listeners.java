@@ -3,11 +3,11 @@ package me.croabeast.sir.module.vanish;
 import com.Zrips.CMI.events.CMIPlayerUnVanishEvent;
 import com.Zrips.CMI.events.CMIPlayerVanishEvent;
 import de.myzelyam.api.vanish.PlayerVanishStateChangeEvent;
+import me.croabeast.sir.module.JoinQuitService;
 import net.ess3.api.IUser;
 import net.ess3.api.events.VanishStatusChangeEvent;
 import me.croabeast.common.Registrable;
 import me.croabeast.sir.Listener;
-import me.croabeast.sir.module.join.JoinQuit;
 import me.croabeast.sir.user.SIRUser;
 import me.croabeast.sir.user.UserManager;
 import me.croabeast.takion.message.MessageSender;
@@ -35,19 +35,14 @@ final class Listeners implements Registrable {
 
                 SIRUser user = event.getUser();
                 if (main.getApi().getModuleManager().isEnabled("Login")) user.setLogged(true);
+
                 if (!main.getApi().getModuleManager().isEnabled("JoinQuit")) return;
 
                 boolean vanished = event.isVanished();
 
-                JoinQuit joinQuit = main.getApi().getModuleManager().getModule(JoinQuit.class);
-                if (joinQuit == null || joinQuit.isStillOnCooldown(user, vanished)) return;
-
-                if (vanished) {
-                    joinQuit.displayJoin(user);
-                    return;
-                }
-
-                joinQuit.displayQuit(user);
+                JoinQuitService joinQuit = main.getApi().getModuleManager().getJoinQuitService();
+                if (joinQuit != null && !joinQuit.isOnCooldown(user, vanished))
+                    joinQuit.display(user, vanished);
             }
 
             @EventHandler

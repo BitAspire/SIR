@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import me.croabeast.common.util.ReplaceUtils;
 import me.croabeast.sir.ChatChannel;
 import me.croabeast.sir.SIRApi;
+import me.croabeast.sir.module.DiscordService;
 import me.croabeast.sir.module.ModuleManager;
-import me.croabeast.sir.module.discord.Discord;
 import me.croabeast.sir.user.SIRUser;
 import me.croabeast.takion.TakionLib;
 import me.croabeast.takion.channel.Channel;
@@ -31,6 +31,7 @@ final class Listener extends me.croabeast.sir.Listener {
     private void onChat(AsyncPlayerChatEvent event) {
         if (event.isCancelled() || !main.isEnabled()) return;
 
+        main.getApi().getLibrary().getLogger().log("1");
         SIRUser user = main.getApi().getUserManager().getUser(event.getPlayer());
         if (user == null) return;
 
@@ -59,21 +60,20 @@ final class Listener extends me.croabeast.sir.Listener {
         boolean async = event.isAsynchronous();
 
         ChatChannel local = main.data.getLocal(user, message, true);
-        if (local != null)
-            if (((Predicate<ChatChannel>) channel -> {
-                ChatChannel.Access access = local.getLocalAccess();
-                if (access == null) return false;
+        if (local != null &&
+                ((Predicate<ChatChannel>) channel -> {
+                    ChatChannel.Access access = local.getLocalAccess();
+                    if (access == null) return false;
 
-                String prefix = access.getPrefix();
-                if (StringUtils.isBlank(prefix)) return false;
+                    String prefix = access.getPrefix();
+                    if (StringUtils.isBlank(prefix)) return false;
 
-                String msg = message.substring(prefix.length());
-                event.setCancelled(true);
+                    String msg = message.substring(prefix.length());
+                    event.setCancelled(true);
 
-                new ChatEvent(user, local, msg, async).call();
-                return true;
-            }
-            ).test(local)) return;
+                    new ChatEvent(user, local, msg, async).call();
+                    return true;
+                }).test(local)) return;
 
         ChatChannel channel = main.data.getGlobal(user);
         if (channel == null) return;
@@ -125,7 +125,7 @@ final class Listener extends me.croabeast.sir.Listener {
             String m = lib.getPlaceholderManager().replace(player, message);
             String name = event.isGlobal() ? "global-chat" : channel.getName();
 
-            Discord discord = manager.getModule(Discord.class);
+            DiscordService discord = manager.getDiscordService();
             if (discord != null)
                 discord.sendMessage(
                         discord.isRestricted() ? "restricted" : name, player,

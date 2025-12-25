@@ -8,7 +8,6 @@ repositories {
 
 dependencies {
     compileOnly(project(":core"))
-    compileOnly(project(":module:join-quit"))
 
     compileOnly("fr.xephi:authme:5.6.0-SNAPSHOT")
     compileOnly("com.nickuc.openlogin:openlogin-universal:1.3")

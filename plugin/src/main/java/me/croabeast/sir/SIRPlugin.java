@@ -17,6 +17,9 @@ import me.croabeast.takion.TakionLib;
 import me.croabeast.vault.ChatAdapter;
 import me.croabeast.vault.EconomyAdapter;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.server.PluginEnableEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -48,6 +51,16 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
         configuration = new ConfigImpl(this);
         moduleManager = new ModuleManager(this);
         commandManager = new CommandManager(this);
+
+        (new Listener() {
+            @EventHandler
+            private void onPluginEnable(PluginEnableEvent event) {
+                String name = event.getPlugin().getName();
+                moduleManager.retryDeferredModules(name, false);
+                commandManager.retryDeferredProviders(name, false);
+                SIRCommand.syncCommands();
+            }
+        }).register();
 
         library = new Library(this);
 
@@ -218,6 +231,8 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
                 "SIR disabled completely in " + timer.current() + " ms.",
                 "==================================="
         ).sendLines();
+
+        HandlerList.unregisterAll(this);
 
         Api.api = null;
     }

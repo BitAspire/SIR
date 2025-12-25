@@ -5,13 +5,13 @@ import com.nickuc.login.api.event.bukkit.auth.AuthenticateEvent;
 import com.nickuc.openlogin.bukkit.api.events.AsyncLoginEvent;
 import com.nickuc.openlogin.bukkit.api.events.AsyncRegisterEvent;
 import fr.xephi.authme.events.LoginEvent;
+import me.croabeast.sir.module.JoinQuitService;
 import su.nexmedia.auth.api.event.AuthPlayerLoginEvent;
 import su.nexmedia.auth.api.event.AuthPlayerRegisterEvent;
 
 import lombok.RequiredArgsConstructor;
 import me.croabeast.common.Registrable;
 import me.croabeast.sir.Listener;
-import me.croabeast.sir.module.join.JoinQuit;
 import me.croabeast.sir.user.SIRUser;
 import me.croabeast.takion.logger.LogLevel;
 import org.bukkit.Bukkit;
@@ -32,8 +32,8 @@ final class Listeners implements Registrable {
         if (!main.getApi().getModuleManager().isEnabled("JoinQuit"))
             return;
 
-        JoinQuit joinQuit = main.getApi().getModuleManager().getModule(JoinQuit.class);
-        if (joinQuit != null && joinQuit.isEnabled()) joinQuit.displayJoin(user);
+        JoinQuitService joinQuit = main.getApi().getModuleManager().getJoinQuitService();
+        if (joinQuit != null) joinQuit.display(user, true);
     }
 
     @Override

@@ -190,6 +190,10 @@ final class MainCommand implements TabExecutor {
         return sender.send("<P> &cInvalid mode. Use enabled or override.");
     }
 
+    boolean sendFallback(MessageSender displayer) {
+        return displayer.addPlaceholder("{version}", main.getDescription().getVersion()).send("help");
+    }
+
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (isProhibited(sender, "sir.admin") || isProhibited(sender, WILD_CARD))
@@ -198,16 +202,20 @@ final class MainCommand implements TabExecutor {
         CommandDisplayer displayer = new CommandDisplayer(sender);
         MessageSender mainSender = main.getLibrary().getLoadedSender();
 
+        if (args.length < 1) return sendFallback(displayer);
+
         String first;
-        if (args.length != 1 || !SUB_COMMANDS.contains(first = args[0].toLowerCase(Locale.ENGLISH)))
-            return displayer.addPlaceholder("{version}", main.getDescription().getVersion()).send("help");
+        if (!SUB_COMMANDS.contains(first = args[0].toLowerCase(Locale.ENGLISH)))
+            return sendFallback(displayer);
 
         if (isProhibited(sender, PERMISSION_PREFIX + first)) return false;
 
         Player player = sender instanceof Player ? (Player) sender : null;
         switch (first) {
             case "about":
-                return mainSender.setTargets(player).send(
+                if (args.length != 1) return sendFallback(displayer);
+
+                return mainSender.setTargets(player).setLogger(false).send(
                         "",
                         " &eSIR &7- &f" + main.getDescription().getVersion() + "&7:",
                         "   &8• &7Server Software: &f" + ServerInfoUtils.SERVER_FORK,
@@ -217,37 +225,41 @@ final class MainCommand implements TabExecutor {
                 );
 
             case "modules":
-                if (ServerInfoUtils.SERVER_VERSION < 14.0)
-                    return handleLegacyModules(sender, args);
+                if (args.length == 1 && ServerInfoUtils.SERVER_VERSION >= 14) {
+                    if (player == null)
+                        return mainSender.send("&cThis command is only for players.");
 
-                if (player == null)
-                    return mainSender.send("&cThis command is only for players.");
+                    main.getModuleManager().getMenu().showGui(player);
+                    return true;
+                }
 
-                main.getModuleManager().getMenu().showGui(player);
-                return true;
+                return handleLegacyModules(sender, args);
 
             case "commands":
-                if (ServerInfoUtils.SERVER_VERSION < 14.0)
-                    return handleLegacyCommands(sender, args);
+                if (args.length == 1 && ServerInfoUtils.SERVER_VERSION >= 14) {
+                    if (player == null)
+                        return mainSender.send("&cThis command is only for players.");
 
-                if (player == null)
-                    return mainSender.send("&cThis command is only for players.");
+                    main.getCommandManager().getMenu().showGui(player);
+                    return true;
+                }
 
-                main.getCommandManager().getMenu().showGui(player);
-                return true;
+                return handleLegacyCommands(sender, args);
 
             case "reload":
+                if (args.length != 1) return sendFallback(displayer);
+
                 Timer timer = Timer.create();
                 lang.reload();
                 main.reload();
                 return displayer.addPlaceholder("{time}", timer.current()).send("reload");
 
             case "support":
+                if (args.length != 1) return sendFallback(displayer);
                 return displayer.addPlaceholder("{link}", "https://discord.gg/s9YFGMrjyF").send("support");
 
             case "help":
-            default:
-                return displayer.addPlaceholder("{version}", main.getDescription().getVersion()).send("help");
+            default: return sendFallback(displayer);
         }
     }
 
