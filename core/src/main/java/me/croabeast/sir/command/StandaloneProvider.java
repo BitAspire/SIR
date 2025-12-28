@@ -31,7 +31,7 @@ public abstract class StandaloneProvider implements CommandProvider {
 
         button.setOnClick(b -> event -> {
             if (event.isRightClick()) {
-                api.getCommandManager().openOverrideMenu(this, event, true);
+                api.getCommandManager().openOverrideMenu(event);
                 return;
             }
 

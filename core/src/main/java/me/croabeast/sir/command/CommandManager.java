@@ -3,7 +3,6 @@ package me.croabeast.sir.command;
 import com.github.stefvanschie.inventoryframework.pane.Pane;
 import com.github.stefvanschie.inventoryframework.pane.util.Slot;
 import lombok.RequiredArgsConstructor;
-import me.croabeast.common.gui.ButtonBuilder;
 import me.croabeast.common.gui.ChestBuilder;
 import me.croabeast.common.gui.ItemCreator;
 import me.croabeast.sir.PluginDependant;
@@ -17,7 +16,7 @@ import org.apache.commons.lang.StringUtils;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.HumanEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.jetbrains.annotations.NotNull;
 
@@ -428,54 +427,6 @@ public final class CommandManager {
         return true;
     }
 
-    public Boolean getCommandOverride(String providerName, String commandKey) {
-        LoadedProvider loaded = getLoadedProvider(providerName);
-        if (loaded == null || StringUtils.isBlank(commandKey)) return null;
-
-        String nameKey = commandKey.toLowerCase(Locale.ENGLISH);
-        ProviderInformation info = loaded.information;
-        ConfigurationSection section = info.getCommandSection(nameKey);
-        if (section == null) return null;
-
-        ProviderState state = ensureProviderState(info.getName());
-        return resolveOverrideState(state, nameKey, section);
-    }
-
-    public boolean updateCommandOverride(String providerName, String commandKey, boolean override, boolean syncCommands) {
-        LoadedProvider loaded = getLoadedProvider(providerName);
-        if (loaded == null || StringUtils.isBlank(commandKey)) return false;
-
-        String nameKey = commandKey.toLowerCase(Locale.ENGLISH);
-        ProviderInformation info = loaded.information;
-        ConfigurationSection section = info.getCommandSection(nameKey);
-        if (section == null) return false;
-
-        ProviderState state = ensureProviderState(info.getName());
-        state.overrides.put(nameKey, override);
-
-        SIRCommand command = getProviderCommand(loaded.provider, nameKey);
-        if (command == null) return true;
-
-        SIRCommand parent = null;
-        boolean depends = section.getBoolean("depends.enabled");
-        String parentName = section.getString("depends.parent");
-        if (depends && StringUtils.isNotBlank(parentName))
-            parent = getCommand(parentName);
-
-        command.applyFile(new CommandFile(nameKey, section, parent, override));
-        if (!commands.containsKey(nameKey)) return true;
-
-        try {
-            command.unregister(syncCommands);
-            command.register(syncCommands);
-        } catch (Exception e) {
-            log(LogLevel.ERROR, "Failed to re-register command '" + commandKey + "' after override change.");
-            e.printStackTrace();
-        }
-
-        return true;
-    }
-
     @NotNull
     public ChestBuilder getMenu() {
         List<Toggleable.Button> buttons = providers.values().stream()
@@ -519,156 +470,11 @@ public final class CommandManager {
         return menu;
     }
 
-    public void openOverrideMenu(@NotNull StandaloneProvider provider, @NotNull InventoryClickEvent event, boolean syncCommands) {
+    public void openOverrideMenu(@NotNull InventoryClickEvent event) {
         event.setCancelled(true);
-        if (!provider.isEnabled()) return;
-
-        ProviderInformation info = provider.getInformation();
-
-        Map<String, ConfigurationSection> commandSections = info.getCommands();
-        if (commandSections.isEmpty()) return;
-
-        Map<String, SIRCommand> commandMap = new LinkedHashMap<>();
-        for (SIRCommand command : provider.getCommands()) {
-            if (command == null) continue;
-
-            String commandKey = StringUtils.isBlank(command.getCommandKey()) ? command.getName() : command.getCommandKey();
-            if (StringUtils.isBlank(commandKey)) continue;
-
-            commandMap.put(commandKey.toLowerCase(Locale.ENGLISH), command);
-        }
-
-        if (commandSections.size() == 1) {
-            Map.Entry<String, ConfigurationSection> entry = commandSections.entrySet().iterator().next();
-
-            String commandKey = entry.getKey();
-            SIRCommand command = commandMap.get(commandKey.toLowerCase(Locale.ENGLISH));
-            toggleOverride(info, commandKey, entry.getValue(), command, syncCommands);
-            return;
-        }
-
-        showOverrideMenu(provider, info, commandSections, commandMap, event.getWhoClicked(), syncCommands);
-    }
-
-    private void showOverrideMenu(StandaloneProvider provider,
-                                  ProviderInformation info,
-                                  Map<String, ConfigurationSection> commandSections,
-                                  Map<String, SIRCommand> commandMap,
-                                  HumanEntity viewer, boolean syncCommands)
-    {
-        int itemsPerPage = 28;
-        List<String> commandKeys = new ArrayList<>(commandSections.keySet());
-        commandKeys.sort(String.CASE_INSENSITIVE_ORDER);
-
-        int rows = getCenterMenuRows(commandKeys.size());
-        String title = "&8" + SmallCaps.toSmallCaps(provider.getName() + " Overrides:");
-        ChestBuilder menu = ChestBuilder.of(api.getPlugin(), rows, title);
-
-        for (int index = 0; index < commandKeys.size(); index++) {
-            String commandKey = commandKeys.get(index);
-
-            ConfigurationSection section = commandSections.get(commandKey);
-            if (section == null) continue;
-
-            int page = index / itemsPerPage, indexOnPage = index % itemsPerPage;
-            Slot slot = getCenterMenuSlot(indexOnPage);
-            if (slot == null) continue;
-
-            ProviderState state = ensureProviderState(info.getMain());
-            boolean override = resolveOverrideState(state, commandKey, section);
-
-            String titleName = "/" + commandKey;
-            String actionLine = "&f➤ &7Toggle override-existing";
-
-            menu.addPane(page, ButtonBuilder
-                    .of(api.getPlugin(), slot, override)
-                    .setItem(
-                            ItemCreator.of(Material.LIME_STAINED_GLASS_PANE)
-                                    .modifyName("&7• &f" + SmallCaps.toSmallCaps(titleName) + ": &a&l✔")
-                                    .modifyLore(actionLine, "&7Current: &aEnabled")
-                                    .create(api.getPlugin()),
-                            true
-                    )
-                    .setItem(
-                            ItemCreator.of(Material.RED_STAINED_GLASS_PANE)
-                                    .modifyName("&7• &f" + SmallCaps.toSmallCaps(titleName) + ": &c&l❌")
-                                    .modifyLore(actionLine, "&7Current: &cDisabled")
-                                    .create(api.getPlugin()),
-                            false
-                    )
-                    .modify(button -> button.allowToggle(false))
-                    .setAction(button -> click -> {
-                        click.setCancelled(true);
-                        toggleOverride(info, commandKey, section, commandMap.get(commandKey.toLowerCase(Locale.ENGLISH)), syncCommands);
-                        showOverrideMenu(provider, info, commandSections, commandMap, click.getWhoClicked(), syncCommands);
-                    })
-                    .getValue());
-        }
-
-        int bottomRow = rows - 1;
-        menu.addSingleItem(
-                0, 7, bottomRow,
-                ItemCreator.of(Material.BARRIER).modifyName("&c&lClose")
-                        .modifyLore("&7Close this menu.")
-                        .setAction(e -> {
-                            e.setCancelled(true);
-                            e.getWhoClicked().closeInventory();
-                        })
-                        .create(api.getPlugin()),
-                pane -> pane.setPriority(Pane.Priority.LOW)
-        );
-
-        menu.showGui(viewer);
-    }
-
-    private static int getCenterMenuRows(int itemCount) {
-        int itemsPerRow = 7;
-        int rowsOfItems = (itemCount + itemsPerRow - 1) / itemsPerRow;
-        return Math.max(1, Math.min(4, rowsOfItems)) + 2;
-    }
-
-    private static Slot getCenterMenuSlot(int index) {
-        int itemsPerRow = 7;
-        int row = index / itemsPerRow;
-        if (row >= 4) {
-            return null;
-        }
-
-        int column = index % itemsPerRow;
-        int x = 1 + column;
-        int y = 1 + row;
-        return Slot.fromXY(x, y);
-    }
-
-    private void toggleOverride(ProviderInformation info, String commandKey, ConfigurationSection section, SIRCommand command, boolean syncCommands) {
-        if (info == null || section == null) return;
-
-        ProviderState state = ensureProviderState(info.getMain());
-        String normalized = commandKey.toLowerCase(Locale.ENGLISH);
-
-        boolean current = resolveOverrideState(state, normalized, section);
-        boolean next = !current;
-        state.overrides.put(normalized, next);
-
-        if (command == null) command = getCommand(normalized);
-        if (command == null) return;
-
-        SIRCommand parent = null;
-
-        boolean depends = section.getBoolean("depends.enabled");
-        String parentName = section.getString("depends.parent");
-        if (depends && StringUtils.isNotBlank(parentName)) parent = getCommand(parentName);
-
-        command.applyFile(new CommandFile(normalized, section, parent, next));
-        if (!commands.containsKey(normalized)) return;
-
-        try {
-            command.unregister(syncCommands);
-            command.register(syncCommands);
-        } catch (Exception e) {
-            log(LogLevel.ERROR, "Failed to re-register command '" + normalized + "' after override change.");
-            e.printStackTrace();
-        }
+        api.getLibrary().getLoadedSender().setTargets(event.getWhoClicked())
+                .setLogger(!(event.getWhoClicked() instanceof Player))
+                .send("<P> &cThis option is only available on &fSIR+&c.");
     }
 
     public boolean isEnabled(String name) {
@@ -784,55 +590,6 @@ public final class CommandManager {
         return ensureProviderState(main).enabled;
     }
 
-    public void toggleOverrides(CommandProvider provider, boolean syncCommands) {
-        if (provider == null) return;
-
-        LoadedProvider loaded = providers.values().stream()
-                .filter(entry -> entry.provider == provider)
-                .findFirst()
-                .orElse(null);
-
-        if (loaded == null) return;
-
-        ProviderInformation info = loaded.information;
-        ProviderState state = ensureProviderState(info.getName());
-
-        for (SIRCommand command : provider.getCommands()) {
-            if (command == null) continue;
-
-            String commandKey = command.getCommandKey();
-            if (StringUtils.isBlank(commandKey)) {
-                commandKey = command.getName();
-            }
-            if (StringUtils.isBlank(commandKey)) continue;
-
-            String nameKey = commandKey.toLowerCase(Locale.ENGLISH);
-            ConfigurationSection section = info.getCommandSection(nameKey);
-            if (section == null) continue;
-
-            boolean current = resolveOverrideState(state, nameKey, section);
-            boolean next = !current;
-            state.overrides.put(nameKey, next);
-
-            SIRCommand parent = null;
-            boolean depends = section.getBoolean("depends.enabled");
-            String parentName = section.getString("depends.parent");
-            if (depends && StringUtils.isNotBlank(parentName)) {
-                parent = getCommand(parentName);
-            }
-
-            command.applyFile(new CommandFile(nameKey, section, parent, next));
-            if (!commands.containsKey(nameKey)) continue;
-            try {
-                command.unregister(syncCommands);
-                command.register(syncCommands);
-            } catch (Exception e) {
-                log(LogLevel.ERROR, "Failed to re-register command '" + commandKey + "' after override change.");
-                e.printStackTrace();
-            }
-        }
-    }
-
     private void loadStates() {
         states.clear();
 
@@ -868,24 +625,6 @@ public final class CommandManager {
 
         for (Map.Entry<String, LoadedProvider> entry : providers.entrySet()) {
             if (entry.getKey().equalsIgnoreCase(name)) return entry.getValue();
-        }
-
-        return null;
-    }
-
-    private SIRCommand getProviderCommand(CommandProvider provider, String nameKey) {
-        if (provider == null || StringUtils.isBlank(nameKey)) return null;
-
-        for (SIRCommand command : provider.getCommands()) {
-            if (command == null) continue;
-
-            String commandKey = command.getCommandKey();
-            if (StringUtils.isBlank(commandKey)) {
-                commandKey = command.getName();
-            }
-            if (StringUtils.isBlank(commandKey)) continue;
-
-            if (nameKey.equalsIgnoreCase(commandKey)) return command;
         }
 
         return null;
