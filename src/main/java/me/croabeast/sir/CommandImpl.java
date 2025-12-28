@@ -133,7 +133,7 @@ final class CommandImpl implements CommandManager {
     public boolean register() {
         commands.values().forEach(c -> c.register(false));
         registrar.forEach(Registrable::register);
-        SIRCommand.syncCommands();
+        SIRCommand.scheduleSync();
         return true;
     }
 
@@ -141,7 +141,7 @@ final class CommandImpl implements CommandManager {
     public boolean unregister() {
         commands.values().forEach(c -> c.unregister(false));
         registrar.forEach(Registrable::unregister);
-        SIRCommand.syncCommands();
+        SIRCommand.scheduleSync();
         return true;
     }
 

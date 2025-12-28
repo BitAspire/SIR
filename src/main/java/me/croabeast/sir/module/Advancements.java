@@ -61,7 +61,7 @@ final class Advancements extends ListenerModule {
         final Player player = event.getPlayer();
         SIRUser user = plugin.getUserManager().getUser(player);
 
-        if (!this.isEnabled() || user.isVanished() ||
+        if (!this.isEnabled() || user == null || user.isVanished() ||
                 fromDisabledList("worlds").contains(player.getWorld().getName()))
             return;
 

@@ -33,7 +33,7 @@ import java.util.function.Function;
 @UtilityClass
 class ChannelUtils {
 
-    private final String DEF_FORMAT = " &7{player}: {message}";
+    private final String DEFAULT_FORMAT = " &7{player}: {message}";
     ChatChannel defaults = null;
 
     final String[] CHAT_KEYS = {
@@ -41,7 +41,7 @@ class ChannelUtils {
             "{color}", "{message}"
     };
 
-    @SuppressWarnings({"ConstantConditions", "unchecked"})
+    @SuppressWarnings("all")
     @Getter
     abstract class BaseChannel implements ChatChannel {
 
@@ -126,7 +126,7 @@ class ChannelUtils {
                     parent.getClickAction() : click;
 
             hoverList = fromList("hover", ChatChannel::getHoverList);
-            chatFormat = fromParent("format", ChatChannel::getChatFormat, DEF_FORMAT);
+            chatFormat = fromParent("format", ChatChannel::getChatFormat, DEFAULT_FORMAT);
 
             Configurable config = FileData.Module.Chat.getMain();
             String logPath = "simple-logger.";
@@ -134,7 +134,7 @@ class ChannelUtils {
             this.logFormat = PlainFormat.TRIM_START_SPACES.accept(
                     !config.get(logPath + "enabled", false) ?
                             chatFormat :
-                            config.get(logPath + "format", DEF_FORMAT)
+                            config.get(logPath + "format", DEFAULT_FORMAT)
             );
         }
 

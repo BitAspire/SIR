@@ -153,7 +153,7 @@ final class MuteHandler implements Commandable {
                     return message.send("is-muted." + path);
                 }
 
-                final int time = convertToSeconds(args[1]);
+                int time = convertToSeconds(args[1]);
                 data.mute(time, sender.getName(), reason);
 
                 return message.setTargets(Bukkit.getOnlinePlayers())
@@ -232,7 +232,7 @@ final class MuteHandler implements Commandable {
                     commands.forEach(c -> c.unregister(false));
                 }
 
-                SIRCommand.syncCommands();
+                SIRCommand.scheduleSync();
 
                 String s = "Mute commands active status: " + b.isEnabled();
                 SIRPlugin.getLib().getLogger().log(s);

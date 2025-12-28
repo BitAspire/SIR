@@ -194,7 +194,7 @@ final class PrintCommand extends SIRCommand {
                                 .toSet();
                         break;
 
-                    default:
+                    default: break;
                 }}
 
             return this.targets =
@@ -227,44 +227,44 @@ final class PrintCommand extends SIRCommand {
         private final String[] args;
         private final int index;
 
-        private final TakionLib lib = plugin.getLibrary();
+        private final TakionLib library = plugin.getLibrary();
 
         private void print(String key) {
             String message = LangUtils.stringFromArray(args, index);
-            String center = lib.getCenterPrefix();
+            String center = library.getCenterPrefix();
 
-            ChannelManager channelMr = lib.getChannelManager();
-            ModuleManager moduleMr = plugin.getModuleManager();
+            ChannelManager channelManager = library.getChannelManager();
+            ModuleManager moduleManager = plugin.getModuleManager();
 
-            PlayerFormatter<?> emojis = moduleMr.getFormatter(SIRModule.Key.EMOJIS);
-            PlayerFormatter<?> tags = moduleMr.getFormatter(SIRModule.Key.TAGS);
+            PlayerFormatter<?> emojis = moduleManager.getFormatter(SIRModule.Key.EMOJIS);
+            PlayerFormatter<?> tags = moduleManager.getFormatter(SIRModule.Key.TAGS);
 
             for (Player player : catcher.targets) {
-                final Channel c = channelMr.identify(key);
-                if (c == channelMr.identify("chat")) {
-                    String[] a = lib.splitString(message);
+                final Channel channel = channelManager.identify(key);
+                if (channel == channelManager.identify("chat")) {
+                    String[] array = library.splitString(message);
 
-                    for (int i = 0; i < a.length; i++) {
-                        final String s = a[i];
+                    for (int i = 0; i < array.length; i++) {
+                        final String s = array[i];
 
                         if (args[2].matches("(?i)CENTERED") &&
-                                !s.startsWith(center)) a[i] = center + s;
+                                !s.startsWith(center)) array[i] = center + s;
 
                         else if (args[2].matches("(?i)DEFAULT") &&
                                 s.startsWith(center))
-                            a[i] = s.substring(center.length());
+                            array[i] = s.substring(center.length());
                     }
 
-                    for (String s : a) {
+                    for (String s : array) {
                         if (tags != null) s = tags.format(player, s);
                         if (emojis != null) s = emojis.format(player, s);
 
-                        c.send(player, s);
+                        channel.send(player, s);
                     }
                     continue;
                 }
 
-                else if (c == channelMr.identify("title")) {
+                else if (channel == channelManager.identify("title")) {
                     String time = null;
                     try {
                         time = Integer.parseInt(args[2]) + "";
@@ -275,10 +275,10 @@ final class PrintCommand extends SIRCommand {
                     if (tags != null) message = tags.format(player, message);
                     if (emojis != null) message = emojis.format(player, message);
 
-                    c.send(player,
-                            channelMr.getStartDelimiter() +
-                                    c.getName() + time +
-                                    channelMr.getEndDelimiter() +
+                    channel.send(player,
+                            channelManager.getStartDelimiter() +
+                                    channel.getName() + time +
+                                    channelManager.getEndDelimiter() +
                                     " " + message
                     );
                     continue;
@@ -287,7 +287,7 @@ final class PrintCommand extends SIRCommand {
                 if (tags != null) message = tags.format(player, message);
                 if (emojis != null) message = emojis.format(player, message);
 
-                c.send(player, message);
+                channel.send(player, message);
             }
         }
     }

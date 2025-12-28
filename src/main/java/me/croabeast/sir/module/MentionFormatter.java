@@ -69,13 +69,13 @@ final class MentionFormatter extends SIRModule implements PlayerFormatter<ChatCh
             int start = 0, end;
 
             while (matcher.find()) {
-                SIRUser user = plugin.getUserManager().fromClosest(matcher.group(1));
-                if (user == null || player == user.getPlayer() ||
-                        user.getIgnoreData().isIgnoring(player, true))
+                SIRUser target = plugin.getUserManager().fromClosest(matcher.group(1));
+                if (target == null || player == target.getPlayer() ||
+                        target.getIgnoreData().isIgnoring(player, true))
                     continue;
 
                 if (channel != null &&
-                        !channel.getRecipients(player).contains(user))
+                        !channel.getRecipients(player).contains(target))
                     continue;
 
                 end = matcher.start();
@@ -85,14 +85,14 @@ final class MentionFormatter extends SIRModule implements PlayerFormatter<ChatCh
 
                 String color = PrismaticAPI.getEndColor(finder);
                 String[] values =
-                        {prefix, player.getName(), user.getName()};
+                        {prefix, player.getName(), target.getName()};
 
                 UnaryOperator<String> op =
                         s -> ReplaceUtils.replaceEach(keys, values, s);
                 if (operator == null) operator = op;
 
                 plugin.getLibrary().getLoadedSender()
-                        .setTargets(user.getPlayer())
+                        .setTargets(target.getPlayer())
                         .setLogger(false)
                         .addFunctions(op)
                         .send(mention.messages.receiver);
@@ -102,7 +102,7 @@ final class MentionFormatter extends SIRModule implements PlayerFormatter<ChatCh
 
                 final Entry e = mention.sound;
                 if (!e.receiver.isEmpty())
-                    user.playSound(e.receiver.get(0));
+                    target.playSound(e.receiver.get(0));
 
                 if (firstSound == null) firstSound = e.sender.get(0);
 
@@ -110,8 +110,6 @@ final class MentionFormatter extends SIRModule implements PlayerFormatter<ChatCh
                 hover.replaceAll(op);
 
                 String click = op.apply(mention.click);
-                String[] c = click.split(":", 2);
-
                 String result = op.apply(mention.value);
 
                 result = MultiComponent.fromString(plugin.getLibrary(), result)
@@ -138,7 +136,7 @@ final class MentionFormatter extends SIRModule implements PlayerFormatter<ChatCh
 
     @Override
     public String format(Player player, String string) {
-        throw new UnsupportedOperationException("A channel should be used");
+        return format(player, string, null);
     }
 
     static class Mention implements PermissibleUnit {

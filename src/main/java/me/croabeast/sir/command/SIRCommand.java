@@ -10,6 +10,8 @@ import me.croabeast.command.*;
 import me.croabeast.file.Configurable;
 import me.croabeast.file.ConfigurableFile;
 import me.croabeast.common.util.Exceptions;
+import me.croabeast.scheduler.GlobalScheduler;
+import me.croabeast.scheduler.GlobalTask;
 import me.croabeast.sir.FileData;
 import me.croabeast.sir.SIRPlugin;
 import me.croabeast.sir.aspect.AspectButton;
@@ -32,6 +34,8 @@ import java.util.function.Supplier;
 
 @Accessors(makeFinal = true)
 public abstract class SIRCommand extends BukkitCommand {
+
+    private static GlobalTask task = null;
 
     protected final SIRPlugin plugin;
     private Options options;
@@ -353,7 +357,7 @@ public abstract class SIRCommand extends BukkitCommand {
     @Override
     public boolean register(boolean sync) {
         loadOptionsFromFile();
-        return super.register(sync);
+        return !options.isEnabled() ? (isRegistered() && !super.unregister(sync)) : super.register(sync);
     }
 
     @Override
@@ -375,6 +379,19 @@ public abstract class SIRCommand extends BukkitCommand {
     @Override
     public String toString() {
         return "SIRCommand{name='" + getName() + "'}";
+    }
+
+    public static void scheduleSync() {
+        GlobalScheduler scheduler = SIRPlugin.getScheduler();
+
+        scheduler.runTask(() -> {
+            if (task != null) task.cancel();
+
+            task = scheduler.runTaskLater(() -> {
+                task = null;
+                syncCommands();
+            }, 1L);
+        });
     }
 
     protected static List<String> getOnlineNames() {
@@ -462,6 +479,7 @@ public abstract class SIRCommand extends BukkitCommand {
         private final UUID uuid;
         private final Slot menuSlot;
 
+        @SuppressWarnings("all")
         @Setter
         private Supplier<Boolean> supplier = () -> false;
         private SIRCommand init;

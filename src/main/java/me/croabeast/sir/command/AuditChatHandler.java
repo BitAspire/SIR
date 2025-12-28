@@ -292,7 +292,7 @@ final class AuditChatHandler implements Commandable, Registrable {
                     messageCommands.forEach(c -> c.unregister(false));
                 }
 
-                SIRCommand.syncCommands();
+                SIRCommand.scheduleSync();
 
                 String s = "Messaging commands registered: " + b.isEnabled();
                 SIRPlugin.getLib().getLogger().log(s);
