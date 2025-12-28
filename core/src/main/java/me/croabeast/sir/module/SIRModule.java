@@ -46,7 +46,7 @@ public abstract class SIRModule implements SIRExtension, Toggleable {
 
         button.setOnClick(b -> event -> {
             if (event.isRightClick()) {
-                api.getModuleManager().openConfigMenu(this, event);
+                api.getModuleManager().openConfigMenu(event);
                 return;
             }
 

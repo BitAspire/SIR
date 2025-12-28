@@ -134,7 +134,7 @@ final class MainCommand implements TabExecutor {
 
         if (args.length < 2)
             return sender.send(
-                    "<P> &7Usage: &f/sir commands <provider> <enabled|override> [command] [state]",
+                    "<P> &7Usage: &f/sir commands <provider> [enable|disable|toggle]",
                     "<P> &7Available: &f" + String.join(", ", commandManager.getProviderNames())
             );
 
@@ -142,52 +142,22 @@ final class MainCommand implements TabExecutor {
         if (info == null)
             return sender.send("<P> &cCommand provider not found: &f" + args[1]);
 
-        if (args.length < 3)
-            return sender.send(
-                    "<P> &7Usage: &f/sir commands " + info.getName() + " <enabled|override> [command] [state]"
-            );
+        String mode = args.length > 2 ? args[2].toLowerCase(Locale.ENGLISH) : null;
+        if ("override".equals(mode))
+            return sender.send("<P> &cThis option is only available on &fSIR+&c.");
 
-        String mode = args[2].toLowerCase(Locale.ENGLISH);
-        if (mode.equals("enabled")) {
-            boolean current = commandManager.isProviderEnabled(info.getName());
-            Boolean next = resolveState(args.length > 3 ? args[3] : null, current);
-            if (next == null)
-                return sender.send("<P> &cInvalid state. Use: enable, disable, toggle.");
+        boolean current = commandManager.isProviderEnabled(info.getName());
+        Boolean next = resolveState(mode, current);
+        if (next == null)
+            return sender.send("<P> &cInvalid state. Use: enable, disable, toggle.");
 
-            if (!commandManager.updateProviderEnabled(info.getName(), next, true))
-                return sender.send("<P> &cFailed to update provider state.");
+        if (!commandManager.updateProviderEnabled(info.getName(), next, true))
+            return sender.send("<P> &cFailed to update provider state.");
 
-            commandManager.saveStates();
-            return sender.send(
-                    "<P> &7Provider &f" + info.getName() + " &7is now " + (next ? "&aenabled" : "&cdisabled") + "&7."
-            );
-        }
-
-        if (mode.equals("override")) {
-            if (args.length < 4)
-                return sender.send(
-                        "<P> &7Usage: &f/sir commands " + info.getName() + " override <command> [state]"
-                );
-
-            String commandKey = args[3];
-            Boolean current = commandManager.getCommandOverride(info.getName(), commandKey);
-            if (current == null)
-                return sender.send("<P> &cCommand not found: &f" + commandKey);
-
-            Boolean next = resolveState(args.length > 4 ? args[4] : null, current);
-            if (next == null)
-                return sender.send("<P> &cInvalid state. Use: enable, disable, toggle.");
-
-            if (!commandManager.updateCommandOverride(info.getName(), commandKey, next, true))
-                return sender.send("<P> &cFailed to update command override.");
-
-            commandManager.saveStates();
-            return sender.send(
-                    "<P> &7Command &f" + commandKey + " &7override is now " + (next ? "&aenabled" : "&cdisabled") + "&7."
-            );
-        }
-
-        return sender.send("<P> &cInvalid mode. Use enabled or override.");
+        commandManager.saveStates();
+        return sender.send(
+                "<P> &7Provider &f" + info.getName() + " &7is now " + (next ? "&aenabled" : "&cdisabled") + "&7."
+        );
     }
 
     boolean sendFallback(MessageSender displayer) {
@@ -255,8 +225,9 @@ final class MainCommand implements TabExecutor {
                 return displayer.addPlaceholder("{time}", timer.current()).send("reload");
 
             case "support":
-                if (args.length != 1) return sendFallback(displayer);
-                return displayer.addPlaceholder("{link}", "https://discord.gg/s9YFGMrjyF").send("support");
+                return args.length == 1 ?
+                        displayer.addPlaceholder("{link}", "https://discord.gg/s9YFGMrjyF").send("support") :
+                        sendFallback(displayer);
 
             case "help":
             default: return sendFallback(displayer);
@@ -274,13 +245,8 @@ final class MainCommand implements TabExecutor {
         CommandManager commandManager = main.getCommandManager();
 
         builder.addArguments(1, (s, a) -> a[0].equalsIgnoreCase("modules"), moduleManager.getModuleNames());
-        builder.addArguments(2, (s, a) -> a[0].equalsIgnoreCase("modules"), STATE_ARGUMENTS);
-
         builder.addArguments(1, (s, a) -> a[0].equalsIgnoreCase("commands"), commandManager.getProviderNames());
-        builder.addArguments(2, (s, a) -> a[0].equalsIgnoreCase("commands"), Arrays.asList("enabled", "override"));
-        builder.addArguments(3, (s, a) -> a[0].equalsIgnoreCase("commands") && a[2].equalsIgnoreCase("override"), commandManager.getProviderCommands(args.length > 1 ? args[1] : null));
-        builder.addArguments(3, (s, a) -> a[0].equalsIgnoreCase("commands") && a[2].equalsIgnoreCase("enabled"), STATE_ARGUMENTS);
-        builder.addArguments(4, (s, a) -> a[0].equalsIgnoreCase("commands") && a[2].equalsIgnoreCase("override"), STATE_ARGUMENTS);
+        builder.addArguments(2, (s, a) -> a[0].equalsIgnoreCase("modules") || a[0].equalsIgnoreCase("commands"), STATE_ARGUMENTS);
 
         return builder.build(sender, args);
     }

@@ -549,10 +549,8 @@ public final class ModuleManager {
             SIRModule module = loadedModules.get(index);
 
             Toggleable.Button button = module.getButton();
-            boolean hasConfig = hasConfigFile(module);
-
-            button.setEnabledItem(buildModuleItem(module, true, hasConfig));
-            button.setDisabledItem(buildModuleItem(module, false, hasConfig));
+            button.setEnabledItem(buildModuleItem(module, true));
+            button.setDisabledItem(buildModuleItem(module, false));
 
             button.setSlot(Slot.fromXY(x, y));
             menu.addPane(0, button);
@@ -601,16 +599,14 @@ public final class ModuleManager {
         setModuleEnabled(module.getName(), enabled);
     }
 
-    public void openConfigMenu(@NotNull SIRModule module, @NotNull InventoryClickEvent event) {
+    public void openConfigMenu(@NotNull InventoryClickEvent event) {
         event.setCancelled(true);
-        showConfigMenu(module, event.getWhoClicked());
+        api.getLibrary().getLoadedSender().setTargets(event.getWhoClicked())
+                .setLogger(!(event.getWhoClicked() instanceof Player))
+                .send("<P> &cThis option is only available on &fSIR+&c.");
     }
 
-    private boolean hasConfigFile(SIRModule module) {
-        return new File(module.getDataFolder(), "config.yml").exists();
-    }
-
-    private GuiItem buildModuleItem(SIRModule module, boolean enabled, boolean hasConfig) {
+    private GuiItem buildModuleItem(SIRModule module, boolean enabled) {
         ModuleInformation info = module.getInformation();
 
         List<String> lore = new ArrayList<>();
@@ -621,8 +617,6 @@ public final class ModuleManager {
 
         lore.add("");
         lore.add("&f➤ &7Left-click: toggle module");
-        if (hasConfig)
-            lore.add("&f➤ &7Right-click: open config");
 
         Material material = enabled ? Material.LIME_STAINED_GLASS_PANE : Material.RED_STAINED_GLASS_PANE;
         String title = SmallCaps.toSmallCaps(info.getTitle());
