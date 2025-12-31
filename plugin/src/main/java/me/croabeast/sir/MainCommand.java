@@ -26,7 +26,7 @@ final class MainCommand implements TabExecutor {
     private static final String PERMISSION_PREFIX = "sir.admin.";
     private static final String WILD_CARD = PERMISSION_PREFIX + "*";
 
-    private static final List<String> SUB_COMMANDS = Arrays.asList("modules", "about", "reload", "help", "commands", "support");
+    private static final List<String> SUB_COMMANDS = Arrays.asList("modules", "about", "reload", "help", "commands", "support", "migrate");
     private static final List<String> STATE_ARGUMENTS = Arrays.asList("enable", "enabled", "disable", "disabled", "toggle", "on", "off", "true", "false");
 
     private final SIRPlugin main;
@@ -160,6 +160,54 @@ final class MainCommand implements TabExecutor {
         );
     }
 
+    private boolean handleMigration(String[] args, MessageSender displayer) {
+        if (args.length < 2) return displayer.send("migrate.help");
+
+        String source = args[1];
+        if (!source.equalsIgnoreCase("Essentials") && !source.equalsIgnoreCase("SIR"))
+            return displayer.addPlaceholder("{source}", source).send("migrate.unknown");
+
+        boolean overwrite = Arrays.stream(args).anyMatch(arg ->
+                arg.equalsIgnoreCase("--overwrite") || arg.equalsIgnoreCase("-o"));
+
+        MigrationService service = new MigrationService(main);
+        try {
+            String displaySource = source.equalsIgnoreCase("SIR") ? "SIR" : "Essentials";
+            displayer.addPlaceholder("{source}", displaySource).send("migrate.start");
+
+            MigrationService.Result result = source.equalsIgnoreCase("SIR")
+                    ? service.migrateSir(overwrite)
+                    : service.migrateEssentialsX(overwrite);
+            if (!result.isOk())
+                return displayer
+                        .addPlaceholder("{path}", result.getPath())
+                        .send("migrate.no-data");
+
+            String backupPath = result.getBackupPath() == null ? "N/A" : result.getBackupPath();
+            if (!result.getExtraBackups().isEmpty())
+                backupPath = backupPath.equals("N/A")
+                        ? String.join(", ", result.getExtraBackups())
+                        : backupPath + ", " + String.join(", ", result.getExtraBackups());
+
+            return displayer
+                    .addPlaceholder("{users}", String.valueOf(result.getUsers()))
+                    .addPlaceholder("{ignoreUsers}", String.valueOf(result.getIgnoreUsers()))
+                    .addPlaceholder("{ignored}", String.valueOf(result.getIgnoredEntries()))
+                    .addPlaceholder("{mutedUsers}", String.valueOf(result.getMutedUsers()))
+                    .addPlaceholder("{skipped}", String.valueOf(result.getSkipped()))
+                    .addPlaceholder("{expired}", String.valueOf(result.getExpiredMutes()))
+                    .addPlaceholder("{invalid}", String.valueOf(result.getInvalidUsers()))
+                    .addPlaceholder("{configs}", String.valueOf(result.getConfigs()))
+                    .addPlaceholder("{moduleStates}", String.valueOf(result.getModuleStates()))
+                    .addPlaceholder("{commandStates}", String.valueOf(result.getCommandStates()))
+                    .addPlaceholder("{backup}", backupPath)
+                    .send("migrate.done");
+        } catch (Exception exception) {
+            return displayer.addPlaceholder("{error}", exception.getMessage())
+                    .send("migrate.error");
+        }
+    }
+
     boolean sendFallback(MessageSender displayer) {
         return displayer.addPlaceholder("{version}", main.getDescription().getVersion()).send("help");
     }
@@ -229,6 +277,8 @@ final class MainCommand implements TabExecutor {
                         displayer.addPlaceholder("{link}", "https://discord.gg/s9YFGMrjyF").send("support") :
                         sendFallback(displayer);
 
+            case "migrate": return handleMigration(args, displayer);
+
             case "help":
             default: return sendFallback(displayer);
         }
@@ -247,6 +297,10 @@ final class MainCommand implements TabExecutor {
         builder.addArguments(1, (s, a) -> a[0].equalsIgnoreCase("modules"), moduleManager.getModuleNames());
         builder.addArguments(1, (s, a) -> a[0].equalsIgnoreCase("commands"), commandManager.getProviderNames());
         builder.addArguments(2, (s, a) -> a[0].equalsIgnoreCase("modules") || a[0].equalsIgnoreCase("commands"), STATE_ARGUMENTS);
+
+        builder.addArguments(1, (s, a) -> a[0].equalsIgnoreCase("migrate"), Arrays.asList("Essentials", "SIR"))
+                .addArgument(2, (s, a) -> a[0].equalsIgnoreCase("migrate"), "--overwrite")
+                .addArgument(2, (s, a) -> a[0].equalsIgnoreCase("migrate"), "-o");
 
         return builder.build(sender, args);
     }

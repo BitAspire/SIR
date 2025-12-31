@@ -60,7 +60,6 @@ options:
   load-default-jars:
     modules: true
     commands: true
-    addons: true
 
 # 🎨 Message Formatting Values
 values:

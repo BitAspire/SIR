@@ -1,12 +1,13 @@
 package me.croabeast.sir.command;
 
 import lombok.Getter;
-import me.croabeast.command.BaseCommand;
 import me.croabeast.command.BukkitCommand;
 import me.croabeast.command.CommandPredicate;
 import me.croabeast.command.TabBuilder;
 import me.croabeast.common.CollectionBuilder;
 import me.croabeast.file.ConfigurableFile;
+import me.croabeast.scheduler.GlobalScheduler;
+import me.croabeast.scheduler.GlobalTask;
 import me.croabeast.sir.SIRApi;
 import me.croabeast.sir.user.UserManager;
 import me.croabeast.takion.TakionLib;
@@ -24,6 +25,7 @@ import java.util.function.Supplier;
 public abstract class SIRCommand extends BukkitCommand {
 
     protected static final String LANG_PREFIX = "lang.";
+    private static GlobalTask task = null;
 
     protected final SIRApi api;
     protected final TakionLib lib;
@@ -280,14 +282,12 @@ public abstract class SIRCommand extends BukkitCommand {
     }
 
     private List<String> resolveMessages(String key, String fallback) {
-        if (lang == null) {
+        if (lang == null)
             return Collections.singletonList(fallback);
-        }
 
         List<String> resolved = lang.toStringList(LANG_PREFIX + key);
-        if (resolved == null || resolved.isEmpty()) {
+        if (resolved == null || resolved.isEmpty())
             return Collections.singletonList(fallback);
-        }
 
         return resolved;
     }
@@ -302,6 +302,19 @@ public abstract class SIRCommand extends BukkitCommand {
     @Override
     public String toString() {
         return "SIRCommand{name='" + getName() + "'}";
+    }
+
+    public static void scheduleSync() {
+        GlobalScheduler scheduler = SIRApi.instance().getScheduler();
+
+        scheduler.runTask(() -> {
+            if (task != null) task.cancel();
+
+            task = scheduler.runTaskLater(() -> {
+                task = null;
+                syncCommands();
+            }, 1L);
+        });
     }
 
     protected static List<String> getOnlineNames() {

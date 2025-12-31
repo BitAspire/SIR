@@ -348,7 +348,7 @@ public final class CommandManager {
 
         deferPluginDependants = false;
         retryDeferredProviders(null, false);
-        SIRCommand.syncCommands();
+        SIRCommand.scheduleSync();
     }
 
     private void deferProvider(String providerName, File jarFile, String[] dependencies) {
@@ -545,7 +545,7 @@ public final class CommandManager {
         providers.clear();
         processedModules.clear();
 
-        SIRCommand.syncCommands();
+        SIRCommand.scheduleSync();
     }
 
     public void saveStates() {

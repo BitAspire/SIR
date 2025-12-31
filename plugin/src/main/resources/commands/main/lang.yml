@@ -5,9 +5,14 @@ lang:
   help:
     - '&7'
     - ' &6>> &e&lSIR &7v {version}'
-    - '  &7 &b/sir&7: The main command of the plugin.'
-    - '  &7 &b/print&7: Prints a raw message to a target.'
-    - '  &7 &b/announcer&7: Manage announcements task.'
+    - '  &7 &b/sir help&7: Shows this help menu.'
+    - '  &7 &b/sir about&7: Shows plugin information.'
+    - '  &7 &b/sir modules&7: Opens the modules menu.'
+    - '  &7 &b/sir modules <module> [enable|disable|toggle]&7: Changes module state.'
+    - '  &7 &b/sir commands&7: Opens the commands menu.'
+    - '  &7 &b/sir commands <provider> [enable|disable|toggle]&7: Changes provider state.'
+    - '  &7 &b/sir reload&7: Reloads all plugin data.'
+    - '  &7 &b/sir support&7: Shows the support link.'
     - '&7'
 
   # Support message with Discord server link
@@ -20,3 +25,11 @@ lang:
   # {time} shows the reload duration in milliseconds
   # Used to verify the reload was successful and track performance
   reload: '<P> All data was reloaded successfully in {time} ms.'
+
+  migrate:
+    help: '<P> &7Usage: &f/sir migrate <Essentials|SIR> [--overwrite]'
+    start: '<P> &7Starting migration from &f{source}&7...'
+    no-data: '<P> &cNo  &f{source} userdata folder found at &f{path}&c.'
+    unknown: '<P> &cUnknown migration source: &f{source}&c.'
+    done: '<P> &aMigration complete: &f{users}&7 users, &f{ignoreUsers}&7 ignore lists, &f{ignored}&7 ignores, &f{mutedUsers}&7 mutes, &f{configs}&7 configs, &f{moduleStates}&7 module states, &f{commandStates}&7 command states, &f{skipped}&7 skipped, &f{expired}&7 expired, &f{invalid}&7 invalid, &f{backup}&7 backup.'
+    error: '<P> &cMigration failed: &f{error}'
