@@ -1,7 +1,9 @@
 package me.croabeast.sir;
 
 import lombok.SneakyThrows;
+import me.croabeast.common.PlayerFormatter;
 import me.croabeast.file.ConfigurableFile;
+import me.croabeast.sir.module.ModuleManager;
 import me.croabeast.takion.TakionLib;
 import me.croabeast.takion.logger.TakionLogger;
 import me.croabeast.takion.message.MessageSender;
@@ -58,7 +60,14 @@ final class Library extends TakionLib {
 
         super.setLoadedSender(new MessageSender(this) {
             {
-                LibFunction.applyFunctions(this);
+                ModuleManager manager = instance.getModuleManager();
+
+                UserFormatter<?> emojis = manager.getFormatter("Emojis");
+                if (emojis != null) addFunctions(emojis::format);
+
+                UserFormatter<?> tags = manager.getFormatter("Tags");
+                if (tags != null) addFunctions(tags::format);
+
                 setSensitive(false);
                 setErrorPrefix("&c[X]&7 ");
             }

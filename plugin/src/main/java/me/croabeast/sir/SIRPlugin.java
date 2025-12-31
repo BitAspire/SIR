@@ -58,7 +58,7 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
                 String name = event.getPlugin().getName();
                 moduleManager.retryDeferredModules(name, false);
                 commandManager.retryDeferredProviders(name, false);
-                SIRCommand.syncCommands();
+                SIRCommand.scheduleSync();
             }
         }).register();
 
@@ -127,15 +127,14 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
 
         logger.add(true, "&e[Commands]");
         int moduleProviders = (int) moduleManager.getModules().stream()
-                .filter(module -> module instanceof CommandProvider)
-                .count();
+                .filter(module -> module instanceof CommandProvider).count();
+
         int standaloneProviders = commandManager.getProviderNames().size();
         int totalProviders = moduleProviders + standaloneProviders;
 
         int totalCommands = commandManager.getCommands().size();
         int enabledCommands = (int) commandManager.getCommands().stream()
-                .filter(SIRCommand::isEnabled)
-                .count();
+                .filter(SIRCommand::isEnabled).count();
 
         logger.add(true, "&e[Command Providers]");
         logger.add(true,
