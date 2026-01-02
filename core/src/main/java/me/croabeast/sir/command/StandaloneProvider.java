@@ -2,7 +2,7 @@ package me.croabeast.sir.command;
 
 import lombok.Getter;
 import me.croabeast.sir.SIRApi;
-import me.croabeast.sir.Toggleable;
+import me.croabeast.sir.MenuToggleable;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -15,7 +15,7 @@ public abstract class StandaloneProvider implements CommandProvider {
     private SIRApi api;
     private ProviderInformation information;
 
-    private Toggleable.Button button;
+    private MenuToggleable.Button button;
 
     private File dataFolder;
     private ClassLoader classLoader;
@@ -25,7 +25,7 @@ public abstract class StandaloneProvider implements CommandProvider {
         this.information = information;
         this.classLoader = loader;
 
-        button = new Toggleable.Button(information, this, api.getCommandManager().isProviderEnabled(information.getName()));
+        button = new MenuToggleable.Button(information, this, api.getCommandManager().isProviderEnabled(information.getName()));
         button.setDefaultItems();
         button.allowToggle(false);
 

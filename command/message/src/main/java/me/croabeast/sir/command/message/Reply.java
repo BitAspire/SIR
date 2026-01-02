@@ -50,8 +50,11 @@ public class Reply extends Command {
         Values initValues = new Values(main, true);
         Values receiveValues = new Values(main, false);
 
-        initValues.playSound(init);
-        receiveValues.playSound(s);
+        boolean senderEnabled = receiver == null || main.isToggled(receiver);
+        boolean initiatorEnabled = main.isToggled(initiator);
+
+        if (initiatorEnabled) initValues.playSound(init);
+        if (senderEnabled) receiveValues.playSound(s);
 
         final MessageSender sender = createSender(null)
                 .setLogger(false)
@@ -59,8 +62,8 @@ public class Reply extends Command {
                 .addPlaceholder("{message}", message)
                 .addPlaceholder("{sender}", isConsoleValue(s));
 
-        sender.copy().setTargets(s).send(initValues.getOutput());
-        sender.copy().setTargets(init).send(receiveValues.getOutput());
+        if (senderEnabled) sender.copy().setTargets(s).send(initValues.getOutput());
+        if (initiatorEnabled) sender.copy().setTargets(init).send(receiveValues.getOutput());
 
         return sender.setErrorPrefix(null)
                 .setLogger(true).send("console-formatting.format");

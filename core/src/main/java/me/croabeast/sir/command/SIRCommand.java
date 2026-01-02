@@ -30,14 +30,13 @@ public abstract class SIRCommand extends BukkitCommand {
     protected final SIRApi api;
     protected final TakionLib lib;
 
-    @Nullable
     private final ConfigurableFile lang;
 
     @Getter
     private String commandKey;
     private CommandFile file;
 
-    public SIRCommand(String name, @Nullable ConfigurableFile lang) {
+    public SIRCommand(String name, ConfigurableFile lang) {
         super(SIRApi.instance().getPlugin(), name);
         this.api = SIRApi.instance();
         this.lib = api.getLibrary();
@@ -64,7 +63,6 @@ public abstract class SIRCommand extends BukkitCommand {
                         .send(resolveMessages("wrong-arg", "<P> &cInvalid argument: &f{arg}&c.")));
     }
 
-    @Nullable
     public final ConfigurableFile getLang() {
         return lang;
     }
@@ -305,8 +303,17 @@ public abstract class SIRCommand extends BukkitCommand {
     }
 
     public static void scheduleSync() {
-        GlobalScheduler scheduler = SIRApi.instance().getScheduler();
+        SIRApi api = SIRApi.instance();
 
+        if (!api.getPlugin().isEnabled()) {
+            if (task != null) {
+                task.cancel();
+                task = null;
+            }
+            return;
+        }
+
+        GlobalScheduler scheduler = api.getScheduler();
         scheduler.runTask(() -> {
             if (task != null) task.cancel();
 

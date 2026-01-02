@@ -3,6 +3,7 @@ package me.croabeast.sir.command.message;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import me.croabeast.file.ConfigurableFile;
+import me.croabeast.sir.ChatToggleable;
 import me.croabeast.sir.ExtensionFile;
 import me.croabeast.sir.Listener;
 import me.croabeast.sir.command.SIRCommand;
@@ -14,7 +15,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.*;
 
-public final class MessageProvider extends StandaloneProvider {
+public final class MessageProvider extends StandaloneProvider implements ChatToggleable {
 
     @Getter
     private final Set<SIRCommand> commands = new HashSet<>();

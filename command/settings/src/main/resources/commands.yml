@@ -1,0 +1,11 @@
+main: me.croabeast.sir.command.settings.SettingsProvider
+title: "&7Chat Settings"
+
+commands:
+  chat-settings:
+    permission: sir.chat-settings
+    override-existing: true
+    aliases: [ settings, chatsettings, csettings, c-settings ]
+
+    description: 'Toggle chat messages and sounds for modules and commands.'
+    usage: '/chat-settings [modules/commands] [<name>] [state]'

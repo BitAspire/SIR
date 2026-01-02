@@ -164,20 +164,15 @@ final class MainCommand implements TabExecutor {
         if (args.length < 2) return displayer.send("migrate.help");
 
         String source = args[1];
-        if (!source.equalsIgnoreCase("Essentials") && !source.equalsIgnoreCase("SIR"))
+        if (!source.equalsIgnoreCase("Essentials"))
             return displayer.addPlaceholder("{source}", source).send("migrate.unknown");
-
-        boolean overwrite = Arrays.stream(args).anyMatch(arg ->
-                arg.equalsIgnoreCase("--overwrite") || arg.equalsIgnoreCase("-o"));
 
         MigrationService service = new MigrationService(main);
         try {
-            String displaySource = source.equalsIgnoreCase("SIR") ? "SIR" : "Essentials";
+            String displaySource = "Essentials";
             displayer.addPlaceholder("{source}", displaySource).send("migrate.start");
 
-            MigrationService.Result result = source.equalsIgnoreCase("SIR")
-                    ? service.migrateSir(overwrite)
-                    : service.migrateEssentialsX(overwrite);
+            MigrationService.Result result = service.migrateEssentialsX();
             if (!result.isOk())
                 return displayer
                         .addPlaceholder("{path}", result.getPath())
@@ -190,16 +185,15 @@ final class MainCommand implements TabExecutor {
                         : backupPath + ", " + String.join(", ", result.getExtraBackups());
 
             return displayer
-                    .addPlaceholder("{users}", String.valueOf(result.getUsers()))
-                    .addPlaceholder("{ignoreUsers}", String.valueOf(result.getIgnoreUsers()))
-                    .addPlaceholder("{ignored}", String.valueOf(result.getIgnoredEntries()))
-                    .addPlaceholder("{mutedUsers}", String.valueOf(result.getMutedUsers()))
-                    .addPlaceholder("{skipped}", String.valueOf(result.getSkipped()))
-                    .addPlaceholder("{expired}", String.valueOf(result.getExpiredMutes()))
-                    .addPlaceholder("{invalid}", String.valueOf(result.getInvalidUsers()))
-                    .addPlaceholder("{configs}", String.valueOf(result.getConfigs()))
-                    .addPlaceholder("{moduleStates}", String.valueOf(result.getModuleStates()))
-                    .addPlaceholder("{commandStates}", String.valueOf(result.getCommandStates()))
+                    .addPlaceholder("{users}", result.getUsers())
+                    .addPlaceholder("{ignoreUsers}", result.getIgnoreUsers())
+                    .addPlaceholder("{ignored}", result.getIgnoredEntries())
+                    .addPlaceholder("{mutedUsers}", result.getMutedUsers())
+                    .addPlaceholder("{expired}", result.getExpiredMutes())
+                    .addPlaceholder("{invalid}", result.getInvalidUsers())
+                    .addPlaceholder("{configs}", result.getConfigs())
+                    .addPlaceholder("{moduleStates}", result.getModuleStates())
+                    .addPlaceholder("{commandStates}", result.getCommandStates())
                     .addPlaceholder("{backup}", backupPath)
                     .send("migrate.done");
         } catch (Exception exception) {
@@ -298,10 +292,7 @@ final class MainCommand implements TabExecutor {
         builder.addArguments(1, (s, a) -> a[0].equalsIgnoreCase("commands"), commandManager.getProviderNames());
         builder.addArguments(2, (s, a) -> a[0].equalsIgnoreCase("modules") || a[0].equalsIgnoreCase("commands"), STATE_ARGUMENTS);
 
-        builder.addArguments(1, (s, a) -> a[0].equalsIgnoreCase("migrate"), Arrays.asList("Essentials", "SIR"))
-                .addArgument(2, (s, a) -> a[0].equalsIgnoreCase("migrate"), "--overwrite")
-                .addArgument(2, (s, a) -> a[0].equalsIgnoreCase("migrate"), "-o");
-
+        builder.addArguments(1, (s, a) -> a[0].equalsIgnoreCase("migrate"), Arrays.asList("Essentials", "SIR"));
         return builder.build(sender, args);
     }
 }

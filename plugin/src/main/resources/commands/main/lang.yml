@@ -27,7 +27,7 @@ lang:
   reload: '<P> All data was reloaded successfully in {time} ms.'
 
   migrate:
-    help: '<P> &7Usage: &f/sir migrate <Essentials|SIR> [--overwrite]'
+    help: '<P> &7Usage: &f/sir migrate <Essentials>'
     start: '<P> &7Starting migration from &f{source}&7...'
     no-data: '<P> &cNo  &f{source} userdata folder found at &f{path}&c.'
     unknown: '<P> &cUnknown migration source: &f{source}&c.'

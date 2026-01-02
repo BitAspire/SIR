@@ -1,10 +1,11 @@
 package me.croabeast.sir.module.join;
 
+import me.croabeast.sir.ChatToggleable;
 import me.croabeast.sir.module.JoinQuitService;
 import me.croabeast.sir.module.SIRModule;
 import me.croabeast.sir.user.SIRUser;
 
-public final class JoinQuit extends SIRModule implements JoinQuitService {
+public final class JoinQuit extends SIRModule implements JoinQuitService, ChatToggleable {
 
     Config config;
     Messages messages;

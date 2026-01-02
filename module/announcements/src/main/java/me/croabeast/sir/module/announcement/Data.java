@@ -17,7 +17,7 @@ final class Data {
     @SneakyThrows
     Data(Announcements main) {
         PermissibleUnit.loadUnits(new ExtensionFile(main, "announcements", true)
-                        .getSection("announcements"), Announcement::new)
+                        .getSection("announcements"), section -> new Announcement(main, section))
                 .forEach(e -> announcements.put(e.getName(), e));
     }
 

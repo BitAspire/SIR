@@ -9,7 +9,7 @@ import me.croabeast.common.util.ArrayUtils;
 import me.croabeast.sir.Information;
 import me.croabeast.sir.SIRApi;
 import me.croabeast.sir.SIRExtension;
-import me.croabeast.sir.Toggleable;
+import me.croabeast.sir.MenuToggleable;
 import me.croabeast.sir.command.CommandProvider;
 import me.croabeast.sir.command.SIRCommand;
 import me.croabeast.takion.logger.TakionLogger;
@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 
 @Accessors(makeFinal = true)
 @Getter
-public abstract class SIRModule implements SIRExtension, Toggleable {
+public abstract class SIRModule implements SIRExtension, MenuToggleable {
 
     private SIRApi api;
     private ModuleInformation information;

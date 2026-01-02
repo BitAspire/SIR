@@ -1,0 +1,80 @@
+lang:
+  help:
+    # Main help menu for /chat-settings.
+    main:
+      - '&7'
+      - ' &6>> &eChat Settings — Help'
+      - '  &7- &b/chat-settings&7: Opens the settings menu (1.14+).'
+      - '  &7- &b/chat-settings modules <module> <state>&7: Toggle module chat output.'
+      - '  &7- &b/chat-settings commands <command> <state>&7: Toggle command chat output.'
+      - '  &7- &7States: &fenable, disable, toggle, on, off, true, false.'
+      - '&7'
+
+    # Help menu for module toggles.
+    modules: '<P> Usage: &b/chat-settings modules <module> <state>'
+
+    # Help menu for command toggles.
+    commands: '<P> Usage: &b/chat-settings commands <command> <state>'
+
+  # Message for non-player senders.
+  player-only: '<P> &cThis command can only be used by players.'
+
+  toggle:
+    # Success message after toggling a setting.
+    success: '<P> &7{type} &f{name}&7 is now {state}.'
+
+    # Message when an entry is not found.
+    not-found: '<P> &cNo {type} named &f{name}&c was found.'
+
+    state:
+      enabled: '&aenabled'
+      disabled: '&cdisabled'
+
+  menu:
+    main:
+      title: '&8Chat Settings:'
+      modules:
+        name: '&7• &fModules:'
+        lore:
+          - '&7Chat settings for {category}.'
+          - '&7Available: &f{count}'
+          - '&f➤ &7Open this menu'
+        empty-name: '&7• &fModules:'
+        empty-lore:
+          - '&7Chat settings for {category}.'
+          - '&cNo entries available to toggle.'
+      commands:
+        name: '&7• &fCommands:'
+        lore:
+          - '&7Chat settings for {category}.'
+          - '&7Available: &f{count}'
+          - '&f➤ &7Open this menu'
+        empty-name: '&7• &fCommands:'
+        empty-lore:
+          - '&7Chat settings for {category}.'
+          - '&cNo entries available to toggle.'
+      close:
+        name: '&cClose'
+        lore:
+          - '&7Close this menu.'
+    category:
+      title: '&8Chat Settings - {category}:'
+      back:
+        name: '&eBack'
+        lore:
+          - '&7Return to the main menu.'
+    toggle:
+      name: '&7• &f{title}: {status}'
+      status:
+        enabled: '&a&l✔'
+        disabled: '&c&l❌'
+      state:
+        enabled: '&aEnabled'
+        disabled: '&cDisabled'
+      description:
+        empty: 'No description available.'
+      lore:
+        - '{description}'
+        - ''
+        - '&f➤ &7Left-click: toggle'
+        - '&7Current: {state}'

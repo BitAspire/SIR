@@ -11,7 +11,7 @@ import me.croabeast.common.gui.ItemCreator;
 import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.sir.PluginDependant;
 import me.croabeast.sir.SIRApi;
-import me.croabeast.sir.Toggleable;
+import me.croabeast.sir.MenuToggleable;
 import me.croabeast.sir.UserFormatter;
 import me.croabeast.sir.command.CommandProvider;
 import me.croabeast.takion.character.SmallCaps;
@@ -548,7 +548,7 @@ public final class ModuleManager {
 
             SIRModule module = loadedModules.get(index);
 
-            Toggleable.Button button = module.getButton();
+            MenuToggleable.Button button = module.getButton();
             button.setEnabledItem(buildModuleItem(module, true));
             button.setDisabledItem(buildModuleItem(module, false));
 

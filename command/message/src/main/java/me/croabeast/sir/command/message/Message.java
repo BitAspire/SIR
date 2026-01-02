@@ -56,6 +56,9 @@ final class Message extends Command {
         Values initValues = new Values(main, true);
         Values receiveValues = new Values(main, false);
 
+        boolean senderEnabled = user == null || main.isToggled(user);
+        boolean receiverEnabled = main.isToggled(target);
+
         Player player = target.getPlayer();
 
         MessageSender sender = createSender(null)
@@ -64,11 +67,11 @@ final class Message extends Command {
                 .addPlaceholder("{message}", message)
                 .addPlaceholder("{sender}", isConsoleValue(s));
 
-        initValues.playSound(s);
-        receiveValues.playSound(player);
+        if (senderEnabled) initValues.playSound(s);
+        if (receiverEnabled) receiveValues.playSound(player);
 
-        sender.copy().setTargets(s).send(initValues.getOutput());
-        sender.copy().setTargets(player).send(receiveValues.getOutput());
+        if (senderEnabled) sender.copy().setTargets(s).send(initValues.getOutput());
+        if (receiverEnabled) sender.copy().setTargets(player).send(receiveValues.getOutput());
 
         main.replies.put(player, s);
         main.replies.put(s, player);

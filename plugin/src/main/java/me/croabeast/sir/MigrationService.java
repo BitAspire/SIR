@@ -22,7 +22,12 @@ final class MigrationService {
         this.plugin = plugin;
     }
 
-    Result migrateEssentialsX(boolean overwrite) throws IOException {
+    private boolean isPluginActive(String name) {
+        Plugin pluginRef = plugin.getServer().getPluginManager().getPlugin(name);
+        return pluginRef != null && pluginRef.isEnabled();
+    }
+
+    Result migrateEssentialsX() throws IOException {
         Result result = new Result();
 
         File essentialsFolder = findPluginFolder("Essentials", "EssentialsX");
@@ -31,20 +36,26 @@ final class MigrationService {
             return result;
         }
 
+        result.ok = true;
+        result.path = essentialsFolder.getPath();
+
+        migrateEssentialsXConfigs(essentialsFolder, result);
+        if (isPluginActive("EssentialsChat")) {
+            migrateEssentialsChat(essentialsFolder, result);
+        }
+        if (isPluginActive("EssentialsSpawn")) {
+            migrateEssentialsSpawn(essentialsFolder, result);
+        }
+        if (isPluginActive("EssentialsDiscord")) {
+            migrateEssentialsDiscord(result);
+        }
+        migrateEssentialsXCommandStates(essentialsFolder, result);
+
         File userdataFolder = new File(essentialsFolder, "userdata");
         if (!userdataFolder.isDirectory()) {
-            result.path = userdataFolder.getPath();
+            result.backupPath = backupPluginFolder(essentialsFolder, essentialsFolder.getName());
             return result;
         }
-
-        result.ok = true;
-        result.path = userdataFolder.getPath();
-
-        migrateEssentialsXConfigs(essentialsFolder, overwrite, result);
-        migrateEssentialsChat(essentialsFolder, overwrite, result);
-        migrateEssentialsSpawn(essentialsFolder, overwrite, result);
-        migrateEssentialsDiscord(overwrite, result);
-        migrateEssentialsXCommandStates(essentialsFolder, overwrite, result);
 
         File usersFolder = new File(plugin.getDataFolder(), "users");
         if (!usersFolder.exists() && !usersFolder.mkdirs())
@@ -77,16 +88,13 @@ final class MigrationService {
 
             Set<String> ignoredIds = parseUuids(ignored);
             if (!ignoredIds.isEmpty()) {
-                if (overwrite || !hasIgnoreData(ignoreConfig, uuidKey)) {
-                    ignoreConfig.set(uuidKey + ".chat.single", new ArrayList<>(ignoredIds));
-                    ignoreConfig.set(uuidKey + ".msg.single", new ArrayList<>(ignoredIds));
-                    ignoreConfig.set(uuidKey + ".chat.all", false);
-                    ignoreConfig.set(uuidKey + ".msg.all", false);
-                    ignoreChanged = true;
-                    result.ignoreUsers++;
-                    result.ignoredEntries += ignoredIds.size();
-                }
-                else result.skipped++;
+                ignoreConfig.set(uuidKey + ".chat.single", new ArrayList<>(ignoredIds));
+                ignoreConfig.set(uuidKey + ".msg.single", new ArrayList<>(ignoredIds));
+                ignoreConfig.set(uuidKey + ".chat.all", false);
+                ignoreConfig.set(uuidKey + ".msg.all", false);
+                ignoreChanged = true;
+                result.ignoreUsers++;
+                result.ignoredEntries += ignoredIds.size();
             }
 
             if (!config.getBoolean("muted", false)) continue;
@@ -94,11 +102,6 @@ final class MigrationService {
             long expiresAt = resolveMuteExpiry(config);
             if (expiresAt > 0 && System.currentTimeMillis() > expiresAt) {
                 result.expiredMutes++;
-                continue;
-            }
-
-            if (!overwrite && hasMuteData(muteConfig, uuidKey)) {
-                result.skipped++;
                 continue;
             }
 
@@ -121,7 +124,7 @@ final class MigrationService {
         return result;
     }
 
-    Result migrateSir(boolean overwrite) throws IOException {
+    Result migrateSir() throws IOException {
         Result result = new Result();
 
         File sirFolder = findPluginFolder("SIR");
@@ -133,9 +136,9 @@ final class MigrationService {
         result.ok = true;
         result.path = sirFolder.getPath();
 
-        migrateSirUsers(sirFolder, overwrite, result);
-        migrateSirSharedFiles(sirFolder, overwrite, result);
-        migrateSirModules(sirFolder, overwrite, result);
+        migrateSirUsers(sirFolder, result);
+        migrateSirSharedFiles(sirFolder, result);
+        migrateSirModules(sirFolder, result);
         migrateSirModuleStates(sirFolder, result);
         migrateSirCommandStates(sirFolder, result);
 
@@ -143,7 +146,7 @@ final class MigrationService {
         return result;
     }
 
-    private void migrateSirUsers(File sirFolder, boolean overwrite, Result result) throws IOException {
+    private void migrateSirUsers(File sirFolder, Result result) throws IOException {
         File commandsFolder = new File(sirFolder, "commands");
         if (!commandsFolder.isDirectory()) return;
 
@@ -159,13 +162,13 @@ final class MigrationService {
         Set<String> migratedUsers = new HashSet<>();
 
         boolean ignoreChanged = mergeIgnoreData(new File(commandsFolder, "ignore" + File.separator + "data.yml"),
-                ignoreTarget, overwrite, result, migratedUsers);
+                ignoreTarget, result, migratedUsers);
         boolean muteChanged = mergeMuteData(new File(commandsFolder, "mute" + File.separator + "data.yml"),
-                muteTarget, overwrite, result, migratedUsers);
+                muteTarget, result, migratedUsers);
         boolean viewChanged = mergeSimpleUsers(new File(commandsFolder, "chat_view" + File.separator + "data.yml"),
-                chatViewTarget, overwrite, result, migratedUsers);
+                chatViewTarget, migratedUsers);
         boolean colorChanged = mergeSimpleUsers(new File(commandsFolder, "chat_color" + File.separator + "data.yml"),
-                chatColorTarget, overwrite, result, migratedUsers);
+                chatColorTarget, migratedUsers);
 
         result.users = migratedUsers.size();
 
@@ -175,7 +178,7 @@ final class MigrationService {
         if (colorChanged) chatColorTarget.save(new File(usersFolder, "chat-color.yml"));
     }
 
-    private void migrateSirModules(File sirFolder, boolean overwrite, Result result) throws IOException {
+    private void migrateSirModules(File sirFolder, Result result) throws IOException {
         File modulesFolder = new File(sirFolder, "modules");
         if (!modulesFolder.isDirectory()) return;
 
@@ -185,79 +188,79 @@ final class MigrationService {
 
         copyIfPresent(new File(modulesFolder, "announcements" + File.separator + "config.yml"),
                 new File(targetModulesFolder, "announcements" + File.separator + "config.yml"),
-                overwrite, result);
+                result);
         migrateSirAnnouncements(new File(modulesFolder, "announcements" + File.separator + "announces.yml"),
                 new File(targetModulesFolder, "announcements" + File.separator + "announcements.yml"),
-                overwrite, result);
+                result);
 
         migrateSirJoinQuitConfig(new File(modulesFolder, "join_quit" + File.separator + "config.yml"),
                 new File(targetModulesFolder, "join-quit" + File.separator + "config.yml"),
-                overwrite, result);
+                result);
         migrateSirJoinQuitMessages(new File(modulesFolder, "join_quit" + File.separator + "messages.yml"),
                 new File(targetModulesFolder, "join-quit" + File.separator + "messages.yml"),
-                overwrite, result);
+                result);
 
         migrateSirAdvancements(new File(modulesFolder, "advancements" + File.separator + "config.yml"),
                 new File(targetModulesFolder, "advancements" + File.separator + "config.yml"),
-                overwrite, result);
+                result);
 
         migrateSirMotd(new File(modulesFolder, "motd" + File.separator + "config.yml"),
                 new File(targetModulesFolder, "motd" + File.separator + "config.yml"),
-                overwrite, result);
+                result);
 
         copyIfPresent(new File(modulesFolder, "chat" + File.separator + "channels.yml"),
                 new File(targetModulesFolder, "channels" + File.separator + "channels.yml"),
-                overwrite, result);
+                result);
         copyIfPresent(new File(modulesFolder, "chat" + File.separator + "config.yml"),
                 new File(targetModulesFolder, "channels" + File.separator + "config.yml"),
-                overwrite, result);
+                result);
         copyIfPresent(new File(modulesFolder, "chat" + File.separator + "tags.yml"),
                 new File(targetModulesFolder, "tags" + File.separator + "tags.yml"),
-                overwrite, result);
+                result);
         copyIfPresent(new File(modulesFolder, "chat" + File.separator + "moderation.yml"),
                 new File(targetModulesFolder, "moderation" + File.separator + "moderation.yml"),
-                overwrite, result);
+                result);
         copyIfPresent(new File(modulesFolder, "chat" + File.separator + "emojis.yml"),
                 new File(targetModulesFolder, "emojis" + File.separator + "emojis.yml"),
-                overwrite, result);
+                result);
         copyIfPresent(new File(modulesFolder, "chat" + File.separator + "cooldowns.yml"),
                 new File(targetModulesFolder, "cooldowns" + File.separator + "cooldowns.yml"),
-                overwrite, result);
+                result);
         copyIfPresent(new File(modulesFolder, "chat" + File.separator + "mentions.yml"),
                 new File(targetModulesFolder, "mentions" + File.separator + "mentions.yml"),
-                overwrite, result);
+                result);
 
         copyIfPresent(new File(modulesFolder, "hook" + File.separator + "discord.yml"),
                 new File(targetModulesFolder, "discord" + File.separator + "config.yml"),
-                overwrite, result);
+                result);
         copyIfPresent(new File(modulesFolder, "hook" + File.separator + "login.yml"),
                 new File(targetModulesFolder, "login" + File.separator + "config.yml"),
-                overwrite, result);
+                result);
         copyIfPresent(new File(modulesFolder, "hook" + File.separator + "vanish.yml"),
                 new File(targetModulesFolder, "vanish" + File.separator + "config.yml"),
-                overwrite, result);
+                result);
     }
 
-    private void migrateSirSharedFiles(File sirFolder, boolean overwrite, Result result) throws IOException {
+    private void migrateSirSharedFiles(File sirFolder, Result result) throws IOException {
         copyIfPresent(new File(sirFolder, "bossbars.yml"),
                 new File(plugin.getDataFolder(), "bossbars.yml"),
-                overwrite, result);
+                result);
         copyIfPresent(new File(sirFolder, "webhooks.yml"),
                 new File(plugin.getDataFolder(), "webhooks.yml"),
-                overwrite, result);
+                result);
     }
 
-    private void migrateEssentialsXConfigs(File essentialsFolder, boolean overwrite, Result result) throws IOException {
+    private void migrateEssentialsXConfigs(File essentialsFolder, Result result) throws IOException {
         File configFile = new File(essentialsFolder, "config.yml");
         if (!configFile.isFile()) return;
 
         YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
 
-        migrateEssentialsJoinQuit(config, overwrite, result);
-        migrateEssentialsMotd(essentialsFolder, overwrite, result);
+        migrateEssentialsJoinQuit(config, result);
+        migrateEssentialsMotd(essentialsFolder, result);
     }
 
-    private void migrateEssentialsChat(File essentialsFolder, boolean overwrite, Result result) throws IOException {
+    private void migrateEssentialsChat(File essentialsFolder, Result result) throws IOException {
         File configFile = new File(essentialsFolder, "config.yml");
         if (!configFile.isFile()) return;
 
@@ -275,24 +278,17 @@ final class MigrationService {
                 ? YamlConfiguration.loadConfiguration(channelsFile)
                 : new YamlConfiguration();
 
-        boolean changed = false;
-        if (format != null && (overwrite || !target.contains("default-channel.format"))) {
+        if (format != null)
             target.set("default-channel.format", translateEssentialsChatFormat(format));
-            changed = true;
-        }
-        if (overwrite || !target.contains("default-channel.radius")) {
-            target.set("default-channel.radius", radius);
-            changed = true;
-        }
 
-        if (changed) {
-            ensureParent(channelsFile);
-            target.save(channelsFile);
-            result.configs++;
-        }
+        target.set("default-channel.radius", radius);
+
+        ensureParent(channelsFile);
+        target.save(channelsFile);
+        result.configs++;
     }
 
-    private void migrateEssentialsSpawn(File essentialsFolder, boolean overwrite, Result result) throws IOException {
+    private void migrateEssentialsSpawn(File essentialsFolder, Result result) throws IOException {
         File spawnFile = new File(essentialsFolder, "spawn.yml");
         if (!spawnFile.isFile()) return;
 
@@ -330,34 +326,29 @@ final class MigrationService {
                 ? YamlConfiguration.loadConfiguration(messagesFile)
                 : new YamlConfiguration();
 
-        boolean changed = false;
         String coordinates = formatCoordinates(x, y, z);
         String rotation = formatRotation(yaw == null ? 0.0 : yaw, pitch == null ? 0.0 : pitch);
 
-        if (spawnOnJoin && (overwrite || !target.contains("join.default.spawn"))) {
+        if (spawnOnJoin) {
             target.set("join.default.spawn.enabled", true);
             target.set("join.default.spawn.world", world);
             target.set("join.default.spawn.coordinates", coordinates);
             target.set("join.default.spawn.rotation", rotation);
-            changed = true;
         }
 
-        if (!spawnOnJoin && (overwrite || !target.contains("first-join.default.spawn"))) {
+        if (!spawnOnJoin) {
             target.set("first-join.default.spawn.enabled", true);
             target.set("first-join.default.spawn.world", world);
             target.set("first-join.default.spawn.coordinates", coordinates);
             target.set("first-join.default.spawn.rotation", rotation);
-            changed = true;
         }
 
-        if (changed) {
-            ensureParent(messagesFile);
-            target.save(messagesFile);
-            result.configs++;
-        }
+        ensureParent(messagesFile);
+        target.save(messagesFile);
+        result.configs++;
     }
 
-    private void migrateEssentialsDiscord(boolean overwrite, Result result) throws IOException {
+    private void migrateEssentialsDiscord(Result result) throws IOException {
         File discordFolder = findPluginFolder("EssentialsDiscord");
         if (discordFolder == null) return;
 
@@ -374,7 +365,7 @@ final class MigrationService {
 
         boolean changed = false;
         String guild = discordConfig.getString("guild");
-        if (guild != null && (overwrite || !target.contains("default-server"))) {
+        if (guild != null) {
             target.set("default-server", guild);
             changed = true;
         }
@@ -382,19 +373,19 @@ final class MigrationService {
         ConfigurationSection channels = discordConfig.getConfigurationSection("channels");
         ConfigurationSection messageTypes = discordConfig.getConfigurationSection("message-types");
 
-        changed |= updateDiscordChannel(target, "first-join", resolveDiscordChannelId(channels, messageTypes, "first-join"), overwrite);
-        changed |= updateDiscordChannel(target, "join", resolveDiscordChannelId(channels, messageTypes, "join"), overwrite);
-        changed |= updateDiscordChannel(target, "quit", resolveDiscordChannelId(channels, messageTypes, "leave"), overwrite);
-        changed |= updateDiscordChannel(target, "global-chat", resolveDiscordChannelId(channels, messageTypes, "chat"), overwrite);
-        changed |= updateDiscordChannel(target, "advancements", resolveDiscordChannelId(channels, messageTypes, "advancement"), overwrite);
+        changed |= updateDiscordChannel(target, "first-join", resolveDiscordChannelId(channels, messageTypes, "first-join"));
+        changed |= updateDiscordChannel(target, "join", resolveDiscordChannelId(channels, messageTypes, "join"));
+        changed |= updateDiscordChannel(target, "quit", resolveDiscordChannelId(channels, messageTypes, "leave"));
+        changed |= updateDiscordChannel(target, "global-chat", resolveDiscordChannelId(channels, messageTypes, "chat"));
+        changed |= updateDiscordChannel(target, "advancements", resolveDiscordChannelId(channels, messageTypes, "advancement"));
 
         ConfigurationSection messages = discordConfig.getConfigurationSection("messages");
         if (messages != null) {
-            changed |= updateDiscordMessage(target, "messages.first-join.text", messages.getString("first-join"), overwrite);
-            changed |= updateDiscordMessage(target, "messages.join.text", messages.getString("join"), overwrite);
-            changed |= updateDiscordMessage(target, "messages.quit.text", messages.getString("quit"), overwrite);
-            changed |= updateDiscordMessage(target, "messages.global-chat.text", messages.getString("mc-to-discord"), overwrite);
-            changed |= updateDiscordMessage(target, "messages.advancements.text", messages.getString("advancement"), overwrite);
+            changed |= updateDiscordMessage(target, "messages.first-join.text", messages.getString("first-join"));
+            changed |= updateDiscordMessage(target, "messages.join.text", messages.getString("join"));
+            changed |= updateDiscordMessage(target, "messages.quit.text", messages.getString("quit"));
+            changed |= updateDiscordMessage(target, "messages.global-chat.text", messages.getString("mc-to-discord"));
+            changed |= updateDiscordMessage(target, "messages.advancements.text", messages.getString("advancement"));
         }
 
         if (changed) {
@@ -407,7 +398,7 @@ final class MigrationService {
         if (backup != null) result.extraBackups.add(backup);
     }
 
-    private void migrateEssentialsJoinQuit(YamlConfiguration config, boolean overwrite, Result result) throws IOException {
+    private void migrateEssentialsJoinQuit(YamlConfiguration config, Result result) throws IOException {
         String joinMessage = config.getString("custom-join-message", "none");
         String quitMessage = config.getString("custom-quit-message", "none");
 
@@ -426,45 +417,30 @@ final class MigrationService {
                 ? YamlConfiguration.loadConfiguration(messagesFile)
                 : new YamlConfiguration();
 
-        boolean configChanged = false, messagesChanged = false;
-
-        if (hasJoinMessage && (overwrite || !targetMessages.contains("join.default.public"))) {
+        if (hasJoinMessage)
             targetMessages.set("join.default.public", translateEssentialsText(joinMessage));
-            messagesChanged = true;
-        }
-        if (hasQuitMessage && (overwrite || !targetMessages.contains("quit.default.public"))) {
+        if (hasQuitMessage)
             targetMessages.set("quit.default.public", translateEssentialsText(quitMessage));
-            messagesChanged = true;
-        }
 
-        if (hasJoinMessage && (overwrite || !targetConfig.contains("disable-vanilla-messages.join"))) {
+        if (hasJoinMessage)
             targetConfig.set("disable-vanilla-messages.join", true);
-            configChanged = true;
-        }
-        if (hasQuitMessage && (overwrite || !targetConfig.contains("disable-vanilla-messages.quit"))) {
+        if (hasQuitMessage)
             targetConfig.set("disable-vanilla-messages.quit", true);
-            configChanged = true;
-        }
 
-        if (configChanged) {
-            ensureParent(configFile);
-            targetConfig.save(configFile);
-            result.configs++;
-        }
-        if (messagesChanged) {
-            ensureParent(messagesFile);
-            targetMessages.save(messagesFile);
-            result.configs++;
-        }
+        ensureParent(configFile);
+        targetConfig.save(configFile);
+        result.configs++;
+
+        ensureParent(messagesFile);
+        targetMessages.save(messagesFile);
+        result.configs++;
     }
 
-    private void migrateEssentialsMotd(File essentialsFolder, boolean overwrite, Result result) throws IOException {
+    private void migrateEssentialsMotd(File essentialsFolder, Result result) throws IOException {
         File motdFile = new File(essentialsFolder, "motd.txt");
         if (!motdFile.isFile()) return;
 
         File targetFile = new File(plugin.getDataFolder(), "modules" + File.separator + "motd" + File.separator + "motd.yml");
-        if (!overwrite && targetFile.exists()) return;
-
         List<String> lines = Files.readAllLines(motdFile.toPath());
         if (lines.isEmpty()) return;
 
@@ -480,7 +456,7 @@ final class MigrationService {
         result.configs++;
     }
 
-    private void migrateEssentialsXCommandStates(File essentialsFolder, boolean overwrite, Result result) throws IOException {
+    private void migrateEssentialsXCommandStates(File essentialsFolder, Result result) throws IOException {
         File configFile = new File(essentialsFolder, "config.yml");
         if (!configFile.isFile()) return;
 
@@ -503,11 +479,6 @@ final class MigrationService {
 
             String provider = resolveProvider(mapped);
             if (provider == null) continue;
-
-            if (!overwrite && target.contains("providers." + provider + ".commands." + mapped.toLowerCase(Locale.ENGLISH))) {
-                result.skipped++;
-                continue;
-            }
 
             target.set("providers." + provider + ".commands." + mapped.toLowerCase(Locale.ENGLISH), false);
             result.commandStates++;
@@ -705,18 +676,14 @@ final class MigrationService {
         }
     }
 
-    private boolean mergeIgnoreData(File sourceFile, YamlConfiguration target, boolean overwrite, Result result, Set<String> migratedUsers) {
+
+    private boolean mergeIgnoreData(File sourceFile, YamlConfiguration target, Result result, Set<String> migratedUsers) {
         if (!sourceFile.isFile()) return false;
 
         YamlConfiguration source = YamlConfiguration.loadConfiguration(sourceFile);
         boolean changed = false;
 
         for (String uuid : source.getKeys(false)) {
-            if (!overwrite && hasIgnoreData(target, uuid)) {
-                result.skipped++;
-                continue;
-            }
-
             List<String> chatList = source.getStringList(uuid + ".chat.single");
             List<String> msgList = source.getStringList(uuid + ".msg.single");
 
@@ -734,18 +701,13 @@ final class MigrationService {
         return changed;
     }
 
-    private boolean mergeMuteData(File sourceFile, YamlConfiguration target, boolean overwrite, Result result, Set<String> migratedUsers) {
+    private boolean mergeMuteData(File sourceFile, YamlConfiguration target, Result result, Set<String> migratedUsers) {
         if (!sourceFile.isFile()) return false;
 
         YamlConfiguration source = YamlConfiguration.loadConfiguration(sourceFile);
         boolean changed = false;
 
         for (String uuid : source.getKeys(false)) {
-            if (!overwrite && hasMuteData(target, uuid)) {
-                result.skipped++;
-                continue;
-            }
-
             target.set(uuid, source.get(uuid));
             changed = true;
             result.mutedUsers++;
@@ -755,18 +717,13 @@ final class MigrationService {
         return changed;
     }
 
-    private boolean mergeSimpleUsers(File sourceFile, YamlConfiguration target, boolean overwrite, Result result, Set<String> migratedUsers) {
+    private boolean mergeSimpleUsers(File sourceFile, YamlConfiguration target, Set<String> migratedUsers) {
         if (!sourceFile.isFile()) return false;
 
         YamlConfiguration source = YamlConfiguration.loadConfiguration(sourceFile);
         boolean changed = false;
 
         for (String uuid : source.getKeys(false)) {
-            if (!overwrite && target.contains(uuid)) {
-                result.skipped++;
-                continue;
-            }
-
             target.set(uuid, source.get(uuid));
             changed = true;
             migratedUsers.add(uuid);
@@ -775,7 +732,7 @@ final class MigrationService {
         return changed;
     }
 
-    private void migrateSirJoinQuitConfig(File sourceFile, File targetFile, boolean overwrite, Result result) throws IOException {
+    private void migrateSirJoinQuitConfig(File sourceFile, File targetFile, Result result) throws IOException {
         if (!sourceFile.isFile()) return;
 
         YamlConfiguration source = YamlConfiguration.loadConfiguration(sourceFile);
@@ -783,42 +740,22 @@ final class MigrationService {
                 ? YamlConfiguration.loadConfiguration(targetFile)
                 : new YamlConfiguration();
 
-        boolean changed = false;
-
         Boolean disableJoin = source.getBoolean("default-messages.disable-join", false);
         Boolean disableQuit = source.getBoolean("default-messages.disable-quit", false);
 
-        if (overwrite || !target.contains("disable-vanilla-messages.join")) {
-            target.set("disable-vanilla-messages.join", disableJoin);
-            changed = true;
-        }
-        if (overwrite || !target.contains("disable-vanilla-messages.quit")) {
-            target.set("disable-vanilla-messages.quit", disableQuit);
-            changed = true;
-        }
+        target.set("disable-vanilla-messages.join", disableJoin);
+        target.set("disable-vanilla-messages.quit", disableQuit);
+        target.set("cooldown.join", source.getInt("cooldown.join", 0));
+        target.set("cooldown.between", source.getInt("cooldown.between", 0));
+        target.set("cooldown.quit", source.getInt("cooldown.quit", 0));
 
-        if (overwrite || !target.contains("cooldown.join")) {
-            target.set("cooldown.join", source.getInt("cooldown.join", 0));
-            changed = true;
-        }
-        if (overwrite || !target.contains("cooldown.between")) {
-            target.set("cooldown.between", source.getInt("cooldown.between", 0));
-            changed = true;
-        }
-        if (overwrite || !target.contains("cooldown.quit")) {
-            target.set("cooldown.quit", source.getInt("cooldown.quit", 0));
-            changed = true;
-        }
-
-        if (changed) {
-            ensureParent(targetFile);
-            target.save(targetFile);
-            result.configs++;
-        }
+        ensureParent(targetFile);
+        target.save(targetFile);
+        result.configs++;
     }
 
-    private void migrateSirJoinQuitMessages(File sourceFile, File targetFile, boolean overwrite, Result result) throws IOException {
-        if (!sourceFile.isFile() || (!overwrite && targetFile.exists())) return;
+    private void migrateSirJoinQuitMessages(File sourceFile, File targetFile, Result result) throws IOException {
+        if (!sourceFile.isFile()) return;
 
         YamlConfiguration source = YamlConfiguration.loadConfiguration(sourceFile);
         YamlConfiguration target = new YamlConfiguration();
@@ -883,8 +820,8 @@ final class MigrationService {
         }
     }
 
-    private void migrateSirAnnouncements(File sourceFile, File targetFile, boolean overwrite, Result result) throws IOException {
-        if (!sourceFile.isFile() || (!overwrite && targetFile.exists())) return;
+    private void migrateSirAnnouncements(File sourceFile, File targetFile, Result result) throws IOException {
+        if (!sourceFile.isFile()) return;
 
         YamlConfiguration source = YamlConfiguration.loadConfiguration(sourceFile);
         YamlConfiguration target = new YamlConfiguration();
@@ -924,7 +861,7 @@ final class MigrationService {
         result.configs++;
     }
 
-    private void migrateSirAdvancements(File sourceFile, File targetFile, boolean overwrite, Result result) throws IOException {
+    private void migrateSirAdvancements(File sourceFile, File targetFile, Result result) throws IOException {
         if (!sourceFile.isFile()) return;
 
         YamlConfiguration source = YamlConfiguration.loadConfiguration(sourceFile);
@@ -932,34 +869,22 @@ final class MigrationService {
                 ? YamlConfiguration.loadConfiguration(targetFile)
                 : new YamlConfiguration();
 
-        boolean changed = false;
-        if (overwrite || !target.contains("worlds.list")) {
-            target.set("worlds.enabled", true);
-            target.set("worlds.whitelist", false);
-            target.set("worlds.list", source.getStringList("disabled-worlds"));
-            changed = true;
-        }
-        if (overwrite || !target.contains("game-modes.list")) {
-            target.set("game-modes.enabled", true);
-            target.set("game-modes.whitelist", false);
-            target.set("game-modes.list", source.getStringList("disabled-modes"));
-            changed = true;
-        }
-        if (overwrite || !target.contains("advancements.list")) {
-            target.set("advancements.enabled", true);
-            target.set("advancements.whitelist", false);
-            target.set("advancements.list", source.getStringList("disabled-advs"));
-            changed = true;
-        }
+        target.set("worlds.enabled", true);
+        target.set("worlds.whitelist", false);
+        target.set("worlds.list", source.getStringList("disabled-worlds"));
+        target.set("game-modes.enabled", true);
+        target.set("game-modes.whitelist", false);
+        target.set("game-modes.list", source.getStringList("disabled-modes"));
+        target.set("advancements.enabled", true);
+        target.set("advancements.whitelist", false);
+        target.set("advancements.list", source.getStringList("disabled-advs"));
 
-        if (changed) {
-            ensureParent(targetFile);
-            target.save(targetFile);
-            result.configs++;
-        }
+        ensureParent(targetFile);
+        target.save(targetFile);
+        result.configs++;
     }
 
-    private void migrateSirMotd(File sourceFile, File targetFile, boolean overwrite, Result result) throws IOException {
+    private void migrateSirMotd(File sourceFile, File targetFile, Result result) throws IOException {
         if (!sourceFile.isFile()) return;
 
         YamlConfiguration source = YamlConfiguration.loadConfiguration(sourceFile);
@@ -967,31 +892,19 @@ final class MigrationService {
                 ? YamlConfiguration.loadConfiguration(targetFile)
                 : new YamlConfiguration();
 
-        boolean changed = false;
-        if (overwrite || !target.contains("max-players.type")) {
-            target.set("max-players.type", source.getString("max-players.type", "DEFAULT"));
-            target.set("max-players.count", source.getInt("max-players.count", 0));
-            changed = true;
-        }
-        if (overwrite || !target.contains("server-icon.usage")) {
-            target.set("server-icon.usage", source.getString("server-icon.usage", "SINGLE"));
-            target.set("server-icon.image", source.getString("server-icon.image", "server-icon.png"));
-            changed = true;
-        }
-        if (overwrite || !target.contains("random-motd")) {
-            target.set("random-motd", source.getBoolean("random-motds", false));
-            changed = true;
-        }
+        target.set("max-players.type", source.getString("max-players.type", "DEFAULT"));
+        target.set("max-players.count", source.getInt("max-players.count", 0));
+        target.set("server-icon.usage", source.getString("server-icon.usage", "SINGLE"));
+        target.set("server-icon.image", source.getString("server-icon.image", "server-icon.png"));
+        target.set("random-motd", source.getBoolean("random-motds", false));
 
-        if (changed) {
-            ensureParent(targetFile);
-            target.save(targetFile);
-            result.configs++;
-        }
+        ensureParent(targetFile);
+        target.save(targetFile);
+        result.configs++;
     }
 
-    private void copyIfPresent(File sourceFile, File targetFile, boolean overwrite, Result result) throws IOException {
-        if (!sourceFile.isFile() || (!overwrite && targetFile.exists())) return;
+    private void copyIfPresent(File sourceFile, File targetFile, Result result) throws IOException {
+        if (!sourceFile.isFile()) return;
 
         ensureParent(targetFile);
         Files.copy(sourceFile.toPath(), targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
@@ -1015,18 +928,16 @@ final class MigrationService {
         if (source.contains(key)) target.set(targetPath, source.getInt(key));
     }
 
-    private boolean updateDiscordChannel(YamlConfiguration target, String key, String channelId, boolean overwrite) {
+    private boolean updateDiscordChannel(YamlConfiguration target, String key, String channelId) {
         if (channelId == null) return false;
 
         String path = "channel-ids." + key;
-        if (!overwrite && target.contains(path)) return false;
-
         target.set(path, Collections.singletonList(channelId));
         return true;
     }
 
-    private boolean updateDiscordMessage(YamlConfiguration target, String path, String value, boolean overwrite) {
-        if (value == null || (!overwrite && target.contains(path)))
+    private boolean updateDiscordMessage(YamlConfiguration target, String path, String value) {
+        if (value == null)
             return false;
 
         target.set(path, translateEssentialsText(value));
@@ -1170,19 +1081,6 @@ final class MigrationService {
         return results;
     }
 
-    private boolean hasIgnoreData(YamlConfiguration config, String uuidKey) {
-        return config.contains(uuidKey + ".chat")
-                || config.contains(uuidKey + ".msg")
-                || config.contains(uuidKey + ".chat.single")
-                || config.contains(uuidKey + ".msg.single");
-    }
-
-    private boolean hasMuteData(YamlConfiguration config, String uuidKey) {
-        return config.contains(uuidKey)
-                || config.contains(uuidKey + ".muted")
-                || config.contains(uuidKey + ".expiresAt");
-    }
-
     private long resolveMuteExpiry(YamlConfiguration config) {
         Object value = resolveFirst(config, "muteTimeout", "muted-until", "mutedUntil", "muted-until-ms");
         if (value instanceof Number) {
@@ -1230,7 +1128,6 @@ final class MigrationService {
         private int ignoreUsers = 0;
         private int ignoredEntries = 0;
         private int mutedUsers = 0;
-        private int skipped = 0;
         private int expiredMutes = 0;
         private int invalidUsers = 0;
         private int configs = 0;
