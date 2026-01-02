@@ -14,7 +14,7 @@ final class Messages {
 
     private void loadUnits(ExtensionFile file, String path, Type type) {
         Set<MessageUnit> set = units.computeIfAbsent(type, v -> new LinkedHashSet<>());
-        set.addAll(PermissibleUnit.loadUnits(file.getSection(path), s -> new MessageUnit(main.getApi(), s, type)));
+        set.addAll(PermissibleUnit.loadUnits(file.getSection(path), s -> new MessageUnit(main, s, type)));
         units.put(type, set);
     }
 

@@ -18,10 +18,12 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Getter
 final class MessageUnit implements PermissibleUnit {
 
+    private final JoinQuit main;
     private final SIRApi api;
 
     private final ConfigurationSection section;
@@ -34,8 +36,9 @@ final class MessageUnit implements PermissibleUnit {
 
     private final List<String> publicList, privateList, commands;
 
-    MessageUnit(SIRApi api, ConfigurationSection section, Messages.Type type) {
-        this.api = api;
+    MessageUnit(JoinQuit main, ConfigurationSection section, Messages.Type type) {
+        this.main = main;
+        this.api = main.getApi();
         this.section = section;
         this.type = type;
 
@@ -68,11 +71,22 @@ final class MessageUnit implements PermissibleUnit {
         MessageSender sender = api.getLibrary().getLoadedSender();
         Player player = user.isOnline() ? user.getPlayer() : null;
 
-        sender.copy().setParser(player).setTargets(Bukkit.getOnlinePlayers()).send(publicList);
+        List<Player> targets = Bukkit.getOnlinePlayers().stream()
+                .filter(p -> {
+                    SIRUser target = api.getUserManager().getUser(p);
+                    return target != null && main.isToggled(target);
+                })
+                .collect(Collectors.toList());
+
+        sender.copy().setParser(player).setTargets(targets).send(publicList);
         if (type != Messages.Type.QUIT) {
-            sender.copy().setTargets(player).send(privateList);
+            boolean chatEnabled = main.isToggled(user);
+            if (chatEnabled)
+                sender.copy().setTargets(player).send(privateList);
+
             user.getImmuneData().giveImmunity(invulnerable);
-            if (soundSection != null) soundSection.playSound(user);
+            if (chatEnabled && soundSection != null) soundSection.playSound(user);
+
             teleport(user);
         }
 

@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "2.3.0-Beta1"
+    kotlin("jvm") version "2.3.0"
     id("java-library")
     id("io.freefair.lombok") version "8.10"
     id("com.gradleup.shadow") version "8.3.0"

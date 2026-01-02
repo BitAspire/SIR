@@ -20,11 +20,13 @@ import java.util.stream.Collectors;
 @Getter
 final class Announcement implements PermissibleUnit {
 
+    private final Announcements main;
     private final ConfigurationSection section;
     private SoundSection sound;
     private final List<String> worlds, lines, commands;
 
-    Announcement(ConfigurationSection section) {
+    Announcement(Announcements main, ConfigurationSection section) {
+        this.main = main;
         this.section = section;
 
         try {
@@ -47,7 +49,7 @@ final class Announcement implements PermissibleUnit {
                 continue;
 
             SIRUser user = SIRApi.instance().getUserManager().getUser(p);
-            if (user == null) continue;
+            if (user == null || !main.isToggled(user)) continue;
 
             if (!user.isVanished() && hasPermission(user))
                 users.add(user);

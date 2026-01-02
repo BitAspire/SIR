@@ -7,7 +7,7 @@ import me.croabeast.common.gui.ChestBuilder;
 import me.croabeast.common.gui.ItemCreator;
 import me.croabeast.sir.PluginDependant;
 import me.croabeast.sir.SIRApi;
-import me.croabeast.sir.Toggleable;
+import me.croabeast.sir.MenuToggleable;
 import me.croabeast.sir.module.ModuleManager;
 import me.croabeast.sir.module.SIRModule;
 import me.croabeast.takion.character.SmallCaps;
@@ -34,6 +34,8 @@ import java.util.stream.Collectors;
 
 public final class CommandManager {
 
+    private boolean deferPluginDependants = false;
+
     private final SIRApi api;
     private final ModuleManager moduleManager;
 
@@ -44,8 +46,6 @@ public final class CommandManager {
     private final Map<String, DeferredProvider> deferredProviders = new LinkedHashMap<>();
 
     private final Set<SIRModule> processedModules = Collections.newSetFromMap(new IdentityHashMap<>());
-
-    private boolean deferPluginDependants = false;
 
     public CommandManager(SIRApi api) {
         this.api = api;
@@ -389,8 +389,16 @@ public final class CommandManager {
     }
 
     public SIRCommand getCommand(String name) {
-        if (name == null) return null;
-        return commands.get(name.toLowerCase(Locale.ENGLISH));
+        return name == null ? null : commands.get(name.toLowerCase(Locale.ENGLISH));
+    }
+
+    public SettingsService getSettingsService() {
+        return (SettingsService) providers.get("SettingsProvider");
+    }
+
+    @NotNull
+    public Collection<CommandProvider> getProviders() {
+        return providers.values().stream().map(entry -> entry.provider).collect(Collectors.toList());
     }
 
     @NotNull
@@ -429,7 +437,7 @@ public final class CommandManager {
 
     @NotNull
     public ChestBuilder getMenu() {
-        List<Toggleable.Button> buttons = providers.values().stream()
+        List<MenuToggleable.Button> buttons = providers.values().stream()
                 .map(entry -> entry.provider)
                 .filter(StandaloneProvider.class::isInstance)
                 .map(StandaloneProvider.class::cast)
@@ -462,7 +470,7 @@ public final class CommandManager {
             int x = 3 + column;
             int y = 1 + row;
 
-            Toggleable.Button button = buttons.get(index);
+            MenuToggleable.Button button = buttons.get(index);
             button.setSlot(Slot.fromXY(x, y));
             menu.addPane(0, button);
         }

@@ -43,7 +43,7 @@ final class Command extends SIRCommand {
                 TargetLoader.sendConfirmation(this, sender, rest[0]);
 
                 boolean hasArg = rest[1].matches("(?i)DEFAULT|CENTERED|MIXED");
-                new Printer(rest, hasArg ? 2 : 1).print(sender, rest[0], "");
+                new Printer(main, rest, hasArg ? 2 : 1).print(sender, rest[0], "");
                 return true;
 
             case "action-bar":
@@ -52,7 +52,7 @@ final class Command extends SIRCommand {
                 if (rest.length < 2) return createSender(sender).send("empty-message");
 
                 TargetLoader.sendConfirmation(this, sender, rest[0]);
-                new Printer(rest, 1).print(sender, rest[0], "ACTION-BAR");
+                new Printer(main, rest, 1).print(sender, rest[0], "ACTION-BAR");
                 return true;
 
             case "title":
@@ -61,7 +61,7 @@ final class Command extends SIRCommand {
                 if (rest.length < 2) return createSender(sender).send("empty-message");
 
                 TargetLoader.sendConfirmation(this, sender, rest[0]);
-                new Printer(rest, 2).print(sender, rest[0], "TITLE");
+                new Printer(main, rest, 2).print(sender, rest[0], "TITLE");
                 return true;
 
             default:

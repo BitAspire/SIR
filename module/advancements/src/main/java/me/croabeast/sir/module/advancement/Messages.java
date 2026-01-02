@@ -6,6 +6,7 @@ import me.croabeast.common.applier.StringApplier;
 import me.croabeast.common.util.ReplaceUtils;
 import me.croabeast.sir.SIRApi;
 import me.croabeast.sir.ExtensionFile;
+import me.croabeast.sir.user.SIRUser;
 import me.croabeast.takion.TakionLib;
 import me.croabeast.takion.format.PlainFormat;
 import org.apache.commons.lang.StringUtils;
@@ -20,6 +21,7 @@ import java.util.*;
 import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 final class Messages {
 
@@ -52,8 +54,12 @@ final class Messages {
         AdvancementInfo info = data.information.get(advancement);
         Type type = Type.fromFrame(info.getFrame());
 
-        Set<Player> players = new HashSet<>(Bukkit.getOnlinePlayers());
-        players.add(player);
+        Set<Player> players = Bukkit.getOnlinePlayers().stream()
+                .filter(entry -> {
+                    SIRUser user = main.getApi().getUserManager().getUser(entry);
+                    return user != null && main.isToggled(user);
+                })
+                .collect(Collectors.toSet());
 
         TakionLib library = SIRApi.instance().getLibrary();
         library.getLoadedSender().setTargets(players)

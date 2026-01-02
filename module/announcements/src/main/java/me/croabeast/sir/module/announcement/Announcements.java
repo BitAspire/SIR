@@ -2,6 +2,7 @@ package me.croabeast.sir.module.announcement;
 
 import lombok.Getter;
 import me.croabeast.scheduler.GlobalTask;
+import me.croabeast.sir.ChatToggleable;
 import me.croabeast.sir.ExtensionFile;
 import me.croabeast.sir.command.CommandProvider;
 import me.croabeast.sir.command.SIRCommand;
@@ -12,7 +13,7 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
-public class Announcements extends SIRModule implements CommandProvider {
+public class Announcements extends SIRModule implements CommandProvider, ChatToggleable {
 
     @Getter
     private final Set<SIRCommand> commands = new HashSet<>();
@@ -52,10 +53,6 @@ public class Announcements extends SIRModule implements CommandProvider {
 
         task.cancel();
         task = null;
-    }
-
-    public boolean isRunning() {
-        return task != null && task.isRunning();
     }
 
     @Override

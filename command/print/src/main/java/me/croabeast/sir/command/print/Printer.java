@@ -16,6 +16,7 @@ import java.util.Locale;
 @RequiredArgsConstructor
 final class Printer {
 
+    final PrintProvider main;
     final String[] args;
     final int index;
 
@@ -43,6 +44,10 @@ final class Printer {
         String argument = args[2];
 
         for (Player player : TargetLoader.getTargets(sender, input)) {
+            SIRUser user = api.getUserManager().getUser(player);
+            if (user != null && !main.isToggled(user))
+                continue;
+
             Channel channel = channelManager.identify(key);
 
             if (channel == channelManager.identify("chat")) {

@@ -3,6 +3,7 @@ package me.croabeast.sir.module.mention;
 import me.croabeast.common.util.ReplaceUtils;
 import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.sir.ChatChannel;
+import me.croabeast.sir.ChatToggleable;
 import me.croabeast.sir.UserFormatter;
 import me.croabeast.sir.module.SIRModule;
 import me.croabeast.sir.user.SIRUser;
@@ -15,7 +16,7 @@ import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public final class Mentions extends SIRModule implements UserFormatter<ChatChannel> {
+public final class Mentions extends SIRModule implements UserFormatter<ChatChannel>, ChatToggleable {
 
     Data data;
 
@@ -34,6 +35,8 @@ public final class Mentions extends SIRModule implements UserFormatter<ChatChann
     public String format(SIRUser user, String string, ChatChannel channel) {
         if (user == null || StringUtils.isBlank(string) || !isEnabled() || !user.isOnline())
             return string;
+
+        boolean senderEnabled = isToggled(user);
 
         UnaryOperator<String> operator = null;
         List<String> firstMessages = null;
@@ -70,18 +73,20 @@ public final class Mentions extends SIRModule implements UserFormatter<ChatChann
                 String finder = string.substring(start, end);
                 String color = PrismaticAPI.getEndColor(finder);
 
-                getApi().getLibrary().getLoadedSender()
-                        .setTargets(target.getPlayer())
-                        .setLogger(false)
-                        .addFunctions(op)
-                        .send(mention.getReceiverMessages());
+                boolean receiverEnabled = isToggled(target);
+                if (receiverEnabled) {
+                    getApi().getLibrary().getLoadedSender()
+                            .setTargets(target.getPlayer())
+                            .setLogger(false)
+                            .addFunctions(op)
+                            .send(mention.getReceiverMessages());
 
-                if (firstMessages == null) firstMessages = mention.getSenderMessages();
+                    Mention.SoundSection receiverSound = mention.getReceiverSound();
+                    if (receiverSound != null) receiverSound.playSound(target);
+                }
 
-                Mention.SoundSection receiverSound = mention.getReceiverSound();
-                if (receiverSound != null) receiverSound.playSound(target);
-
-                if (firstSound == null) firstSound = mention.getSenderSound();
+                if (senderEnabled && firstMessages == null) firstMessages = mention.getSenderMessages();
+                if (senderEnabled && firstSound == null) firstSound = mention.getSenderSound();
 
                 List<String> hover = mention.getHover();
                 hover.replaceAll(op);
@@ -101,10 +106,13 @@ public final class Mentions extends SIRModule implements UserFormatter<ChatChann
             }
         }
 
-        if (firstSound != null) firstSound.playSound(user);
-
-        getApi().getLibrary().getLoadedSender().addFunctions(operator)
-                .setLogger(false).setTargets(user.getPlayer()).send(firstMessages);
+        if (senderEnabled && firstSound != null) firstSound.playSound(user);
+        if (senderEnabled)
+            getApi().getLibrary().getLoadedSender()
+                    .addFunctions(operator)
+                    .setLogger(false)
+                    .setTargets(user.getPlayer())
+                    .send(firstMessages);
 
         return string;
     }
