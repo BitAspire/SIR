@@ -260,10 +260,18 @@ class ChannelUtils {
         return FileData.Module.Chat.CHANNELS.getFile();
     }
 
+    void clearDefaults() {
+        defaults = null;
+    }
+
     ChatChannel loadDefaults() {
+        defaults = null; // Clear cache before loading
         ConfigurationSection def = config().getSection("default-channel");
 
-        return def == null ? null : (defaults = new BaseChannel(def, null) {
+        if (def == null || !config().get("default-channel.enabled", true))
+            return null;
+
+        return defaults = new BaseChannel(def, null) {
 
             public boolean isGlobal() {
                 return true;
@@ -273,7 +281,7 @@ class ChannelUtils {
             public ChatChannel getSubChannel() {
                 return null;
             }
-        });
+        };
     }
 
     ChatChannel getDefaults() {

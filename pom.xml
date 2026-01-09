@@ -6,7 +6,7 @@
 
     <groupId>me.croabeast</groupId>
     <artifactId>SIR</artifactId>
-    <version>1.6.1</version>
+    <version>1.7.0</version>
     <packaging>jar</packaging>
 
     <name>SIR</name> <!--Simple In-game Receptionist-->
@@ -62,7 +62,6 @@
                             <artifact>*:*</artifact>
                             <excludes>
                                 <exclude>META-INF/**</exclude>
-                                <exclude>me/croabeast/sir/addon/**</exclude>
                                 <exclude>resources/plugin.yml</exclude>
                                 <exclude>fonts/**</exclude>
                                 <exclude>me/croabeast/menu/font/**</exclude>

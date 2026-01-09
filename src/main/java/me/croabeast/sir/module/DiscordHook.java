@@ -144,18 +144,28 @@ final class DiscordHook extends SIRModule implements Actionable, HookLoadable {
                 }
 
                 JDADiscordService service = Reflector.from(() -> discord).get("jda");
+                if (service == null) return;
 
-                String message = StringUtils.isBlank(values[5]) ? values[5] :
+                Object jda = Reflector.from(() -> service).get("jda");
+                if (jda == null) return;
+
+                String message = StringUtils.isBlank(values[5]) ? "" :
                         StringApplier.simplified(values[5])
                                 .apply(s -> ReplaceUtils.replaceEach(keys, values, s))
                                 .apply(s -> replacePlaceholders(player, s))
                                 .apply(s -> PlainFormat.PLACEHOLDER_API.accept(player, s))
                                 .apply(PrismaticAPI::stripAll).toString();
 
-                DiscordChatMessageEvent event =
-                        new DiscordChatMessageEvent(player, message, ChatType.UNKNOWN);
-                Bukkit.getPluginManager().callEvent(event);
-                service.sendChatMessage(player, event.getMessage());
+                if (StringUtils.isBlank(message)) return;
+
+                try {
+                    DiscordChatMessageEvent event =
+                            new DiscordChatMessageEvent(player, message, ChatType.UNKNOWN);
+                    Bukkit.getPluginManager().callEvent(event);
+                    service.sendChatMessage(player, event.getMessage());
+                } catch (Exception e) {
+                    // JDA service is not ready or disconnected, silently ignore
+                }
             });
         }
     }

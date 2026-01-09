@@ -138,14 +138,23 @@ final class ChatHandler extends ListenerModule implements Commandable {
     }
 
     ChatChannel getGlobal(SIRUser user) {
+        ChatChannel selected = null;
+        int highestPriority = Integer.MIN_VALUE;
+
         for (Set<ChatChannel> set : globals.values()) {
             for (ChatChannel channel : set) {
-                if (user.hasPermission(channel.getPermission()))
-                    return channel;
+                if (!user.hasPermission(channel.getPermission()))
+                    continue;
+
+                int priority = channel.getPriority();
+                if (selected == null || priority > highestPriority) {
+                    selected = channel;
+                    highestPriority = priority;
+                }
             }
         }
 
-        return ChannelUtils.getDefaults();
+        return selected != null ? selected : ChannelUtils.getDefaults();
     }
 
     class EmptyChecker {

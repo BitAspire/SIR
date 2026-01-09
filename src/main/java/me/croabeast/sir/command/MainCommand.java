@@ -29,10 +29,13 @@ final class MainCommand extends SIRCommand {
             final Timer timer = Timer.create(true);
             FileData.loadFiles();
 
-            plugin.getModuleManager().unregister();
-            plugin.getCommandManager().unregister();
+            plugin.getModuleManager().unload();
+            plugin.getCommandManager().unload();
 
+            plugin.getModuleManager().load();
             plugin.getModuleManager().register();
+
+            plugin.getCommandManager().load();
             plugin.getCommandManager().register();
 
             return senderPredicate("{time}", timer.result(), "reload").test(s, strings);

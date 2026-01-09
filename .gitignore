@@ -113,3 +113,4 @@ buildNumber.properties
 run/
 
 /src/main/java/me/croabeast/sir/addon/
+/.claude/settings.local.json

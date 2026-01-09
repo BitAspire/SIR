@@ -93,7 +93,16 @@ public interface ChatChannel extends PermissibleUnit {
         if (access == null) return false;
 
         List<String> list = access.getCommands();
-        return list.contains(command);
+
+        String normalized = command.startsWith("/") ? command : "/" + command;
+        String stripped = normalized.substring(1);
+
+        for (String entry : list) {
+            if (entry == null) continue;
+            if (entry.equalsIgnoreCase(normalized) || entry.equalsIgnoreCase(stripped))
+                return true;
+        }
+        return false;
     }
 
     @NotNull
