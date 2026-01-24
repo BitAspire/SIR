@@ -164,6 +164,7 @@ public final class SettingsProvider extends StandaloneProvider implements Settin
                 menuString("category.title", "&8Chat Settings - {category}:"),
                 Collections.singletonMap("category", category.getLabel())
         );
+
         ChestBuilder menu = ChestBuilder.of(getApi().getPlugin(), rows, title);
 
         SIRUser viewer = getApi().getUserManager().getUser(player);
@@ -193,7 +194,7 @@ public final class SettingsProvider extends StandaloneProvider implements Settin
         }
 
         menu.addSingleItem(
-                0, 1, rows,
+                0, 1, rows - 1,
                 ItemCreator.of(Material.ARROW)
                         .modifyName(menuString("category.back.name", "&eBack"))
                         .modifyLore(menuList("category.back.lore", Collections.singletonList("&7Return to the main menu.")))

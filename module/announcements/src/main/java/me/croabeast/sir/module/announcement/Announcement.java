@@ -4,16 +4,14 @@ import lombok.Getter;
 import me.croabeast.file.Configurable;
 import me.croabeast.sir.PermissibleUnit;
 import me.croabeast.sir.SIRApi;
+import me.croabeast.sir.SoundSection;
 import me.croabeast.sir.user.SIRUser;
 import org.bukkit.Bukkit;
-import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -31,7 +29,7 @@ final class Announcement implements PermissibleUnit {
 
         try {
             SoundSection temp = new SoundSection(section.getConfigurationSection("sound"));
-            if (temp.enabled) sound = temp;
+            if (temp.isEnabled()) sound = temp;
         } catch (Exception ignored) {}
 
         worlds = Configurable.toStringList(section, "worlds");
@@ -68,35 +66,5 @@ final class Announcement implements PermissibleUnit {
                 .send(lines);
         if (sound != null) users.forEach(u -> sound.playSound(u));
         SIRApi.executeCommands(null, commands);
-    }
-
-    static <T> T non(T value) {
-        return Objects.requireNonNull(value);
-    }
-
-    private static class SoundSection {
-
-        private final boolean enabled;
-        private final Sound sound;
-        private float volume = 1.0F, pitch = 1.0F;
-
-        SoundSection(@Nullable ConfigurationSection section) {
-            enabled = non(section).getBoolean("enabled");
-            sound = Sound.valueOf(section.getString("type"));
-
-            try {
-                String temp = non(section.getString("volume"));
-                volume = Float.parseFloat(temp);
-            } catch (Exception ignored) {}
-
-            try {
-                String temp = non(section.getString("pitch"));
-                pitch = Float.parseFloat(temp);
-            } catch (Exception ignored) {}
-        }
-
-        void playSound(SIRUser user) {
-            user.playSound(sound, volume, pitch);
-        }
     }
 }

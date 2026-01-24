@@ -4,16 +4,15 @@ import lombok.Getter;
 import me.croabeast.file.Configurable;
 import me.croabeast.sir.PermissibleUnit;
 import me.croabeast.sir.SIRApi;
+import me.croabeast.sir.SoundSection;
 import me.croabeast.sir.module.DiscordService;
 import me.croabeast.sir.user.SIRUser;
 import me.croabeast.takion.message.MessageSender;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Locale;
@@ -44,7 +43,7 @@ final class MessageUnit implements PermissibleUnit {
 
         try {
             SoundSection temp = new SoundSection(section.getConfigurationSection("sound"));
-            if (temp.enabled) soundSection = temp;
+            if (temp.isEnabled()) soundSection = temp;
         } catch (Exception ignored) {}
 
         try {
@@ -57,10 +56,6 @@ final class MessageUnit implements PermissibleUnit {
         publicList = Configurable.toStringList(section, "public");
         privateList = Configurable.toStringList(section, "private");
         commands = Configurable.toStringList(section, "commands");
-    }
-
-    static <T> T non(T value) {
-        return Objects.requireNonNull(value);
     }
 
     void teleport(SIRUser user) {
@@ -100,45 +95,19 @@ final class MessageUnit implements PermissibleUnit {
                     type.name().toLowerCase(Locale.ENGLISH), player, s -> s);
     }
 
-     private static class SoundSection {
-
-        private final boolean enabled;
-        private final Sound sound;
-        private float volume = 1.0F, pitch = 1.0F;
-
-        SoundSection(@Nullable ConfigurationSection section) {
-            enabled = non(section).getBoolean("enabled");
-            sound = Sound.valueOf(section.getString("type"));
-
-            try {
-                String temp = non(section.getString("volume"));
-                volume = Float.parseFloat(temp);
-            } catch (Exception ignored) {}
-
-            try {
-                String temp = non(section.getString("pitch"));
-                pitch = Float.parseFloat(temp);
-            } catch (Exception ignored) {}
-        }
-
-        void playSound(SIRUser user) {
-            user.playSound(sound, volume, pitch);
-        }
-    }
-
     private static class SpawnSection {
 
         private final boolean enabled;
         private final Location location;
 
-        SpawnSection(@Nullable ConfigurationSection section) {
-            enabled = non(section).getBoolean("enabled");
+        SpawnSection(ConfigurationSection section) {
+            enabled = Objects.requireNonNull(section).getBoolean("enabled");
 
-            final World world = Bukkit.getWorld(non(section.getString("world")));
-            location = non(world).getSpawnLocation();
+            final World world = Bukkit.getWorld(Objects.requireNonNull(section.getString("world")));
+            location = Objects.requireNonNull(world).getSpawnLocation();
 
             try {
-                String[] c = non(section.getString("coordinates")).split(",", 3);
+                String[] c = Objects.requireNonNull(section.getString("coordinates")).split(",", 3);
                 try {
                     location.setX(Double.parseDouble(c[0]));
                 } catch (Exception ignored) {}
@@ -151,7 +120,7 @@ final class MessageUnit implements PermissibleUnit {
             } catch (Exception ignored) {}
 
             try {
-                String[] r = non(section.getString("rotation")).split(",", 3);
+                String[] r = Objects.requireNonNull(section.getString("rotation")).split(",", 3);
                 try {
                     location.setYaw(Float.parseFloat(r[0]));
                 } catch (Exception ignored) {}
