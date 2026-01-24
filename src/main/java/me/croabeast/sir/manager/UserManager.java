@@ -53,4 +53,28 @@ public interface UserManager {
     static boolean hasPermission(SIRUser user, String permission) {
         return hasPermission(user.getPlayer(), permission);
     }
+
+    /**
+     * Saves all user data safely without removing users from the map.
+     * This is safe to call during reload operations.
+     */
+    void saveAllDataSafely();
+
+    /**
+     * Starts the auto-save task if enabled in config.
+     */
+    void startAutoSave();
+
+    /**
+     * Stops the auto-save task if running.
+     */
+    void stopAutoSave();
+
+    /**
+     * Gets the Runnable for safe reload operations.
+     * @return Runnable that saves all user data safely
+     */
+    default Runnable getSaveRunnable() {
+        return this::saveAllDataSafely;
+    }
 }

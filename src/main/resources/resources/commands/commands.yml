@@ -131,8 +131,9 @@ commands:
     permissions:
       main: sir.checkmute   # Permission to check mute status
 
-# Enable/disable automatic updates
-update: true
+# Enable/disable automatic updates from JAR resources
+# Set as false to preserve user changes to command states
+update: false
 
 # Global language configuration
 lang:

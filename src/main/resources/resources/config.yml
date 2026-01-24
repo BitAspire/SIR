@@ -57,6 +57,22 @@ options:
   # Recommended to keep false for better performance and consistency
   default-bukkit-plugin-methods: false
 
+  # Auto-Save Configuration
+  # Periodically saves user data to prevent data loss on crashes
+  auto-save:
+    # Enable/disable auto-save feature
+    # When enabled, user data is saved periodically to disk
+    enabled: true
+
+    # Interval between saves in minutes (minimum: 1)
+    # Lower values = more disk writes but less data loss risk
+    # Higher values = fewer writes but more potential data loss
+    interval-minutes: 5
+
+    # Log auto-save operations to console
+    # Useful for debugging, disable for cleaner console output
+    log: false
+
 # 🎨 Message Formatting Values
 values:
   # Prefix Key Configuration

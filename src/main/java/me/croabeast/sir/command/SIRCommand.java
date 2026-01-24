@@ -191,8 +191,12 @@ public abstract class SIRCommand extends BukkitCommand {
         this.parent = parent;
         button.allowToggle(false);
 
-        if (parent.isEnabled() != button.isEnabled())
+        if (parent.isEnabled() != button.isEnabled()) {
             button.toggleAll();
+            // Sync and save the state to match parent
+            file.set("commands." + name + ".enabled", button.isEnabled());
+            file.save();
+        }
     }
 
     protected SIRCommand(@NotNull SIRAspect parent, String name) {

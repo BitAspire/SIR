@@ -72,6 +72,12 @@ public class FileData {
 
     private class SIRFile extends ConfigurableFile {
 
+        // Files that should never be updated to preserve user state changes
+        private static final String[] NON_UPDATABLE_FILES = {
+                "modules" + File.separator + "modules",
+                "commands" + File.separator + "commands"
+        };
+
         SIRFile(String folder, String name) throws IOException {
             super(SIRPlugin.getInstance(), folder, name);
             setResourcePath("resources" + File.separator + getLocation());
@@ -79,6 +85,12 @@ public class FileData {
 
         @Override
         public boolean isUpdatable() {
+            String location = getLocation();
+            for (String nonUpdatable : NON_UPDATABLE_FILES) {
+                if (location.equals(nonUpdatable + ".yml")) {
+                    return false;
+                }
+            }
             return get("update", false);
         }
     }
@@ -91,7 +103,6 @@ public class FileData {
 
         if (areFilesLoaded) {
             for (YAMLFile file : FILE_MAP.values()) {
-                file.reload();
                 file.reload();
                 FILES_COUNTER.loaded++;
 
@@ -152,6 +163,32 @@ public class FileData {
                 "- Updated: " + FILES_COUNTER.updated + '/' + FILE_PATHS.size(),
                 "- Failed: " + FILES_COUNTER.failed + '/' + FILE_PATHS.size()
         );
+    }
+
+    /**
+     * Performs a safe reload that preserves user data.
+     * This method saves user data before reloading configuration files.
+     *
+     * @param userSaver A Runnable that saves all user data before reloading files
+     * @return DelayLogger with reload statistics
+     */
+    public DelayLogger safeReload(Runnable userSaver) {
+        DelayLogger logger = new DelayLogger();
+
+        if (userSaver != null) {
+            try {
+                userSaver.run();
+                logger.add("&a[Safe Reload] User data saved successfully.", true);
+            } catch (Exception e) {
+                logger.add("&c[Safe Reload] Failed to save user data: " + e.getMessage(), true);
+                SIRPlugin.getInstance().getLogger().severe(
+                        "[Safe Reload] Failed to save user data: " + e.getMessage()
+                );
+                e.printStackTrace();
+            }
+        }
+
+        return logger.add(loadFiles());
     }
 
     interface Key extends FileKey<Object> {}

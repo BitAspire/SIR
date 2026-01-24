@@ -190,12 +190,19 @@ final class ModuleImpl implements ModuleManager {
 
         moduleMap.asType(Type.LOADABLE).forEach(loadable -> {
             loadable.load();
+            if (loadable.isPluginEnabled()) return;
 
-            if (!loadable.isPluginEnabled()) {
-                AspectButton button = ((SIRModule) loadable).getButton();
-                button.allowToggle(false);
-                if (button.isEnabled()) button.toggle();
-            }
+            SIRModule module = (SIRModule) loadable;
+            AspectButton button = module.getButton();
+            button.allowToggle(false);
+
+            if (!button.isEnabled()) return;
+
+            button.toggle();
+            // Save the disabled state to file
+            String path = "modules." + ((SIRModule.Key) module.getKey()).getFullName();
+            module.getFile().set(path, false);
+            module.getFile().save();
         });
         loaded = true;
     }

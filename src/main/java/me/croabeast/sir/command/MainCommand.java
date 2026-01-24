@@ -7,6 +7,7 @@ import me.croabeast.command.CommandPredicate;
 import me.croabeast.common.util.ServerInfoUtils;
 import me.croabeast.sir.SIRPlugin;
 import me.croabeast.sir.FileData;
+import me.croabeast.sir.manager.UserManager;
 import me.croabeast.sir.misc.Timer;
 import me.croabeast.takion.message.MessageSender;
 import org.apache.commons.lang.SystemUtils;
@@ -27,7 +28,10 @@ final class MainCommand extends SIRCommand {
 
         editSubCommand("reload", (s, strings) -> {
             final Timer timer = Timer.create(true);
-            FileData.loadFiles();
+
+            // Safe reload: Save user data before reloading files
+            UserManager userManager = plugin.getUserManager();
+            FileData.safeReload(userManager.getSaveRunnable());
 
             plugin.getModuleManager().unload();
             plugin.getCommandManager().unload();
@@ -37,6 +41,9 @@ final class MainCommand extends SIRCommand {
 
             plugin.getCommandManager().load();
             plugin.getCommandManager().register();
+
+            // Restart auto-save with potentially new config values
+            userManager.startAutoSave();
 
             return senderPredicate("{time}", timer.result(), "reload").test(s, strings);
         });

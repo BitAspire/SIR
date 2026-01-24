@@ -12,6 +12,7 @@ import me.croabeast.common.Registrable;
 import me.croabeast.common.util.Exceptions;
 import me.croabeast.file.ConfigurableFile;
 import me.croabeast.scheduler.GlobalScheduler;
+import me.croabeast.scheduler.GlobalTask;
 import me.croabeast.sir.manager.UserManager;
 import me.croabeast.sir.user.SIRUser;
 import me.croabeast.sir.module.SIRModule;
@@ -46,6 +47,9 @@ final class UserManagerImpl implements UserManager, Registrable {
 
     private final SIRPlugin plugin;
     private final CustomListener listener;
+
+    private GlobalTask autoSaveTask = null;
+    private static final Object SAVE_LOCK = new Object();
 
     UserManagerImpl(SIRPlugin plugin) {
         this.plugin = plugin;
@@ -131,6 +135,101 @@ final class UserManagerImpl implements UserManager, Registrable {
             removeUuid(files, o.getUniqueId());
 
         files.forEach(ConfigurableFile::save);
+    }
+
+    /**
+     * Saves all user data without removing users from the map.
+     * This is safe to call during reload operations.
+     * Thread-safe implementation.
+     */
+    @Override
+    public void saveAllDataSafely() {
+        synchronized (SAVE_LOCK) {
+            Set<ConfigurableFile> modifiedFiles = new HashSet<>();
+
+            for (BaseUser user : userMap.values()) {
+                if (user == null) continue;
+
+                try {
+                    user.save(false);
+
+                    for (BaseData data : user.map.map.values())
+                        if (data.file != null) modifiedFiles.add(data.file);
+                }
+                catch (Exception e) {
+                    plugin.getLogger().warning("[UserManager] Failed to save data for user " + user.getUuid() + ": " + e.getMessage());
+                }
+            }
+
+            for (ConfigurableFile file : modifiedFiles) {
+                try {
+                    file.save();
+                } catch (Exception e) {
+                    plugin.getLogger().severe("[UserManager] Failed to save file: " + e.getMessage());
+                }
+            }
+
+            plugin.getLogger().info("[UserManager] Saved data for " + userMap.size() + " users.");
+        }
+    }
+
+    /**
+     * Starts the auto-save task if enabled in config.
+     */
+    @Override
+    public void startAutoSave() {
+        stopAutoSave();
+
+        ConfigurableFile config = FileData.Main.CONFIG.getFile();
+        boolean enabled = config.get("options.auto-save.enabled", false);
+
+        if (!enabled) {
+            plugin.getLogger().info("[UserManager] Auto-save is disabled.");
+            return;
+        }
+
+        int min = config.get("options.auto-save.interval-minutes", 5);
+        if (min < 1) min = 1;
+
+        long ticks = min * 60L * 20L;
+
+        autoSaveTask = SIRPlugin.getScheduler().runTaskTimer(this::performAutoSave, ticks, ticks);
+        plugin.getLogger().info("[UserManager] Auto-save enabled. Interval: " + min + " minutes.");
+    }
+
+    /**
+     * Stops the auto-save task if running.
+     */
+    @Override
+    public void stopAutoSave() {
+        if (autoSaveTask != null) {
+            autoSaveTask.cancel();
+            autoSaveTask = null;
+        }
+    }
+
+    /**
+     * Performs the auto-save operation with logging.
+     */
+    private void performAutoSave() {
+        try {
+            saveAllDataSafely();
+            if (FileData.Main.CONFIG.getFile().get("options.auto-save.log", true)) {
+                plugin.getLogger().info("[UserManager] Auto-save completed successfully.");
+            }
+        } catch (Exception e) {
+            plugin.getLogger().severe("[UserManager] Auto-save failed: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Gets the Runnable for safe reload operations.
+     * @return Runnable that saves all user data safely
+     */
+    @Override
+    public Runnable getSaveRunnable() {
+        return this::saveAllDataSafely;
     }
 
     @Override

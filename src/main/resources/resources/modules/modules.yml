@@ -1,7 +1,8 @@
 # SIR Plugin Module Configuration
 
-# Enable/disable automatic updates
-update: true
+# Enable/disable automatic updates from JAR resources
+# Set to false to preserve user changes to module states
+update: false
 
 # Module activation settings
 # true = enabled, false = disabled

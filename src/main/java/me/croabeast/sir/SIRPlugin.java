@@ -9,6 +9,7 @@ import me.croabeast.updater.UpdateChecker;
 import me.croabeast.updater.Result;
 import me.croabeast.updater.VersionScheme;
 import me.croabeast.common.util.Exceptions;
+import me.croabeast.file.ConfigurableFile;
 import me.croabeast.file.ResourceUtils;
 import me.croabeast.common.MetricsLoader;
 import me.croabeast.common.util.ServerInfoUtils;
@@ -226,6 +227,8 @@ public final class SIRPlugin extends JavaPlugin {
         if (SIRModule.Key.LOGIN.isEnabled())
             userManager.getOnlineUsers().forEach(u -> u.setLogged(true));
 
+        userManager.startAutoSave();
+
         logger.add(true,
                 "&e[Status]", "- SIR initialized completely.",
                 "- Loading time: " + initializer.result() + " ms",
@@ -348,9 +351,13 @@ public final class SIRPlugin extends JavaPlugin {
 
         AnimatedBossbar.unregisterAll(this);
 
+        // Backup save: ensure all module/command states are persisted
+        saveModuleAndCommandStates();
+
         moduleManager.unload();
         commandManager.unload();
 
+        userManager.stopAutoSave();
         userManager.unregister();
         userManager.saveAllData();
 
@@ -364,6 +371,36 @@ public final class SIRPlugin extends JavaPlugin {
 
         lib = null;
         instance = null;
+    }
+
+    /**
+     * Saves all module and command states to their configuration files as a backup.
+     * This ensures no state is lost even if individual saves failed during runtime.
+     */
+    private void saveModuleAndCommandStates() {
+        try {
+            // Save module states
+            ConfigurableFile modulesFile = FileData.Module.getMain();
+            for (SIRModule module : moduleManager.getValues()) {
+                SIRModule.Key key = (SIRModule.Key) module.getKey();
+                String path = "modules." + key.getFullName();
+                modulesFile.set(path, module.isEnabled());
+            }
+            modulesFile.save();
+
+            // Save command states (only for commands without parent, as parent controls their state)
+            ConfigurableFile commandsFile = FileData.Command.getMain();
+            for (SIRCommand command : commandManager.getValues()) {
+                // Skip commands with parent - their state is controlled by the parent module
+                if (command.getParent() == null) {
+                    String path = "commands." + command.getName() + ".enabled";
+                    commandsFile.set(path, command.isEnabled());
+                }
+            }
+            commandsFile.save();
+        } catch (Exception e) {
+            getLogger().warning("Failed to save module/command states: " + e.getMessage());
+        }
     }
 
     @NotNull
@@ -385,7 +422,9 @@ public final class SIRPlugin extends JavaPlugin {
 
     @NotNull
     public FileConfiguration getConfig() {
-        if (checkDefaultBukkitMethods()) return super.getConfig();
+        if (checkDefaultBukkitMethods())
+            return super.getConfig();
+
         throw new IllegalStateException("Please use FileData for File management.");
     }
 
@@ -395,6 +434,7 @@ public final class SIRPlugin extends JavaPlugin {
             super.reloadConfig();
             return;
         }
+
         throw new IllegalStateException("Please use FileData for File management.");
     }
 
@@ -404,12 +444,15 @@ public final class SIRPlugin extends JavaPlugin {
             super.saveConfig();
             return;
         }
+
         throw new IllegalStateException("Please use FileData for File management.");
     }
 
     @Nullable
     public PluginCommand getCommand(@NotNull String name) {
-        if (checkDefaultBukkitMethods()) return super.getCommand(name);
+        if (checkDefaultBukkitMethods())
+            return super.getCommand(name);
+
         throw new IllegalStateException("Please refer to SIRPlugin#getCommandManager() for command management.");
     }
 
