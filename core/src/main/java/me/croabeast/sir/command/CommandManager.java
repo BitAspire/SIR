@@ -393,7 +393,7 @@ public final class CommandManager {
     }
 
     public SettingsService getSettingsService() {
-        return (SettingsService) providers.get("SettingsProvider");
+        return (SettingsService) providers.get("SettingsProvider").provider;
     }
 
     @NotNull

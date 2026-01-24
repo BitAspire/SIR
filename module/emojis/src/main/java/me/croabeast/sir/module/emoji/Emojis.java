@@ -6,7 +6,6 @@ import me.croabeast.sir.module.SIRModule;
 import me.croabeast.sir.user.SIRUser;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 public final class Emojis extends SIRModule implements UserFormatter<Object> {

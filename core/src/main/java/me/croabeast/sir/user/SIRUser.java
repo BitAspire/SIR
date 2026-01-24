@@ -1,5 +1,6 @@
 package me.croabeast.sir.user;
 
+import me.croabeast.sir.SoundUtils;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -175,9 +176,8 @@ public interface SIRUser {
      * @param pitch the pitch of the sound
      */
     default void playSound(String rawSound, float volume, float pitch) {
-        try {
-            playSound(Sound.valueOf(rawSound), volume, pitch);
-        } catch (Exception ignored) {}
+        Sound sound = SoundUtils.parseSound(rawSound);
+        if (sound != null) playSound(sound, volume, pitch);
     }
 
     /**

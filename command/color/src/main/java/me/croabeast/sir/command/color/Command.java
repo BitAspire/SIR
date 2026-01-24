@@ -1,6 +1,5 @@
 package me.croabeast.sir.command.color;
 
-import me.croabeast.command.BaseCommand;
 import me.croabeast.command.TabBuilder;
 import me.croabeast.sir.ExtensionFile;
 import me.croabeast.sir.command.SIRCommand;
@@ -132,6 +131,8 @@ final class Command extends SIRCommand {
             case RESET:
                 user.getColorData().removeAnyFormats();
                 return createSender(sender).send("reset");
+
+            default: break;
         }
 
         return isWrongArgument(sender, args[0]);

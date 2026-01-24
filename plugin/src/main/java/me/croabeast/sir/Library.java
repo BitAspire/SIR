@@ -1,7 +1,6 @@
 package me.croabeast.sir;
 
 import lombok.SneakyThrows;
-import me.croabeast.common.PlayerFormatter;
 import me.croabeast.file.ConfigurableFile;
 import me.croabeast.sir.module.ModuleManager;
 import me.croabeast.takion.TakionLib;
