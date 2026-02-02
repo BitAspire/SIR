@@ -6,6 +6,7 @@ import me.croabeast.sir.ExtensionFile;
 import me.croabeast.sir.command.SIRCommand;
 import me.croabeast.sir.user.SIRUser;
 import org.bukkit.command.CommandSender;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -21,9 +22,9 @@ final class Command extends SIRCommand {
     }
 
     @Override
-    protected boolean execute(CommandSender sender, String[] args) {
+    public boolean execute(@NotNull CommandSender sender, String[] args) {
         if (!isPermitted(sender)) return true;
-        if (args.length == 0) return createSender(sender).send("help.main");
+        if (args.length == 0) return Utils.create(this, sender).send("help.main");
 
         String subCommand = args[0].toLowerCase(Locale.ENGLISH);
         String[] rest = Arrays.copyOfRange(args, 1, args.length);
@@ -32,13 +33,13 @@ final class Command extends SIRCommand {
             case "targets":
                 if (!isSubCommandPermitted(sender, "targets", true)) return true;
                 return rest.length == 0 ?
-                        createSender(sender).send("help.targets") :
-                        isWrongArgument(sender, rest[rest.length - 1]);
+                        Utils.create(this, sender).send("help.targets") :
+                        getArgumentCheck().test(sender, rest[rest.length - 1]);
 
             case "chat":
                 if (!isSubCommandPermitted(sender, "chat", true)) return true;
-                if (rest.length == 0) return createSender(sender).send("help.chat");
-                if (rest.length < 3) return createSender(sender).send("empty-message");
+                if (rest.length == 0) return Utils.create(this, sender).send("help.chat");
+                if (rest.length < 3) return Utils.create(this, sender).send("empty-message");
 
                 TargetLoader.sendConfirmation(this, sender, rest[0]);
 
@@ -48,8 +49,8 @@ final class Command extends SIRCommand {
 
             case "action-bar":
                 if (!isSubCommandPermitted(sender, "action-bar", true)) return true;
-                if (rest.length == 0) return createSender(sender).send("help.action-bar");
-                if (rest.length < 2) return createSender(sender).send("empty-message");
+                if (rest.length == 0) return Utils.create(this, sender).send("help.action-bar");
+                if (rest.length < 2) return Utils.create(this, sender).send("empty-message");
 
                 TargetLoader.sendConfirmation(this, sender, rest[0]);
                 new Printer(main, rest, 1).print(sender, rest[0], "ACTION-BAR");
@@ -57,21 +58,21 @@ final class Command extends SIRCommand {
 
             case "title":
                 if (!isSubCommandPermitted(sender, "title", true)) return true;
-                if (rest.length == 0) return createSender(sender).send("help.title");
-                if (rest.length < 2) return createSender(sender).send("empty-message");
+                if (rest.length == 0) return Utils.create(this, sender).send("help.title");
+                if (rest.length < 2) return Utils.create(this, sender).send("empty-message");
 
                 TargetLoader.sendConfirmation(this, sender, rest[0]);
                 new Printer(main, rest, 2).print(sender, rest[0], "TITLE");
                 return true;
 
             default:
-                return isWrongArgument(sender, args[0]);
+                return getArgumentCheck().test(sender, args[0]);
         }
     }
 
     @Override
     public TabBuilder getCompletionBuilder() {
-        TabBuilder builder = createBasicTabBuilder().addArgument(0, "sir.print.targets", "targets")
+        TabBuilder builder = Utils.newBuilder().addArgument(0, "sir.print.targets", "targets")
                 .addArgument(0, "sir.print.chat", "chat")
                 .addArgument(0, "sir.print.action-bar", "action-bar")
                 .addArgument(0, "sir.print.title", "title")

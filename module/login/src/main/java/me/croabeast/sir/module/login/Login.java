@@ -19,7 +19,6 @@ public final class Login extends SIRModule implements PluginDependant {
     private final String[] dependencies = {"AuthMe", "UserLogin", "nLogin", "OpeNLogin", "NexAuth"};
     private final Set<Plugin> loadedPlugins = new HashSet<>();
 
-    @Override
     public Plugin getPlugin() {
         return loadedPlugins.size() != 1 ? null : loadedPlugins.iterator().next();
     }

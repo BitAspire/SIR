@@ -258,7 +258,18 @@ public final class ModuleManager {
 
             ModuleLoader classLoader = new ModuleLoader(api, url);
 
-            Class<?> clazz = Class.forName(file.getMain(), true, classLoader);
+            Class<?> clazz;
+            try {
+                clazz = Class.forName(file.getMain(), true, classLoader);
+            } catch (NoClassDefFoundError e) {
+                String missingClass = e.getMessage();
+                log(LogLevel.INFO, "Module '" + name + "' deferred: missing class dependency '" + missingClass + "'.");
+                String[] inferredDeps = inferPluginFromClass(missingClass);
+                deferModule(candidate, inferredDeps);
+                classLoader.close();
+                return false;
+            }
+
             if (!SIRModule.class.isAssignableFrom(clazz)) {
                 log(LogLevel.ERROR, "Main class '" + file.getMain() + "' does not extend SIRModule, skipping...");
                 classLoader.close();
@@ -271,17 +282,21 @@ public final class ModuleManager {
             SIRModule module = (SIRModule) constructor.newInstance();
             if (module instanceof PluginDependant) {
                 PluginDependant dependant = (PluginDependant) module;
-                if (deferPluginDependants) {
-                    deferModule(candidate, dependant.getDependencies());
-                    classLoader.close();
-                    return false;
-                }
+                String[] deps = dependant.getDependencies();
 
-                if (!dependant.isPluginEnabled()) {
-                    log(LogLevel.INFO, hookMessage(name, dependant.getDependencies()));
-                    deferModule(candidate, dependant.getDependencies());
-                    classLoader.close();
-                    return false;
+                if (deps.length > 0) {
+                    if (deferPluginDependants) {
+                        deferModule(candidate, deps);
+                        classLoader.close();
+                        return false;
+                    }
+
+                    if (!dependant.areDependenciesEnabled()) {
+                        log(LogLevel.INFO, hookMessage(name, deps));
+                        deferModule(candidate, deps);
+                        classLoader.close();
+                        return false;
+                    }
                 }
             }
 
@@ -483,6 +498,29 @@ public final class ModuleManager {
             if (dependency.equalsIgnoreCase(pluginName)) return true;
         }
         return false;
+    }
+
+    private String[] inferPluginFromClass(String className) {
+        if (className == null) return new String[]{"Unknown"};
+
+        // Normalize class name (replace / with .)
+        String normalized = className.replace('/', '.');
+
+        // Known plugin package mappings
+        if (normalized.startsWith("me.clip.placeholderapi"))
+            return new String[]{"PlaceholderAPI"};
+        if (normalized.startsWith("github.scarsz.discordsrv") || normalized.startsWith("com.discordsrv"))
+            return new String[]{"DiscordSRV"};
+        if (normalized.startsWith("net.luckperms"))
+            return new String[]{"LuckPerms"};
+        if (normalized.startsWith("me.realized.tokenmanager"))
+            return new String[]{"TokenManager"};
+        if (normalized.startsWith("com.earth2me.essentials"))
+            return new String[]{"Essentials"};
+        if (normalized.startsWith("net.milkbowl.vault"))
+            return new String[]{"Vault"};
+
+        return new String[]{"Unknown"};
     }
 
     public void unload(String name) {

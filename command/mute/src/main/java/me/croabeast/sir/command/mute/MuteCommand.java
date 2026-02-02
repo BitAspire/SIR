@@ -6,6 +6,7 @@ import me.croabeast.sir.user.SIRUser;
 import me.croabeast.takion.message.MessageSender;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
+import org.jetbrains.annotations.NotNull;
 
 final class MuteCommand extends Command {
 
@@ -14,11 +15,11 @@ final class MuteCommand extends Command {
     }
 
     @Override
-    protected boolean execute(CommandSender sender, String[] args) {
+    public boolean execute(@NotNull CommandSender sender, String[] args) {
         if (!isPermitted(sender)) return true;
 
         if (args.length == 0)
-            return createSender(sender).send("help.perm");
+            return Utils.create(this, sender).send("help.perm");
 
         SIRUser target = main.getApi().getUserManager().fromClosest(args[0]);
         if (target == null) return checkPlayer(sender, args[0]);
@@ -31,7 +32,7 @@ final class MuteCommand extends Command {
             if (temp != null) reason = temp;
         }
 
-        MessageSender message = createSender(sender)
+        MessageSender message = Utils.create(this, sender)
                 .addPlaceholder("{reason}", reason)
                 .addPlaceholder("{target}", target.getName())
                 .addPlaceholder("{admin}", sender.getName());

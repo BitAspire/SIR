@@ -8,6 +8,7 @@ import me.croabeast.sir.user.SIRUser;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.*;
@@ -22,9 +23,9 @@ final class Command extends SIRCommand {
     }
 
     @Override
-    protected boolean execute(CommandSender sender, String[] args) {
+    public boolean execute(@NotNull CommandSender sender, String[] args) {
         if (!isPermitted(sender)) return true;
-        if (args.length == 0) return createSender(sender).send("help");
+        if (args.length == 0) return Utils.create(this, sender).send("help");
 
         String subCommand = args[0].toLowerCase(Locale.ENGLISH);
         String[] rest = Arrays.copyOfRange(args, 1, args.length);
@@ -32,13 +33,13 @@ final class Command extends SIRCommand {
         switch (subCommand) {
             case "help":
                 if (!isSubCommandPermitted(sender, "help", true)) return true;
-                return createSender(sender).send("help");
+                return Utils.create(this, sender).send("help");
 
             case "gradient": {
                 if (!isSubCommandPermitted(sender, "gradient", true)) return true;
 
-                if (!(sender instanceof Player)) return createSender(sender).send("need-player");
-                if (rest.length != 2) return createSender(sender).send("gradient.usage");
+                if (!(sender instanceof Player)) return Utils.create(this, sender).send("need-player");
+                if (rest.length != 2) return Utils.create(this, sender).send("gradient.usage");
 
                 SIRUser user = main.getApi().getUserManager().getUser(sender);
                 if (user == null) return checkPlayer(sender, sender.getName());
@@ -47,7 +48,7 @@ final class Command extends SIRCommand {
                 data.setColorStart(rest[0]);
                 data.setColorEnd(rest[1]);
 
-                return createSender(sender)
+                return Utils.create(this, sender)
                         .addPlaceholder("{gradient}", rest[0])
                         .addPlaceholder("{end}", rest[1])
                         .send("gradient.success");
@@ -55,7 +56,7 @@ final class Command extends SIRCommand {
 
             case "rainbow": {
                 if (!isSubCommandPermitted(sender, "rainbow", true)) return true;
-                if (!(sender instanceof Player)) return createSender(sender).send("need-player");
+                if (!(sender instanceof Player)) return Utils.create(this, sender).send("need-player");
 
                 SIRUser user = main.getApi().getUserManager().getUser(sender);
                 if (user == null) return checkPlayer(sender, sender.getName());
@@ -63,7 +64,7 @@ final class Command extends SIRCommand {
                 user.getColorData().setColorStart("<R:1>");
                 user.getColorData().setColorEnd("</R>");
 
-                return createSender(sender)
+                return Utils.create(this, sender)
                         .addPlaceholder("{rainbow}", "<R:1>")
                         .addPlaceholder("{end}", "</R>")
                         .send("rainbow");
@@ -79,12 +80,12 @@ final class Command extends SIRCommand {
             }
         }
 
-        if (resolved == null) return isWrongArgument(sender, args[0]);
+        if (resolved == null) return getArgumentCheck().test(sender, args[0]);
         String colorName = resolved.asBungee().getName();
         if (!isSubCommandPermitted(sender, colorName, true)) return true;
 
         if (!(sender instanceof Player))
-            return createSender(sender).send("need-player");
+            return Utils.create(this, sender).send("need-player");
 
         SIRUser user = main.getApi().getUserManager().getUser(sender);
         if (user == null)
@@ -103,7 +104,7 @@ final class Command extends SIRCommand {
                 boolean added = !formats.remove(to) && formats.add(to);
 
                 String path = added ? "add" : "remove";
-                return createSender(sender)
+                return Utils.create(this, sender)
                         .addPlaceholder("{format}", to + colorName)
                         .send("format." + path);
 
@@ -124,18 +125,18 @@ final class Command extends SIRCommand {
             case DARK_PURPLE:
             case LIGHT_PURPLE:
                 user.getColorData().setColorStart(resolved.toString());
-                return createSender(sender)
+                return Utils.create(this, sender)
                         .addPlaceholder("{color}", resolved + colorName)
                         .send("color");
 
             case RESET:
                 user.getColorData().removeAnyFormats();
-                return createSender(sender).send("reset");
+                return Utils.create(this, sender).send("reset");
 
             default: break;
         }
 
-        return isWrongArgument(sender, args[0]);
+        return getArgumentCheck().test(sender, args[0]);
     }
 
     @Override
@@ -148,7 +149,7 @@ final class Command extends SIRCommand {
         for (ChatColor color : ChatColor.values())
             subCommands.add(color.asBungee().getName());
 
-        TabBuilder builder = createBasicTabBuilder();
+        TabBuilder builder = Utils.newBuilder();
         for (String name : subCommands)
             builder.addArguments(0, (s, a) -> isSubCommandPermitted(s, name, false), name);
 

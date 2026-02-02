@@ -25,6 +25,6 @@ abstract class Command extends SIRCommand {
 
     @Override
     public TabBuilder getCompletionBuilder() {
-        return createBasicTabBuilder().addArguments(0, getOnlineNames()).addArgument(1, "<reason>");
+        return Utils.newBuilder().addArguments(0, Utils.getOnlineNames()).addArgument(1, "<reason>");
     }
 }

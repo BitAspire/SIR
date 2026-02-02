@@ -22,7 +22,6 @@ public class Discord extends SIRModule implements PluginDependant, DiscordServic
 
     private Config config;
 
-    @Override
     public Plugin getPlugin() {
         return loadedPlugins.size() != 1 ? null : loadedPlugins.iterator().next();
     }

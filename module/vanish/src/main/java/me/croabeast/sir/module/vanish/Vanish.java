@@ -20,7 +20,6 @@ public final class Vanish extends SIRModule implements PluginDependant {
     private final String[] dependencies = {"Essentials", "CMI", "SuperVanish", "PremiumVanish"};
     private final Set<Plugin> loadedPlugins = new HashSet<>();
 
-    @Override
     public Plugin getPlugin() {
         return loadedPlugins.size() != 1 ? null : loadedPlugins.iterator().next();
     }

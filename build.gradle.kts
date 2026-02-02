@@ -66,7 +66,7 @@ subprojects {
         compileOnly("me.clip:placeholderapi:2.11.6")
 
         compileOnly("com.github.stefvanschie.inventoryframework:IF:0.11.6")
-        implementation("me.croabeast.takion:shaded-all:1.3")
+        implementation("me.croabeast.takion:shaded-all:1.4")
     }
 }
 

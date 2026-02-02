@@ -60,7 +60,7 @@ class TargetLoader {
 
     void sendConfirmation(SIRCommand command, CommandSender sender, String input) {
         Set<Player> targets = getTargets(sender, input);
-        MessageSender displayer = command.createSender(sender);
+        MessageSender displayer = SIRCommand.Utils.create(command, sender);
 
         if (targets.isEmpty()) {
             displayer.addPlaceholder("{target}", input).send("reminder.empty");

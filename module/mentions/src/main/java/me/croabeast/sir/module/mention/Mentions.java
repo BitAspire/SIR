@@ -4,6 +4,7 @@ import me.croabeast.common.util.ReplaceUtils;
 import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.sir.ChatChannel;
 import me.croabeast.sir.ChatToggleable;
+import me.croabeast.sir.SoundSection;
 import me.croabeast.sir.UserFormatter;
 import me.croabeast.sir.module.SIRModule;
 import me.croabeast.sir.user.SIRUser;
@@ -40,7 +41,7 @@ public final class Mentions extends SIRModule implements UserFormatter<ChatChann
 
         UnaryOperator<String> operator = null;
         List<String> firstMessages = null;
-        Mention.SoundSection firstSound = null;
+        SoundSection firstSound = null;
 
         for (Mention mention : data.getMentions()) {
             if (!mention.isInGroupAsNull(user.getPlayer()) || !mention.hasPermission(user))
@@ -81,7 +82,7 @@ public final class Mentions extends SIRModule implements UserFormatter<ChatChann
                             .addFunctions(op)
                             .send(mention.getReceiverMessages());
 
-                    Mention.SoundSection receiverSound = mention.getReceiverSound();
+                    SoundSection receiverSound = mention.getReceiverSound();
                     if (receiverSound != null) receiverSound.playSound(target);
                 }
 
