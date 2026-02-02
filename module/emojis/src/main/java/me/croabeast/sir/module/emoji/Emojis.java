@@ -1,35 +1,47 @@
 package me.croabeast.sir.module.emoji;
 
-import me.croabeast.sir.PAPIExpansion;
+import me.croabeast.sir.PluginDependant;
 import me.croabeast.sir.UserFormatter;
 import me.croabeast.sir.module.SIRModule;
 import me.croabeast.sir.user.SIRUser;
-import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 
-public final class Emojis extends SIRModule implements UserFormatter<Object> {
+public final class Emojis extends SIRModule implements UserFormatter<Object>, PluginDependant {
+
+    private static final String PAPI = "PlaceholderAPI";
 
     Data data;
-    PAPIExpansion hook;
+    private Object hook;
+
+    @NotNull
+    @Override
+    public String[] getSoftDependencies() {
+        return new String[]{PAPI};
+    }
 
     @Override
     public boolean register() {
         data = new Data(this);
 
-        return !Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI") ||
-                (hook = new PAPIExpansion("sir_emoji") {
-                    @NotNull
-                    public String onRequest(OfflinePlayer off, @NotNull String params) {
-                        Emoji emoji = data.emojis.get(params);
-                        return emoji != null && emoji.getValue() != null ? emoji.getValue() : "";
-                    }
-                }).register();
+        if (!isPluginEnabled(PAPI))
+            return true;
+
+        try {
+            hook = new EmojiExpansion(data);
+            return ((me.croabeast.sir.PAPIExpansion) hook).register();
+        } catch (NoClassDefFoundError e) {
+            return true;
+        }
     }
 
     @Override
     public boolean unregister() {
-        return hook == null || hook.unregister();
+        if (hook == null) return true;
+        try {
+            return ((me.croabeast.sir.PAPIExpansion) hook).unregister();
+        } catch (NoClassDefFoundError e) {
+            return true;
+        }
     }
 
     @NotNull

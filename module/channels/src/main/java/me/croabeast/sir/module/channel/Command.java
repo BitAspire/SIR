@@ -8,6 +8,7 @@ import me.croabeast.sir.user.ChannelData;
 import me.croabeast.sir.user.SIRUser;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,20 +31,20 @@ final class Command extends SIRCommand {
     }
 
     @Override
-    protected boolean execute(CommandSender sender, String[] args) {
+    public boolean execute(@NotNull CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
             main.getApi().getLibrary().getLogger().log("&cYou can't toggle a local chat in console.");
             return true;
         }
 
         if (!isPermitted(sender)) return true;
-        if (args.length == 0) return createSender(sender).send("help");
+        if (args.length == 0) return Utils.create(this, sender).send("help");
 
         if (args.length != 1)
-            return isWrongArgument(sender, args[args.length - 1]);
+            return getArgumentCheck().test(sender, args[args.length - 1]);
 
         SIRUser user = main.getApi().getUserManager().getUser(sender);
-        if (user == null) return createSender(sender).send("help");
+        if (user == null) return Utils.create(this, sender).send("help");
 
         String key = null;
         for (String k : getKeys(user))
@@ -52,17 +53,17 @@ final class Command extends SIRCommand {
                 break;
             }
 
-        if (key == null) return isWrongArgument(sender, args[0]);
+        if (key == null) return getArgumentCheck().test(sender, args[0]);
 
         ChannelData data = user.getChannelData();
         data.toggle(key);
 
-        return createSender(sender).addPlaceholder("{channel}", key)
+        return Utils.create(this, sender).addPlaceholder("{channel}", key)
                 .send((data.isToggled(key)) + "");
     }
 
     @Override
     public TabBuilder getCompletionBuilder() {
-        return createBasicTabBuilder().addArguments(0, (s, a) -> getKeys(main.getApi().getUserManager().getUser(s)));
+        return Utils.newBuilder().addArguments(0, (s, a) -> getKeys(main.getApi().getUserManager().getUser(s)));
     }
 }

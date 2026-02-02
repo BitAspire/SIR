@@ -20,16 +20,16 @@ public class Reply extends Command {
     }
 
     @Override
-    protected boolean execute(CommandSender s, String[] args) {
+    public boolean execute(@NotNull CommandSender s, String[] args) {
         if (!isPermitted(s)) return true;
 
         SIRUser receiver = main.getApi().getUserManager().getUser(s);
         if (receiver != null && receiver.getMuteData().isMuted())
-            return createSender(s).setLogger(false).send("is-muted");
+            return Utils.create(this, s).setLogger(false).send("is-muted");
 
         CommandSender init = main.replies.get(s);
         if (init == null)
-            return createSender(s).setLogger(false).send("not-replied");
+            return Utils.create(this, s).setLogger(false).send("not-replied");
 
         SIRUser initiator = main.getApi().getUserManager().getUser(init);
 
@@ -41,11 +41,11 @@ public class Reply extends Command {
 
         if (getLang().get("lang.vanish-messages.enabled", true) &&
                 initiator.isVanished())
-            return createSender(s).setLogger(false).send("vanish-messages.message");
+            return Utils.create(this, s).setLogger(false).send("vanish-messages.message");
 
         String message = SIRApi.joinArray(0, args);
         if (StringUtils.isBlank(message))
-            return createSender(s).setLogger(false).send("empty-message");
+            return Utils.create(this, s).setLogger(false).send("empty-message");
 
         Values initValues = new Values(main, true);
         Values receiveValues = new Values(main, false);
@@ -56,7 +56,7 @@ public class Reply extends Command {
         if (initiatorEnabled) initValues.playSound(init);
         if (senderEnabled) receiveValues.playSound(s);
 
-        final MessageSender sender = createSender(null)
+        final MessageSender sender = Utils.create(this, null)
                 .setLogger(false)
                 .addPlaceholder("{receiver}", isConsoleValue(init))
                 .addPlaceholder("{message}", message)
@@ -71,6 +71,6 @@ public class Reply extends Command {
 
     @NotNull
     public Supplier<Collection<String>> generateCompletions(CommandSender sender, String[] arguments) {
-        return () -> createBasicTabBuilder().addArgument(0, "<message>").build(sender, arguments);
+        return () -> Utils.newBuilder().addArgument(0, "<message>").build(sender, arguments);
     }
 }

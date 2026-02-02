@@ -23,21 +23,21 @@ final class Message extends Command {
     }
 
     @Override
-    protected boolean execute(CommandSender s, String[] args) {
+    public boolean execute(@NotNull CommandSender s, String[] args) {
         if (!isPermitted(s)) return true;
 
         final SIRUser user = main.getApi().getUserManager().getUser(s);
         if (user != null && user.getMuteData().isMuted())
-            return createSender(s).setLogger(false).send("is-muted");
+            return Utils.create(this, s).setLogger(false).send("is-muted");
 
         if (args.length == 0)
-            return createSender(s).setLogger(false).send("need-player");
+            return Utils.create(this, s).setLogger(false).send("need-player");
 
         SIRUser target = main.getApi().getUserManager().fromClosest(args[0]);
         if (target == null) return checkPlayer(s, args[0]);
 
         if (Objects.equals(target, user))
-            return createSender(s).setLogger(false).send("not-yourself");
+            return Utils.create(this, s).setLogger(false).send("not-yourself");
 
         if (target.getIgnoreData().isIgnoring(user, false))
             return main.getApi().getLibrary().getLoadedSender()
@@ -47,11 +47,11 @@ final class Message extends Command {
 
         boolean vanished = getLang().get("lang.vanish-messages.enabled", true);
         if (target.isVanished() && vanished)
-            return createSender(s).setLogger(false).send("vanish-messages.message");
+            return Utils.create(this, s).setLogger(false).send("vanish-messages.message");
 
         String message = SIRApi.joinArray(1, args);
         if (StringUtils.isBlank(message))
-            return createSender(s).setLogger(false).send("empty-message");
+            return Utils.create(this, s).setLogger(false).send("empty-message");
 
         Values initValues = new Values(main, true);
         Values receiveValues = new Values(main, false);
@@ -61,7 +61,7 @@ final class Message extends Command {
 
         Player player = target.getPlayer();
 
-        MessageSender sender = createSender(null)
+        MessageSender sender = Utils.create(this, null)
                 .setLogger(false)
                 .addPlaceholder("{receiver}", isConsoleValue(player))
                 .addPlaceholder("{message}", message)
@@ -82,7 +82,7 @@ final class Message extends Command {
 
     @NotNull
     public Supplier<Collection<String>> generateCompletions(CommandSender sender, String[] arguments) {
-        return () -> createBasicTabBuilder()
+        return () -> Utils.newBuilder()
                 .addArguments(0,
                         CollectionBuilder.of(main.getApi().getUserManager().getUsers())
                                 .filter(u -> !u.isVanished())

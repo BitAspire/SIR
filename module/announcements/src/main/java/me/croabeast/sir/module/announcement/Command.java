@@ -5,6 +5,7 @@ import me.croabeast.file.ConfigurableFile;
 import me.croabeast.sir.command.SIRCommand;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Locale;
 
@@ -18,17 +19,17 @@ final class Command extends SIRCommand {
     }
 
     @Override
-    protected boolean execute(CommandSender sender, String[] args) {
+    public boolean execute(@NotNull CommandSender sender, String[] args) {
         if (!isPermitted(sender)) return true;
-        if (args.length == 0) return createSender(sender).send("help");
+        if (args.length == 0) return Utils.create(this, sender).send("help");
 
         String subCommand = args[0].toLowerCase(Locale.ENGLISH);
         switch (subCommand) {
             case "help":
                 if (!isSubCommandPermitted(sender, "help", true)) return true;
                 return args.length < 2 ?
-                        createSender(sender).send("help") :
-                        isWrongArgument(sender, args[args.length - 1]);
+                        Utils.create(this, sender).send("help") :
+                        getArgumentCheck().test(sender, args[args.length - 1]);
 
             case "preview":
                 if (!isSubCommandPermitted(sender, "preview", true)) return true;
@@ -42,16 +43,16 @@ final class Command extends SIRCommand {
                     return true;
                 }
 
-                return createSender(sender).send("select");
+                return Utils.create(this, sender).send("select");
 
             default:
-                return isWrongArgument(sender, args[0]);
+                return getArgumentCheck().test(sender, args[0]);
         }
     }
 
     @Override
     public TabBuilder getCompletionBuilder() {
-        final TabBuilder builder = createBasicTabBuilder();
+        final TabBuilder builder = Utils.newBuilder();
         builder.addArguments(0, (s, a) -> isSubCommandPermitted(s, "help", false), "help");
         builder.addArguments(0, (s, a) -> isSubCommandPermitted(s, "preview", false), "preview");
 

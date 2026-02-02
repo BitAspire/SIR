@@ -7,6 +7,7 @@ import me.croabeast.sir.user.SIRUser;
 import me.croabeast.takion.message.MessageSender;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -56,11 +57,11 @@ final class TempCommand extends Command {
     }
 
     @Override
-    protected boolean execute(CommandSender sender, String[] args) {
+    public boolean execute(@NotNull CommandSender sender, String[] args) {
         if (!isPermitted(sender)) return true;
 
         if (args.length < 2)
-            return createSender(sender).send("help.temp");
+            return Utils.create(this, sender).send("help.temp");
 
         SIRUser target = main.getApi().getUserManager().fromClosest(args[0]);
         if (target == null) return checkPlayer(sender, args[0]);
@@ -73,7 +74,7 @@ final class TempCommand extends Command {
             if (temp != null) reason = temp;
         }
 
-        MessageSender message = createSender(sender)
+        MessageSender message = Utils.create(this, sender)
                 .addPlaceholder("{reason}", reason)
                 .addPlaceholder("{target}", target.getName())
                 .addPlaceholder("{admin}", sender.getName());
@@ -98,6 +99,6 @@ final class TempCommand extends Command {
 
     @Override
     public TabBuilder getCompletionBuilder() {
-        return createBasicTabBuilder().addArguments(0, getOnlineNames()).addArgument(1, "<time>").addArgument(2, "<reason>");
+        return Utils.newBuilder().addArguments(0, Utils.getOnlineNames()).addArgument(1, "<time>").addArgument(2, "<reason>");
     }
 }

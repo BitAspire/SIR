@@ -9,14 +9,14 @@ import lombok.SneakyThrows;
 import me.croabeast.common.gui.ButtonBuilder;
 import me.croabeast.common.gui.ChestBuilder;
 import me.croabeast.common.gui.ItemCreator;
-import me.croabeast.file.ConfigurableFile;
 import me.croabeast.sir.ChatToggleable;
 import me.croabeast.sir.ExtensionFile;
+import me.croabeast.sir.PluginDependant;
 import me.croabeast.sir.command.*;
 import me.croabeast.sir.module.SIRModule;
 import me.croabeast.sir.user.SIRUser;
+import me.croabeast.takion.character.SmallCaps;
 import org.apache.commons.lang.StringUtils;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -26,35 +26,49 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Getter
-public final class SettingsProvider extends StandaloneProvider implements SettingsService {
+public final class SettingsProvider extends StandaloneProvider implements SettingsService, PluginDependant {
 
-    private static final int ITEMS_PER_ROW = 5;
+    private static final int ITEMS_PER_ROW = 7;
+    private static final String PAPI = "PlaceholderAPI";
+    private static final String MENU_ROOT = "lang.menu.";
+
+    private static final String[] SOFT_DEPS = new String[]{PAPI};
 
     private final Set<SIRCommand> commands = new HashSet<>();
-    private ConfigurableFile lang, settings;
+    private ExtensionFile lang, settings;
 
     @Getter(AccessLevel.NONE)
     private Expansion expansion;
 
+    @NotNull
+    public String[] getSoftDependencies() {
+        return SOFT_DEPS.clone();
+    }
+
     @SneakyThrows
     public boolean register() {
         lang = new ExtensionFile(this, "lang", true);
-        settings = new ConfigurableFile(this, "settings");
-        settings.save();
+        settings = new ExtensionFile(this, "settings", true);
 
         commands.add(new Command(this));
 
-        if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI"))
-            (expansion = new Expansion(this)).register();
+        if (isPluginEnabled(PAPI)) {
+            expansion = new Expansion(this);
+            expansion.register();
+        }
         return true;
     }
 
     @Override
     public boolean unregister() {
-        if (expansion != null)
+        if (expansion != null) {
             expansion.unregister();
+            expansion = null;
+        }
         return true;
     }
+
+    // ---------------- Toggles ----------------
 
     @Override
     public boolean isToggled(@NotNull SIRUser user, @NotNull ChatToggleable toggleable) {
@@ -79,6 +93,8 @@ public final class SettingsProvider extends StandaloneProvider implements Settin
         settings.save();
     }
 
+    // ---------------- Menus ----------------
+
     void openMainMenu(@NotNull Player player) {
         getMainMenu().showGui(player);
     }
@@ -89,28 +105,32 @@ public final class SettingsProvider extends StandaloneProvider implements Settin
 
     @NotNull
     List<ChatToggleable> getToggleableList(@NotNull Category category) {
-        List<ChatToggleable> list = new ArrayList<>();
+        List<ChatToggleable> list;
+
         switch (category) {
             case MODULES:
                 list = getApi().getModuleManager().getModules().stream()
                         .filter(ChatToggleable.class::isInstance)
-                        .filter(SIRModule::isEnabled)
                         .map(ChatToggleable.class::cast)
+                        .filter(t -> ((SIRModule) t).isEnabled())
                         .collect(Collectors.toList());
                 break;
+
             case COMMANDS:
                 list = getApi().getCommandManager().getProviders().stream()
                         .filter(ChatToggleable.class::isInstance)
                         .map(ChatToggleable.class::cast)
-                        .filter(toggleable -> getApi().getCommandManager()
-                                .isProviderEnabled(toggleable.getKey()))
+                        .filter(t -> getApi().getCommandManager().isProviderEnabled(t.getKey()))
                         .collect(Collectors.toList());
                 break;
+
             default:
-                break;
+                list = Collections.emptyList();
         }
 
-        list.sort(Comparator.comparing(toggleable -> normalizeKey(toggleable.getKey())));
+        if (!list.isEmpty()) {
+            list.sort(Comparator.comparing(t -> normalizeKey(t.getKey())));
+        }
         return list;
     }
 
@@ -119,11 +139,9 @@ public final class SettingsProvider extends StandaloneProvider implements Settin
         String normalized = normalizeKey(name);
         if (StringUtils.isBlank(normalized)) return null;
 
-        for (ChatToggleable toggleable : getToggleableList(category)) {
-            if (normalizeKey(toggleable.getKey()).equals(normalized))
-                return toggleable;
+        for (ChatToggleable t : getToggleableList(category)) {
+            if (normalizeKey(t.getKey()).equals(normalized)) return t;
         }
-
         return null;
     }
 
@@ -135,11 +153,13 @@ public final class SettingsProvider extends StandaloneProvider implements Settin
         List<ChatToggleable> modules = getToggleableList(Category.MODULES);
         List<ChatToggleable> commands = getToggleableList(Category.COMMANDS);
 
-        menu.addSingleItem(0, 3, 1, buildCategoryItem(Category.MODULES, modules), pane -> pane.setPriority(Pane.Priority.LOW));
-        menu.addSingleItem(0, 5, 1, buildCategoryItem(Category.COMMANDS, commands), pane -> pane.setPriority(Pane.Priority.LOW));
+        menu.addSingleItem(0, 3, 1, buildCategoryItem(Category.MODULES, modules),
+                pane -> pane.setPriority(Pane.Priority.LOW));
+        menu.addSingleItem(0, 4, 1, buildCategoryItem(Category.COMMANDS, commands),
+                pane -> pane.setPriority(Pane.Priority.LOW));
 
         menu.addSingleItem(
-                0, 7, 1,
+                0, 5, 1,
                 ItemCreator.of(Material.BARRIER)
                         .modifyName(menuString("main.close.name", "&cClose"))
                         .modifyLore(menuList("main.close.lore", Collections.singletonList("&7Close this menu.")))
@@ -157,12 +177,13 @@ public final class SettingsProvider extends StandaloneProvider implements Settin
     @NotNull
     private ChestBuilder getCategoryMenu(@NotNull Player player, @NotNull Category category) {
         List<ChatToggleable> list = getToggleableList(category);
+
         int rowsOfItems = (list.size() + ITEMS_PER_ROW - 1) / ITEMS_PER_ROW;
         int rows = Math.min(6, Math.max(3, rowsOfItems + 2));
 
         String title = applyPlaceholders(
                 menuString("category.title", "&8Chat Settings - {category}:"),
-                Collections.singletonMap("category", category.getLabel())
+                placeholders("category", category.getLabel())
         );
 
         ChestBuilder menu = ChestBuilder.of(getApi().getPlugin(), rows, title);
@@ -175,26 +196,27 @@ public final class SettingsProvider extends StandaloneProvider implements Settin
             if (row >= rows - 2) break;
 
             int column = index % ITEMS_PER_ROW;
-            int x = 3 + column;
-            int y = 1 + row;
+            int x = 1 + column, y = 1 + row;
 
             ChatToggleable toggleable = list.get(index);
             Slot slot = Slot.fromXY(x, y);
-            menu.addPane(0, ButtonBuilder
-                    .of(getApi().getPlugin(), slot, isToggled(viewer, toggleable))
-                    .setItem(buildToggleItem(toggleable, true), true)
-                    .setItem(buildToggleItem(toggleable, false), false)
-                    .modify(button -> button.allowToggle(false))
-                    .setAction(button -> event -> {
-                        event.setCancelled(true);
-                        setToggle(viewer, toggleable, !button.isEnabled());
-                        openCategoryMenu((Player) event.getWhoClicked(), category);
-                    })
-                    .getValue());
+
+            menu.addPane(0,
+                    ButtonBuilder.of(getApi().getPlugin(), slot, isToggled(viewer, toggleable))
+                            .setItem(buildToggleItem(toggleable, true), true)
+                            .setItem(buildToggleItem(toggleable, false), false)
+                            .modify(button -> button.allowToggle(false))
+                            .setAction(button -> event -> {
+                                event.setCancelled(true);
+                                setToggle(viewer, toggleable, !button.isEnabled());
+                                openCategoryMenu((Player) event.getWhoClicked(), category);
+                            })
+                            .getValue()
+            );
         }
 
         menu.addSingleItem(
-                0, 1, rows - 1,
+                0, 0, rows - 1,
                 ItemCreator.of(Material.ARROW)
                         .modifyName(menuString("category.back.name", "&eBack"))
                         .modifyLore(menuList("category.back.lore", Collections.singletonList("&7Return to the main menu.")))
@@ -212,46 +234,28 @@ public final class SettingsProvider extends StandaloneProvider implements Settin
     @NotNull
     private GuiItem buildCategoryItem(@NotNull Category category, @NotNull List<ChatToggleable> list) {
         boolean hasEntries = !list.isEmpty();
-        Material material;
-        if (!hasEntries) {
-            material = Material.BARRIER;
-        } else if (category == Category.MODULES) {
-            material = Material.BOOKSHELF;
-        } else {
-            material = Material.PAPER;
-        }
 
-        List<String> lore = new ArrayList<>();
+        Material material = !hasEntries ? Material.BARRIER
+                : (category == Category.MODULES ? Material.BOOKSHELF : Material.PAPER);
 
-        Map<String, String> placeholders = new LinkedHashMap<>();
-        placeholders.put("category", category.getLabel());
-        placeholders.put("count", String.valueOf(list.size()));
+        Map<String, String> ph = placeholders(
+                "category", category.getLabel(),
+                "count", String.valueOf(list.size())
+        );
 
-        if (hasEntries) {
-            lore.addAll(applyPlaceholders(
-                    menuList("main." + category.getKey() + ".lore",
-                            Arrays.asList("&7Chat settings for {category}.",
-                                    "&7Available: &f{count}",
-                                    "&f➤ &7Open this menu")
-                    ),
-                    placeholders
-            ));
-        } else {
-            lore.addAll(applyPlaceholders(
-                    menuList("main." + category.getKey() + ".empty-lore",
-                            Arrays.asList("&7Chat settings for {category}.", "&cNo entries available to toggle.")
-                    ),
-                    placeholders
-            ));
-        }
+        String namePath = "main." + category.getKey() + (hasEntries ? ".name" : ".empty-name");
+        String lorePath = "main." + category.getKey() + (hasEntries ? ".lore" : ".empty-lore");
+
+        List<String> loreDefault = hasEntries
+                ? Arrays.asList("&7Chat settings for {category}.", "&7Available: &f{count}")
+                : Arrays.asList("&7Chat settings for {category}.", "&cNo entries available to toggle.");
 
         ItemCreator creator = ItemCreator.of(material)
                 .modifyName(applyPlaceholders(
-                        menuString("main." + category.getKey() + (hasEntries ? ".name" : ".empty-name"),
-                                "&7• &f{category}:"),
-                        placeholders
+                        menuString(namePath, "&7• &f{category}:"),
+                        ph
                 ))
-                .modifyLore(lore);
+                .modifyLore(applyPlaceholders(menuList(lorePath, loreDefault), ph));
 
         if (hasEntries) {
             creator.setAction(event -> {
@@ -267,26 +271,34 @@ public final class SettingsProvider extends StandaloneProvider implements Settin
 
     @NotNull
     private GuiItem buildToggleItem(@NotNull ChatToggleable toggleable, boolean enabled) {
-        List<String> lore = new ArrayList<>(), description = buildToggleDescription(toggleable);
+        List<String> description = new ArrayList<>(buildToggleDescription(toggleable));
+        description.replaceAll(s -> "&7" + SmallCaps.toSmallCaps(s));
 
-        Map<String, String> placeholders = new LinkedHashMap<>();
-        placeholders.put("title", buildToggleTitle(toggleable));
-        placeholders.put("state", enabled ? menuString("toggle.state.enabled", "&aEnabled")
-                : menuString("toggle.state.disabled", "&cDisabled"));
-        placeholders.put("status", enabled ? menuString("toggle.status.enabled", "&a&l✔")
-                : menuString("toggle.status.disabled", "&c&l❌"));
+        Map<String, String> ph = placeholders(
+                "title", buildToggleTitle(toggleable),
+                "state", enabled ? menuString("toggle.state.enabled", "&aEnabled")
+                        : menuString("toggle.state.disabled", "&cDisabled"),
+                "status", enabled ? menuString("toggle.status.enabled", "&a&l✔")
+                        : menuString("toggle.status.disabled", "&c&l❌")
+        );
 
-        List<String> baseLore = menuList("toggle.lore", Arrays.asList("{description}", "", "&f➤ &7Left-click: toggle", "&7Current: {state}"));
+        List<String> baseLore = menuList(
+                "toggle.lore",
+                Arrays.asList("{description}", "", "&f➤ &7Left-click: toggle", "&7Current: {state}")
+        );
+
+        List<String> lore = new ArrayList<>();
         for (String line : expandDescription(baseLore, description)) {
             if (StringUtils.isBlank(line)) continue;
-            lore.add(applyPlaceholders(line, placeholders));
+            lore.add(applyPlaceholders(line, ph));
         }
 
         Material material = enabled ? Material.LIME_STAINED_GLASS_PANE : Material.RED_STAINED_GLASS_PANE;
+
         return ItemCreator.of(material)
                 .modifyName(applyPlaceholders(
                         menuString("toggle.name", "&7• &f{title}: {status}"),
-                        placeholders
+                        ph
                 ))
                 .modifyLore(lore)
                 .create(getApi().getPlugin());
@@ -296,17 +308,21 @@ public final class SettingsProvider extends StandaloneProvider implements Settin
     private String buildToggleTitle(@NotNull ChatToggleable toggleable) {
         if (toggleable instanceof SIRModule)
             return ((SIRModule) toggleable).getInformation().getTitle();
+
         if (toggleable instanceof CommandProvider) {
             ProviderInformation info = getApi().getCommandManager().getInformation(toggleable.getKey());
             if (info != null && StringUtils.isNotBlank(info.getTitle())) return info.getTitle();
         }
+
         return toggleable.getKey();
     }
 
     @NotNull
     private List<String> buildToggleDescription(@NotNull ChatToggleable toggleable) {
-        if (toggleable instanceof SIRModule)
+        if (toggleable instanceof SIRModule) {
             return Arrays.asList(((SIRModule) toggleable).getInformation().getDescription());
+        }
+
         if (toggleable instanceof CommandProvider) {
             ProviderInformation info = getApi().getCommandManager().getInformation(toggleable.getKey());
             if (info != null && info.getDescription().length > 0) return Arrays.asList(info.getDescription());
@@ -315,52 +331,63 @@ public final class SettingsProvider extends StandaloneProvider implements Settin
         return Collections.singletonList(menuString("toggle.description.empty", "No description available."));
     }
 
+    // ---------------- Helpers ----------------
+
     @NotNull
     private String normalizeKey(@Nullable String name) {
-        return name == null ? "" : name.trim().toLowerCase(Locale.ENGLISH);
+        return name == null ? "" : name.trim().toLowerCase(Locale.ROOT);
     }
 
     @NotNull
     private String menuString(@NotNull String path, @NotNull String fallback) {
-        return lang.get("lang.menu." + path, fallback);
+        return lang.get(MENU_ROOT + path, fallback);
     }
 
     @NotNull
     private List<String> menuList(@NotNull String path, @NotNull List<String> fallback) {
-        List<String> result = lang.toStringList("lang.menu." + path);
+        List<String> result = lang.toStringList(MENU_ROOT + path);
         return result.isEmpty() ? fallback : result;
+    }
+
+    @NotNull
+    private Map<String, String> placeholders(Object... kv) {
+        Map<String, String> map = new LinkedHashMap<>();
+        for (int i = 0; i + 1 < kv.length; i += 2)
+            map.put(String.valueOf(kv[i]), String.valueOf(kv[i + 1]));
+        return map;
     }
 
     @NotNull
     private String applyPlaceholders(@NotNull String input, @NotNull Map<String, String> placeholders) {
         String result = input;
-        for (Map.Entry<String, String> entry : placeholders.entrySet())
-            result = result.replace("{" + entry.getKey() + "}", entry.getValue());
+        for (Map.Entry<String, String> e : placeholders.entrySet())
+            result = result.replace("{" + e.getKey() + "}", e.getValue());
         return result;
     }
 
     @NotNull
     private List<String> applyPlaceholders(@NotNull List<String> input, @NotNull Map<String, String> placeholders) {
-        List<String> result = new ArrayList<>();
-        for (String line : input) result.add(applyPlaceholders(line, placeholders));
+        List<String> result = new ArrayList<>(input.size());
+        for (String line : input)
+            result.add(applyPlaceholders(line, placeholders));
         return result;
     }
 
     @NotNull
     private List<String> expandDescription(@NotNull List<String> base, @NotNull List<String> description) {
-        List<String> result = new ArrayList<>();
+        List<String> out = new ArrayList<>();
         for (String line : base) {
-            if (line.contains("{description}")) {
-                if (description.isEmpty()) continue;
-                for (String desc : description) {
-                    if (StringUtils.isBlank(desc)) continue;
-                    result.add(line.replace("{description}", desc));
-                }
+            if (!line.contains("{description}")) {
+                out.add(line);
                 continue;
             }
-            result.add(line);
+
+            for (String desc : description) {
+                if (StringUtils.isBlank(desc)) continue;
+                out.add(line.replace("{description}", desc));
+            }
         }
-        return result;
+        return out;
     }
 
     @NotNull
@@ -370,29 +397,19 @@ public final class SettingsProvider extends StandaloneProvider implements Settin
 
     @NotNull
     private Category resolveCategory(@NotNull ChatToggleable toggleable) {
-        return toggleable instanceof SIRModule ? Category.MODULES : Category.COMMANDS;
+        return (toggleable instanceof SIRModule) ? Category.MODULES : Category.COMMANDS;
     }
 
+    @Getter
     enum Category {
         MODULES("modules", "Modules"),
         COMMANDS("commands", "Commands");
 
-        private final String key;
-        private final String label;
+        private final String key, label;
 
         Category(String key, String label) {
             this.key = key;
             this.label = label;
-        }
-
-        @NotNull
-        public String getKey() {
-            return key;
-        }
-
-        @NotNull
-        public String getLabel() {
-            return label;
         }
 
         @Nullable

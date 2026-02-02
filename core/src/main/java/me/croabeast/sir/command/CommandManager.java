@@ -2,9 +2,13 @@ package me.croabeast.sir.command;
 
 import com.github.stefvanschie.inventoryframework.pane.Pane;
 import com.github.stefvanschie.inventoryframework.pane.util.Slot;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import me.croabeast.command.Synchronizer;
 import me.croabeast.common.gui.ChestBuilder;
 import me.croabeast.common.gui.ItemCreator;
+import me.croabeast.scheduler.GlobalScheduler;
+import me.croabeast.scheduler.GlobalTask;
 import me.croabeast.sir.PluginDependant;
 import me.croabeast.sir.SIRApi;
 import me.croabeast.sir.MenuToggleable;
@@ -39,6 +43,9 @@ public final class CommandManager {
     private final SIRApi api;
     private final ModuleManager moduleManager;
 
+    @Getter
+    private final Synchronizer synchronizer;
+
     private final Map<String, SIRCommand> commands = new LinkedHashMap<>();
     private final Map<String, ProviderState> states = new LinkedHashMap<>();
 
@@ -50,6 +57,40 @@ public final class CommandManager {
     public CommandManager(SIRApi api) {
         this.api = api;
         moduleManager = api.getModuleManager();
+        synchronizer = new Synchronizer() {
+
+            private GlobalTask task = null;
+
+            private void cancel0(boolean reassign) {
+                if (task == null) return;
+
+                task.cancel();
+                if (reassign) task = null;
+            }
+
+            @Override
+            public void sync() {
+                if (!api.getPlugin().isEnabled()) {
+                    cancel();
+                    return;
+                }
+
+                GlobalScheduler scheduler = api.getScheduler();
+                scheduler.runTask(() -> {
+                    cancel0(false);
+
+                    task = scheduler.runTaskLater(() -> {
+                        task = null;
+                        Synchronizer.syncCommands();
+                    }, 1L);
+                });
+            }
+
+            @Override
+            public void cancel() {
+                cancel0(true);
+            }
+        };
     }
 
     @RequiredArgsConstructor
@@ -137,7 +178,7 @@ public final class CommandManager {
         for (SIRCommand command : set) {
             if (command == null) continue;
 
-            String commandKey = command.getCommandKey();
+            String commandKey = command.getName();
             if (StringUtils.isBlank(commandKey)) {
                 commandKey = command.getName();
             }
@@ -170,7 +211,7 @@ public final class CommandManager {
         }
 
         for (SIRCommand command : pending) {
-            String commandKey = command.getCommandKey();
+            String commandKey = command.getName();
             if (StringUtils.isBlank(commandKey)) {
                 commandKey = command.getName();
             }
@@ -293,7 +334,7 @@ public final class CommandManager {
                     return;
                 }
 
-                if (!dependant.isPluginEnabled()) {
+                if (!dependant.areDependenciesEnabled()) {
                     deferProvider(file.getName(), jarFile, dependant.getDependencies());
                     loader.close();
                     return;
@@ -348,7 +389,7 @@ public final class CommandManager {
 
         deferPluginDependants = false;
         retryDeferredProviders(null, false);
-        SIRCommand.scheduleSync();
+        synchronizer.sync();
     }
 
     private void deferProvider(String providerName, File jarFile, String[] dependencies) {
@@ -530,7 +571,7 @@ public final class CommandManager {
         for (SIRCommand command : provider.getCommands()) {
             if (command == null) continue;
 
-            String name = StringUtils.isBlank(command.getName()) ? command.getCommandKey() : command.getName();
+            String name = command.getName();
             if (StringUtils.isBlank(name) || getCommand(name) == null) continue;
 
             unload(name, syncCommands);
@@ -553,7 +594,7 @@ public final class CommandManager {
         providers.clear();
         processedModules.clear();
 
-        SIRCommand.scheduleSync();
+        synchronizer.sync();
     }
 
     public void saveStates() {

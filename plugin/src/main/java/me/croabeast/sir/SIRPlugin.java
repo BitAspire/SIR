@@ -58,7 +58,7 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
                 String name = event.getPlugin().getName();
                 moduleManager.retryDeferredModules(name, false);
                 commandManager.retryDeferredProviders(name, false);
-                SIRCommand.scheduleSync();
+                commandManager.getSynchronizer().sync();
             }
         }).register();
 

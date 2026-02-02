@@ -1,45 +1,52 @@
 package me.croabeast.sir.module.tag;
 
-import me.croabeast.sir.PAPIExpansion;
+import me.croabeast.sir.PluginDependant;
 import me.croabeast.sir.UserFormatter;
 import me.croabeast.sir.module.SIRModule;
 import me.croabeast.sir.user.SIRUser;
 import org.apache.commons.lang.StringUtils;
-import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public final class Tags extends SIRModule implements UserFormatter<Object> {
+public final class Tags extends SIRModule implements UserFormatter<Object>, PluginDependant {
+
+    private static final String PAPI = "PlaceholderAPI";
 
     Data data;
-    PAPIExpansion hook;
+    private Object hook;
+
+    @NotNull
+    @Override
+    public String[] getSoftDependencies() {
+        return new String[]{PAPI};
+    }
 
     @Override
     public boolean register() {
         data = new Data(this);
 
-        return !Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI") ||
-                (hook = new PAPIExpansion("sir_tag") {
-                    @Nullable
-                    public String onRequest(OfflinePlayer off, @NotNull String params) {
-                        Player player = off.getPlayer();
-                        if (player == null) return null;
+        if (!isPluginEnabled(PAPI))
+            return true;
 
-                        SIRUser user = getApi().getUserManager().getUser(player);
-                        return user == null ? null : parseTag(user, params);
-                    }
-                }).register();
+        try {
+            hook = new TagExpansion(this);
+            return ((me.croabeast.sir.PAPIExpansion) hook).register();
+        } catch (NoClassDefFoundError e) {
+            return true;
+        }
     }
 
     @Override
     public boolean unregister() {
-        return hook == null || hook.unregister();
+        if (hook == null) return true;
+        try {
+            return ((me.croabeast.sir.PAPIExpansion) hook).unregister();
+        } catch (NoClassDefFoundError e) {
+            return true;
+        }
     }
 
     String parseTag(SIRUser user, String string) {

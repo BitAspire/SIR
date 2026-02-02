@@ -7,6 +7,7 @@ import me.croabeast.sir.user.IgnoreData;
 import me.croabeast.sir.user.SIRUser;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
@@ -22,7 +23,7 @@ final class Command extends SIRCommand {
     private final String[] baseKeys = {"{target}", "{type}"};
 
     @Override
-    protected boolean execute(CommandSender sender, String[] args) {
+    public boolean execute(@NotNull CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
             main.getApi().getLibrary().getServerLogger().log(
                     "&cYou can not ignore players in the console.");
@@ -30,10 +31,10 @@ final class Command extends SIRCommand {
         }
 
         if (!isPermitted(sender)) return true;
-        if (args.length == 0) return createSender(sender).send("help");
+        if (args.length == 0) return Utils.create(this, sender).send("help");
 
         if (args.length > 2)
-            return isWrongArgument(sender, args[args.length - 1]);
+            return getArgumentCheck().test(sender, args[args.length - 1]);
 
         SIRUser user = main.getApi().getUserManager().getUser(sender);
         assert user != null;
@@ -51,7 +52,7 @@ final class Command extends SIRCommand {
             }
 
             String temp = (data.isIgnoringAll(chat) ? "success" : "remove") + ".all";
-            return createSender(sender)
+            return Utils.create(this, sender)
                     .addPlaceholders(baseKeys, null, channel).send(temp);
         }
 
@@ -65,14 +66,14 @@ final class Command extends SIRCommand {
         }
 
         String path = (data.isIgnoring(target, chat) ? "success" : "remove") + ".player";
-        return createSender(sender)
+        return Utils.create(this, sender)
                 .addPlaceholders(baseKeys, target.getName(), channel).send(path);
     }
 
     @Override
     public TabBuilder getCompletionBuilder() {
-        return createBasicTabBuilder()
-                .addArguments(0, getOnlineNames())
+        return Utils.newBuilder()
+                .addArguments(0, Utils.getOnlineNames())
                 .addArgument(0, "@a")
                 .addArgument(1, "-chat");
     }
