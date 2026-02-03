@@ -624,7 +624,7 @@ public final class ModuleManager {
     }
 
     public boolean isEnabled(String name) {
-        return name != null && moduleStates.computeIfAbsent(name, key -> false);
+        return name != null && moduleStates.computeIfAbsent(name, key -> true);
     }
 
     public void updateModuleEnabled(String name, boolean enabled) {

@@ -40,7 +40,7 @@ public abstract class SIRModule implements SIRExtension, MenuToggleable {
         this.api = api;
         this.information = information;
 
-        button = new Button(buildInformation(), this, true);
+        button = new Button(buildInformation(), this, api.getModuleManager().isEnabled(information.getName()));
         button.setDefaultItems();
         button.allowToggle(false);
 

@@ -16,12 +16,14 @@ import me.croabeast.sir.command.*;
 import me.croabeast.sir.module.SIRModule;
 import me.croabeast.sir.user.SIRUser;
 import me.croabeast.takion.character.SmallCaps;
+import me.croabeast.takion.logger.LogLevel;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -61,10 +63,14 @@ public final class SettingsProvider extends StandaloneProvider implements Settin
 
     @Override
     public boolean unregister() {
+        ExtensionFile file = ensureSettings();
+        if (file != null) file.save();
+
         if (expansion != null) {
             expansion.unregister();
             expansion = null;
         }
+
         return true;
     }
 
@@ -82,15 +88,19 @@ public final class SettingsProvider extends StandaloneProvider implements Settin
 
     boolean isEnabled(@NotNull SIRUser user, @NotNull Category category, @Nullable String key) {
         String normalized = normalizeKey(key);
-        return StringUtils.isBlank(normalized) || settings.get(pathFor(user, category, normalized), true);
+        ExtensionFile file = ensureSettings();
+        return StringUtils.isBlank(normalized) || file == null || file.get(pathFor(user, category, normalized), true);
     }
 
     void setEnabled(@NotNull SIRUser user, @NotNull Category category, @Nullable String key, boolean enabled) {
         String normalized = normalizeKey(key);
         if (StringUtils.isBlank(normalized)) return;
 
-        settings.set(pathFor(user, category, normalized), enabled);
-        settings.save();
+        ExtensionFile file = ensureSettings();
+        if (file == null) return;
+
+        file.set(pathFor(user, category, normalized), enabled);
+        file.save();
     }
 
     // ---------------- Menus ----------------
@@ -271,8 +281,9 @@ public final class SettingsProvider extends StandaloneProvider implements Settin
 
     @NotNull
     private GuiItem buildToggleItem(@NotNull ChatToggleable toggleable, boolean enabled) {
-        List<String> description = new ArrayList<>(buildToggleDescription(toggleable));
-        description.replaceAll(s -> "&7" + SmallCaps.toSmallCaps(s));
+        List<String> description = new ArrayList<>();
+        for (String line : buildToggleDescription(toggleable))
+            description.add("&7" + SmallCaps.toSmallCaps(line));
 
         Map<String, String> ph = placeholders(
                 "title", buildToggleTitle(toggleable),
@@ -398,6 +409,20 @@ public final class SettingsProvider extends StandaloneProvider implements Settin
     @NotNull
     private Category resolveCategory(@NotNull ChatToggleable toggleable) {
         return (toggleable instanceof SIRModule) ? Category.MODULES : Category.COMMANDS;
+    }
+
+    @Nullable
+    private ExtensionFile ensureSettings() {
+        if (settings != null) return settings;
+
+        try {
+            settings = new ExtensionFile(this, "settings", true);
+            return settings;
+        } catch (IOException e) {
+            getApi().getLibrary().getLogger().log(LogLevel.ERROR, "Failed to load chat settings file.");
+            e.printStackTrace();
+            return null;
+        }
     }
 
     @Getter

@@ -434,7 +434,19 @@ public final class CommandManager {
     }
 
     public SettingsService getSettingsService() {
-        return (SettingsService) providers.get("SettingsProvider").provider;
+        LoadedProvider loaded = getLoadedProvider("SettingsProvider");
+
+        if (loaded == null)
+            for (LoadedProvider entry : providers.values())
+                if (entry.provider instanceof SettingsService) {
+                    loaded = entry;
+                    break;
+                }
+        if (loaded == null) return null;
+
+        StandaloneProvider standalone = loaded.provider instanceof StandaloneProvider ?
+                (StandaloneProvider) loaded.provider : null;
+        return standalone instanceof SettingsService ? (SettingsService) standalone : null;
     }
 
     @NotNull
