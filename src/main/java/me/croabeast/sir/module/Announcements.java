@@ -40,9 +40,9 @@ final class Announcements extends SIRModule implements Actionable, Commandable {
             {
                 editSubCommand("help", (sender, args) -> {
                     if (args.length > 0)
-                        return isWrongArgument(sender, args[args.length - 1]);
+                        return getArgumentCheck().test(sender, args[args.length - 1]);
 
-                    return createSender(sender).send("help");
+                    return Utils.create(this, sender).send("help");
                 });
 
                 editSubCommand("preview", (sender, args) -> {
@@ -56,7 +56,7 @@ final class Announcements extends SIRModule implements Actionable, Commandable {
                         accept(args[0]);
                         return true;
                     }
-                    return createSender(sender).send("select");
+                    return Utils.create(this, sender).send("select");
                 });
             }
 
@@ -66,15 +66,15 @@ final class Announcements extends SIRModule implements Actionable, Commandable {
             }
 
             @Override
-            protected boolean execute(CommandSender sender, String[] args) {
-                return createSender(sender).send("help");
+            public boolean execute(@NotNull CommandSender sender, String[] args) {
+                return Utils.create(this, sender).send("help");
             }
 
             @NotNull
             public TabBuilder getCompletionBuilder() {
-                final TabBuilder builder = createBasicTabBuilder();
+                final TabBuilder builder = Utils.newBuilder();
 
-                for (BaseCommand sub : getSubCommands()) {
+                for (BaseCommand sub : getSubCommandMap().getSubCommands()) {
                     Deque<String> list = new LinkedList<>(sub.getAliases());
                     list.addFirst(sub.getName());
 

@@ -21,6 +21,6 @@ abstract class ListenerModule extends SIRModule implements CustomListener {
 
     @Override
     public boolean unregister() {
-        return !isEnabled() && CustomListener.super.unregister();
+        return CustomListener.super.unregister();
     }
 }

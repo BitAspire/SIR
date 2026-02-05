@@ -2,10 +2,13 @@ package me.croabeast.sir;
 
 import com.github.stefvanschie.inventoryframework.pane.Pane;
 import lombok.Getter;
+import me.croabeast.command.Synchronizer;
 import me.croabeast.common.Registrable;
 import me.croabeast.common.reflect.Reflector;
 import me.croabeast.common.gui.ItemCreator;
 import me.croabeast.common.gui.ChestBuilder;
+import me.croabeast.scheduler.GlobalScheduler;
+import me.croabeast.scheduler.GlobalTask;
 import me.croabeast.sir.aspect.AspectButton;
 import me.croabeast.sir.manager.CommandManager;
 import me.croabeast.sir.command.SIRCommand;
@@ -28,10 +31,48 @@ final class CommandImpl implements CommandManager {
     private final SIRPlugin plugin;
 
     @Getter
+    private final Synchronizer synchronizer;
+
+    @Getter
     private boolean loaded = false;
 
     CommandImpl(SIRPlugin plugin) {
         this.plugin = plugin;
+
+        synchronizer = new Synchronizer() {
+
+            private GlobalTask task = null;
+
+            private void cancel0(boolean reassign) {
+                if (task == null) return;
+
+                task.cancel();
+                if (reassign) task = null;
+            }
+
+            @Override
+            public void sync() {
+                if (!plugin.isEnabled()) {
+                    cancel();
+                    return;
+                }
+
+                GlobalScheduler scheduler = SIRPlugin.getScheduler();
+                scheduler.runTask(() -> {
+                    cancel0(false);
+                    task = scheduler.runTaskLater(() -> {
+                        task = null;
+                        Synchronizer.syncCommands();
+                    }, 1L);
+                });
+            }
+
+            @Override
+            public void cancel() {
+                cancel0(true);
+            }
+        };
+
         final ClassLoader classLoader = plugin.classLoader();
 
         SIRPlugin.getJarEntries()
@@ -104,7 +145,7 @@ final class CommandImpl implements CommandManager {
             if (init instanceof Registrable)
                 registrar.add((Registrable) init);
 
-            final Set<SIRCommand> set = commandable.getCommands();
+            Set<SIRCommand> set = commandable.getCommands();
             set.forEach(c -> commands.put(c.getName(), c));
         }
 
@@ -114,8 +155,9 @@ final class CommandImpl implements CommandManager {
 
         Set<AspectButton> buttons = new HashSet<>();
         commands.values().forEach(c -> buttons.add(c.getButton()));
-
         buttons.forEach(b -> menu.addPane(0, b));
+
+        commands.values().forEach(c -> c.setSynchronizer(synchronizer));
         loaded = true;
     }
 
@@ -133,7 +175,7 @@ final class CommandImpl implements CommandManager {
     public boolean register() {
         commands.values().forEach(c -> c.register(false));
         registrar.forEach(Registrable::register);
-        SIRCommand.scheduleSync();
+        synchronizer.sync();
         return true;
     }
 
@@ -141,7 +183,7 @@ final class CommandImpl implements CommandManager {
     public boolean unregister() {
         commands.values().forEach(c -> c.unregister(false));
         registrar.forEach(Registrable::unregister);
-        SIRCommand.scheduleSync();
+        synchronizer.sync();
         return true;
     }
 

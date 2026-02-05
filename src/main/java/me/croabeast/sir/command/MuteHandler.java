@@ -34,18 +34,18 @@ final class MuteHandler implements Commandable {
     MuteHandler() {
         commands.add(new BaseCommand("checkmute") {
             @Override
-            protected boolean execute(CommandSender sender, String[] args) {
+            public boolean execute(@NotNull CommandSender sender, String[] args) {
                 return isPermitted(sender);
             }
         });
 
         commands.add(new BaseCommand("mute") {
             @Override
-            protected boolean execute(CommandSender sender, String[] args) {
+            public boolean execute(@NotNull CommandSender sender, String[] args) {
                 if (!isPermitted(sender)) return true;
 
                 if (args.length == 0)
-                    return createSender(sender).send("help.perm");
+                    return Utils.create(this, sender).send("help.perm");
 
                 SIRUser target = plugin.getUserManager().fromClosest(args[0]);
                 if (target == null) return checkPlayer(sender, args[0]);
@@ -58,7 +58,7 @@ final class MuteHandler implements Commandable {
                     if (temp != null) reason = temp;
                 }
 
-                final MessageSender message = createSender(sender)
+                MessageSender message = Utils.create(this, sender)
                         .addPlaceholder("{reason}", reason)
                         .addPlaceholder("{target}", target.getName())
                         .addPlaceholder("{admin}", sender.getName());
@@ -120,11 +120,11 @@ final class MuteHandler implements Commandable {
             }
 
             @Override
-            protected boolean execute(CommandSender sender, String[] args) {
+            public boolean execute(@NotNull CommandSender sender, String[] args) {
                 if (!isPermitted(sender)) return true;
 
                 if (args.length < 2)
-                    return createSender(sender).send("help.temp");
+                    return Utils.create(this, sender).send("help.temp");
 
                 SIRUser target = plugin.getUserManager().fromClosest(args[0]);
                 if (target == null) return checkPlayer(sender, args[0]);
@@ -137,7 +137,7 @@ final class MuteHandler implements Commandable {
                     if (temp != null) reason = temp;
                 }
 
-                MessageSender message = createSender(sender)
+                MessageSender message = Utils.create(this, sender)
                         .addPlaceholder("{reason}", reason)
                         .addPlaceholder("{target}", target.getName())
                         .addPlaceholder("{admin}", sender.getName());
@@ -162,8 +162,8 @@ final class MuteHandler implements Commandable {
 
             @Override
             public TabBuilder getCompletionBuilder() {
-                return createBasicTabBuilder()
-                        .addArguments(0, getOnlineNames())
+                return Utils.newBuilder()
+                        .addArguments(0, Utils.getOnlineNames())
                         .addArgument(1, "<time>")
                         .addArgument(2, "<reason>");
             }
@@ -171,11 +171,11 @@ final class MuteHandler implements Commandable {
 
         commands.add(new BaseCommand("unmute") {
             @Override
-            protected boolean execute(CommandSender sender, String[] args) {
+            public boolean execute(@NotNull CommandSender sender, String[] args) {
                 if (!isPermitted(sender)) return true;
 
                 if (args.length < 1)
-                    return createSender(sender).send("help.unmute");
+                    return Utils.create(this, sender).send("help.unmute");
 
                 SIRUser target = plugin.getUserManager().fromClosest(args[0]);
                 if (target == null) return checkPlayer(sender, args[0]);
@@ -188,7 +188,7 @@ final class MuteHandler implements Commandable {
                     if (temp != null) reason = temp;
                 }
 
-                MessageSender message = createSender(sender)
+                MessageSender message = Utils.create(this, sender)
                         .addPlaceholder("{reason}", reason)
                         .addPlaceholder("{target}", target.getName())
                         .addPlaceholder("{admin}", sender.getName());
@@ -232,7 +232,7 @@ final class MuteHandler implements Commandable {
                     commands.forEach(c -> c.unregister(false));
                 }
 
-                SIRCommand.scheduleSync();
+                SIRPlugin.getInstance().getCommandManager().getSynchronizer().sync();
 
                 String s = "Mute commands active status: " + b.isEnabled();
                 SIRPlugin.getLib().getLogger().log(s);
@@ -265,8 +265,8 @@ final class MuteHandler implements Commandable {
 
         @Override
         public TabBuilder getCompletionBuilder() {
-            return createBasicTabBuilder()
-                    .addArguments(0, getOnlineNames())
+            return Utils.newBuilder()
+                    .addArguments(0, Utils.getOnlineNames())
                     .addArgument(1, "<reason>");
         }
     }

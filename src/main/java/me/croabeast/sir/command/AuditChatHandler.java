@@ -64,7 +64,7 @@ final class AuditChatHandler implements Commandable, Registrable {
             }
 
             @Override
-            protected boolean execute(CommandSender sender, String[] args) {
+            public boolean execute(@NotNull CommandSender sender, String[] args) {
                 if (!(sender instanceof Player)) {
                     plugin.getLibrary().getServerLogger().log(
                             "&cYou can not ignore players in the console.");
@@ -72,10 +72,10 @@ final class AuditChatHandler implements Commandable, Registrable {
                 }
 
                 if (!isPermitted(sender)) return true;
-                if (args.length == 0) return createSender(sender).send("help");
+                if (args.length == 0) return Utils.create(this, sender).send("help");
 
                 if (args.length > 2)
-                    return isWrongArgument(sender, args[args.length - 1]);
+                    return getArgumentCheck().test(sender, args[args.length - 1]);
 
                 final SIRUser user = plugin.getUserManager().getUser(sender);
                 assert user != null;
@@ -92,7 +92,7 @@ final class AuditChatHandler implements Commandable, Registrable {
                         data.ignoreAll(chat);
                     }
 
-                    return createSender(sender)
+                    return Utils.create(this, sender)
                             .addPlaceholders(baseKeys, null, channel)
                             .send((data.isIgnoringAll(chat) ?
                                     "success" :
@@ -108,7 +108,7 @@ final class AuditChatHandler implements Commandable, Registrable {
                     data.ignore(target, chat);
                 }
 
-                return createSender(sender)
+                return Utils.create(this, sender)
                         .addPlaceholders(baseKeys, target.getName(), channel)
                         .send((data.isIgnoring(target, chat) ?
                                 "success" :
@@ -117,8 +117,8 @@ final class AuditChatHandler implements Commandable, Registrable {
 
             @Override
             public TabBuilder getCompletionBuilder() {
-                return createBasicTabBuilder()
-                        .addArguments(0, getOnlineNames())
+                return Utils.newBuilder()
+                        .addArguments(0, Utils.getOnlineNames())
                         .addArgument(0, "@a")
                         .addArgument(1, "-chat");
             }
@@ -126,21 +126,21 @@ final class AuditChatHandler implements Commandable, Registrable {
 
         messageCommands.add(new BaseCommand("msg") {
             @Override
-            protected boolean execute(CommandSender s, String[] args) {
+            public boolean execute(@NotNull CommandSender s, String[] args) {
                 if (!isPermitted(s)) return true;
 
                 final SIRUser user = plugin.getUserManager().getUser(s);
                 if (user != null && user.getMuteData().isMuted())
-                    return createSender(s).setLogger(false).send("is-muted");
+                    return Utils.create(this, s).setLogger(false).send("is-muted");
 
                 if (args.length == 0)
-                    return createSender(s).setLogger(false).send("need-player");
+                    return Utils.create(this, s).setLogger(false).send("need-player");
 
                 SIRUser target = plugin.getUserManager().fromClosest(args[0]);
                 if (target == null) return checkPlayer(s, args[0]);
 
                 if (Objects.equals(target, user))
-                    return createSender(s).setLogger(false).send("not-yourself");
+                    return Utils.create(this, s).setLogger(false).send("not-yourself");
 
                 if (target.getIgnoreData().isIgnoring(user, false))
                     return plugin.getLibrary().getLoadedSender()
@@ -150,18 +150,18 @@ final class AuditChatHandler implements Commandable, Registrable {
 
                 boolean vanished = getLang().get("lang.vanish-messages.enabled", true);
                 if (target.isVanished() && vanished)
-                    return createSender(s).setLogger(false).send("vanish-messages.message");
+                    return Utils.create(this, s).setLogger(false).send("vanish-messages.message");
 
                 String message = LangUtils.stringFromArray(args, 1);
                 if (StringUtils.isBlank(message))
-                    return createSender(s).setLogger(false).send("empty-message");
+                    return Utils.create(this, s).setLogger(false).send("empty-message");
 
                 Values initValues = new Values(plugin, true);
                 Values receiveValues = new Values(plugin, false);
 
                 Player player = target.getPlayer();
 
-                MessageSender sender = createSender(null)
+                MessageSender sender = Utils.create(this, null)
                         .setLogger(false)
                         .addPlaceholder("{receiver}", isConsoleValue(player))
                         .addPlaceholder("{message}", message)
@@ -182,7 +182,7 @@ final class AuditChatHandler implements Commandable, Registrable {
 
             @NotNull
             public Supplier<Collection<String>> generateCompletions(CommandSender sender, String[] arguments) {
-                return () -> createBasicTabBuilder()
+                return () -> Utils.newBuilder()
                         .addArguments(0,
                                 CollectionBuilder.of(plugin.getUserManager().getOnlineUsers())
                                         .filter(u -> !u.isVanished())
@@ -193,16 +193,16 @@ final class AuditChatHandler implements Commandable, Registrable {
         });
         messageCommands.add(new BaseCommand("reply") {
             @Override
-            protected boolean execute(CommandSender s, String[] args) {
+            public boolean execute(@NotNull CommandSender s, String[] args) {
                 if (!isPermitted(s)) return true;
 
                 final SIRUser receiver = plugin.getUserManager().getUser(s);
                 if (receiver != null && receiver.getMuteData().isMuted())
-                    return createSender(s).setLogger(false).send("is-muted");
+                    return Utils.create(this, s).setLogger(false).send("is-muted");
 
                 final CommandSender init = replies.get(s);
                 if (init == null)
-                    return createSender(s).setLogger(false).send("not-replied");
+                    return Utils.create(this, s).setLogger(false).send("not-replied");
 
                 SIRUser initiator = plugin.getUserManager().getUser(init);
 
@@ -214,11 +214,11 @@ final class AuditChatHandler implements Commandable, Registrable {
 
                 if (getLang().get("lang.vanish-messages.enabled", true) &&
                         initiator.isVanished())
-                    return createSender(s).setLogger(false).send("vanish-messages.message");
+                    return Utils.create(this, s).setLogger(false).send("vanish-messages.message");
 
                 String message = LangUtils.stringFromArray(args, 0);
                 if (StringUtils.isBlank(message))
-                    return createSender(s).setLogger(false).send("empty-message");
+                    return Utils.create(this, s).setLogger(false).send("empty-message");
 
                 Values initValues = new Values(plugin, true);
                 Values receiveValues = new Values(plugin, false);
@@ -226,7 +226,7 @@ final class AuditChatHandler implements Commandable, Registrable {
                 initValues.playSound(init);
                 receiveValues.playSound(s);
 
-                final MessageSender sender = createSender(null)
+                MessageSender sender = Utils.create(this, null)
                         .setLogger(false)
                         .addPlaceholder("{receiver}", isConsoleValue(init))
                         .addPlaceholder("{message}", message)
@@ -241,7 +241,7 @@ final class AuditChatHandler implements Commandable, Registrable {
 
             @NotNull
             public Supplier<Collection<String>> generateCompletions(CommandSender sender, String[] arguments) {
-                return () -> createBasicTabBuilder().addArgument(0, "<message>").build(sender, arguments);
+                return () -> Utils.newBuilder().addArgument(0, "<message>").build(sender, arguments);
             }
         });
 
@@ -292,7 +292,7 @@ final class AuditChatHandler implements Commandable, Registrable {
                     messageCommands.forEach(c -> c.unregister(false));
                 }
 
-                SIRCommand.scheduleSync();
+                SIRPlugin.getInstance().getCommandManager().getSynchronizer().sync();
 
                 String s = "Messaging commands registered: " + b.isEnabled();
                 SIRPlugin.getLib().getLogger().log(s);

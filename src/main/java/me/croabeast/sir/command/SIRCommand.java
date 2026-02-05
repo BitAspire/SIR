@@ -5,13 +5,13 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import lombok.experimental.UtilityClass;
 import me.croabeast.common.CollectionBuilder;
 import me.croabeast.command.*;
+import me.croabeast.common.util.ArrayUtils;
 import me.croabeast.file.Configurable;
 import me.croabeast.file.ConfigurableFile;
 import me.croabeast.common.util.Exceptions;
-import me.croabeast.scheduler.GlobalScheduler;
-import me.croabeast.scheduler.GlobalTask;
 import me.croabeast.sir.FileData;
 import me.croabeast.sir.SIRPlugin;
 import me.croabeast.sir.aspect.AspectButton;
@@ -34,8 +34,6 @@ import java.util.function.Supplier;
 
 @Accessors(makeFinal = true)
 public abstract class SIRCommand extends BukkitCommand {
-
-    private static GlobalTask task = null;
 
     protected final SIRPlugin plugin;
     private Options options;
@@ -97,6 +95,27 @@ public abstract class SIRCommand extends BukkitCommand {
         return sender instanceof Player ? (Player) sender : null;
     }
 
+    @Setter
+    private final class Sub extends SubCommand {
+
+        private CommandPredicate predicate;
+
+        Sub(me.croabeast.command.Command parent, String name) {
+            super(parent, name);
+        }
+
+        public boolean isPermitted(CommandSender s, boolean log) {
+            final String wild = SIRCommand.this.getPermission(true);
+            return UserManager.hasPermission(s, wild) ||
+                    UserManager.hasPermission(s, getPermission());
+        }
+
+        @Override
+        public boolean execute(@NotNull CommandSender commandSender, @NotNull String[] strings) {
+            return predicate.test(commandSender, strings);
+        }
+    }
+
     private SIRCommand(AspectKey key, String name, boolean modifiable) {
         super(SIRPlugin.getInstance(), name);
 
@@ -112,16 +131,10 @@ public abstract class SIRCommand extends BukkitCommand {
         if (aspectKey instanceof Key)
             ((Key) aspectKey).init = this;
 
+        getSubCommandMap().setConsoleArguments(options.getSubCommands().toArray(new String[0]));
         options.getSubCommands()
-                .forEach(s -> addSubCommand(new SubCommand(this, s) {
-                    @Override
-                    public boolean isPermitted(CommandSender s, boolean log) {
-                        final String wild = getWildcardPermission();
-                        return UserManager.hasPermission(s, wild) ||
-                                UserManager.hasPermission(s, getPermission());
-                    }
-                }));
-        setExecutingError((sender, e) -> {
+                .forEach(s -> getSubCommandMap().add(new Sub(this, s)));
+        setExecuteCheck((sender, e) -> {
             e.printStackTrace();
 
             return plugin.getLibrary().getLoadedSender()
@@ -130,7 +143,7 @@ public abstract class SIRCommand extends BukkitCommand {
                             getName() + ": &c" +
                             e.getLocalizedMessage());
         });
-        setCompletingError((sender, e) -> {
+        setCompleteCheck((sender, e) -> {
             e.printStackTrace();
 
             return plugin.getLibrary().getLoadedSender()
@@ -139,7 +152,7 @@ public abstract class SIRCommand extends BukkitCommand {
                             getName() + ": &c" +
                             e.getLocalizedMessage());
         });
-        setWrongArgumentAction((sender, arg) -> {
+        setArgumentCheck((sender, arg) -> {
             plugin.getLibrary()
                     .getLoadedSender().setTargets(fromSender(sender))
                     .addPlaceholder("{arg}", arg)
@@ -280,13 +293,6 @@ public abstract class SIRCommand extends BukkitCommand {
         return this;
     }
 
-    protected abstract boolean execute(CommandSender sender, String[] args);
-
-    @NotNull
-    public final CommandPredicate getPredicate() {
-        return this::execute;
-    }
-
     public abstract TabBuilder getCompletionBuilder();
 
     @NotNull
@@ -295,39 +301,15 @@ public abstract class SIRCommand extends BukkitCommand {
         return () -> builder == null ? new ArrayList<>() : builder.build(sender, arguments);
     }
 
-    private class CommandDisplayer extends MessageSender {
-
-        private CommandDisplayer(MessageSender sender) {
-            super(sender);
-        }
-
-        private CommandDisplayer() {
-            super(plugin.getLibrary().getLoadedSender());
-        }
-
-        @NotNull
-        public MessageSender copy() {
-            return new CommandDisplayer(this);
-        }
-
-        @Override
-        public boolean send(String... strings) {
-            if (strings.length != 1)
-                throw new NullPointerException("Needs only a single path");
-
-            return super.send(file.toStringList("lang." + strings[0]));
-        }
-    }
-
     protected final boolean checkPlayer(CommandSender sender, String name) {
-        return createSender(sender)
+        return Utils.create(this, sender)
                 .setLogger(false).addPlaceholder("{target}", name)
                 .send(file.toStringList("lang.not-player"));
     }
 
     public final boolean testPermissionSilent(@NotNull CommandSender target) {
         return UserManager.hasPermission(target, getPermission()) ||
-                UserManager.hasPermission(target, getWildcardPermission());
+                UserManager.hasPermission(target, getPermission(true));
     }
 
     public final boolean isPermitted(CommandSender sender, boolean log) {
@@ -343,18 +325,14 @@ public abstract class SIRCommand extends BukkitCommand {
         return false;
     }
 
-    protected final MessageSender createSender(CommandSender sender) {
-        return new CommandDisplayer().setLogger(fromSender(sender) == null).setTargets(sender);
-    }
-
     protected final boolean editSubCommand(String name, CommandPredicate predicate) {
         if (StringUtils.isBlank(name) || predicate == null)
             return false;
 
-        final BaseCommand subCommand = getSubCommand(name);
+        BaseCommand subCommand = getSubCommandMap().get(name);
         if (subCommand == null) return false;
 
-        ((SubCommand) subCommand).setPredicate(predicate);
+        ((Sub) subCommand).setPredicate(predicate);
         return true;
     }
 
@@ -383,27 +361,6 @@ public abstract class SIRCommand extends BukkitCommand {
     @Override
     public String toString() {
         return "SIRCommand{name='" + getName() + "'}";
-    }
-
-    public static void scheduleSync() {
-        GlobalScheduler scheduler = SIRPlugin.getScheduler();
-
-        scheduler.runTask(() -> {
-            if (task != null) task.cancel();
-
-            task = scheduler.runTaskLater(() -> {
-                task = null;
-                syncCommands();
-            }, 1L);
-        });
-    }
-
-    protected static List<String> getOnlineNames() {
-        return CollectionBuilder.of(Bukkit.getOnlinePlayers()).map(HumanEntity::getName).toList();
-    }
-
-    protected static TabBuilder createBasicTabBuilder() {
-        return new TabBuilder().setPermissionPredicate(UserManager::hasPermission);
     }
 
     @Accessors(makeFinal = false)
@@ -502,6 +459,87 @@ public abstract class SIRCommand extends BukkitCommand {
         @Override
         public boolean isEnabled() {
             return init == null ? supplier.get() : init.isEnabled();
+        }
+    }
+
+    @UtilityClass
+    public class Utils {
+
+        private List<String> resolve(ConfigurableFile lang, String... strings) {
+            if (strings.length != 1 && strings.length != 2)
+                throw new NullPointerException();
+
+            String key = strings[0];
+            if (lang == null) return ArrayUtils.toList(key);
+
+            List<String> fallback = strings.length != 2 ?
+                    new ArrayList<>() :
+                    ArrayUtils.toList(strings[1]);
+
+            List<String> result = lang.toStringList("lang." + key);
+            return !result.isEmpty() ? result : fallback;
+        }
+
+        private void setSettings(MessageSender message, CommandSender sender) {
+            message.setLogger(!(sender instanceof Player));
+            message.setTargets(sender);
+        }
+
+        private final class SenderImpl extends MessageSender {
+
+            private final ConfigurableFile lang;
+            private final CommandSender sender;
+
+            private SenderImpl(SIRCommand command, CommandSender sender) {
+                super(SIRPlugin.getLib().getLoadedSender());
+                this.lang = command.getLang();
+                setSettings(this, this.sender = sender);
+            }
+
+            private SenderImpl(SenderImpl sender) {
+                super(sender);
+                this.lang = sender.lang;
+                setSettings(this, this.sender = sender.sender);
+            }
+
+            @NotNull
+            public MessageSender copy() {
+                return new SenderImpl(this);
+            }
+
+            @Override
+            public boolean send(String... strings) {
+                return super.send(resolve(lang, strings));
+            }
+        }
+
+        private final class Default extends MessageSender {
+
+            private Default(CommandSender sender) {
+                super(SIRPlugin.getInstance().getLibrary().getLoadedSender());
+                setSettings(this, sender);
+            }
+
+            @Override
+            public boolean send(String... strings) {
+                return super.send(resolve(null, strings));
+            }
+        }
+
+        public MessageSender create(SIRCommand command, CommandSender sender) {
+            return command != null ? new SenderImpl(command, sender) : new Default(sender);
+        }
+
+        public MessageSender create(CommandSender sender) {
+            return create(null, sender);
+        }
+
+        public TabBuilder newBuilder() {
+            return new TabBuilder().setPermissionPredicate(UserManager::hasPermission);
+        }
+
+        public List<String> getOnlineNames() {
+            return CollectionBuilder.of(Bukkit.getOnlinePlayers()).map(HumanEntity::getName).toList();
         }
     }
 }

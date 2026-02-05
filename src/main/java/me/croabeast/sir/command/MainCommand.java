@@ -95,12 +95,12 @@ final class MainCommand extends SIRCommand {
     }
 
     private CommandPredicate senderPredicate(String key, Object o, String path) {
-        return (s, strings) -> createSender(s).addPlaceholder(key, o).send(path);
+        return (s, strings) -> Utils.create(this, s).addPlaceholder(key, o).send(path);
     }
 
     @Override
-    protected boolean execute(CommandSender sender, String[] args) {
-        return Objects.requireNonNull(getSubCommand("help")).getPredicate().test(sender, args);
+    public boolean execute(@NotNull CommandSender sender, String[] args) {
+        return Objects.requireNonNull(getSubCommandMap().get("help")).execute(sender, args);
     }
 
     @NotNull
@@ -110,9 +110,9 @@ final class MainCommand extends SIRCommand {
 
     @NotNull
     public TabBuilder getCompletionBuilder() {
-        final TabBuilder builder = createBasicTabBuilder();
+        final TabBuilder builder = Utils.newBuilder();
 
-        for (BaseCommand sub : getSubCommands()) {
+        for (BaseCommand sub : getSubCommandMap().getSubCommands()) {
             Deque<String> list = new LinkedList<>(sub.getAliases());
             list.addFirst(sub.getName());
 

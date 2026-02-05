@@ -35,16 +35,16 @@ final class PrintCommand extends SIRCommand {
         super(Key.PRINT, true);
 
         editSubCommand("targets", (sender, args) -> args.length == 0 ?
-                createSender(sender).send("help.targets") :
-                isWrongArgument(sender, args[args.length - 1]));
+                Utils.create(this, sender).send("help.targets") :
+                getArgumentCheck().test(sender, args[args.length - 1]));
 
         editSubCommand("chat", (sender, args) -> {
-            TargetCatcher catcher = new TargetCatcher(sender, args.length > 0 ? args[0] : null);
+            TargetCatcher catcher = new TargetCatcher(this, sender, args.length > 0 ? args[0] : null);
 
             if (args.length == 0)
-                return createSender(sender).send("help.chat");
+                return Utils.create(this, sender).send("help.chat");
             if (args.length < 3)
-                return createSender(sender).send("empty-message");
+                return Utils.create(this, sender).send("empty-message");
 
             catcher.sendConfirmation();
 
@@ -55,12 +55,12 @@ final class PrintCommand extends SIRCommand {
         });
 
         editSubCommand("action-bar", (sender, args) -> {
-            TargetCatcher catcher = new TargetCatcher(sender, args.length > 0 ? args[0] : null);
+            TargetCatcher catcher = new TargetCatcher(this, sender, args.length > 0 ? args[0] : null);
 
             if (args.length == 0)
-                return createSender(sender).send("help.action-bar");
+                return Utils.create(this, sender).send("help.action-bar");
             if (args.length < 2)
-                return createSender(sender).send("empty-message");
+                return Utils.create(this, sender).send("empty-message");
 
             catcher.sendConfirmation();
             new Printer(catcher, args, 1).print("ACTION-BAR");
@@ -69,12 +69,12 @@ final class PrintCommand extends SIRCommand {
         });
 
         editSubCommand("title", (sender, args) -> {
-            TargetCatcher catcher = new TargetCatcher(sender, args.length > 0 ? args[0] : null);
+            TargetCatcher catcher = new TargetCatcher(this, sender, args.length > 0 ? args[0] : null);
 
             if (args.length == 0)
-                return createSender(sender).send("help.title");
+                return Utils.create(this, sender).send("help.title");
             if (args.length < 2)
-                return createSender(sender).send("empty-message");
+                return Utils.create(this, sender).send("empty-message");
 
             catcher.sendConfirmation();
             new Printer(catcher, args, 2).print("TITLE");
@@ -89,13 +89,13 @@ final class PrintCommand extends SIRCommand {
     }
 
     @Override
-    protected boolean execute(CommandSender sender, String[] args) {
-        return createSender(sender).send("help.main");
+    public boolean execute(@NotNull CommandSender sender, String[] args) {
+        return Utils.create(this, sender).send("help.main");
     }
 
     @NotNull
     public TabBuilder getCompletionBuilder() {
-        TabBuilder builder = createBasicTabBuilder()
+        TabBuilder builder = Utils.newBuilder()
                 .addArgument(0, "sir.print.targets", "targets")
                 .addArgument(0, "sir.print.chat", "chat")
                 .addArgument(0, "sir.print.action-bar", "action-bar")
@@ -131,12 +131,14 @@ final class PrintCommand extends SIRCommand {
 
     private class TargetCatcher {
 
+        private final SIRCommand command;
         private final CommandSender sender;
         private final String input;
 
         private Set<Player> targets = null;
 
-        TargetCatcher(CommandSender sender, String input) {
+        TargetCatcher(SIRCommand command, CommandSender sender, String input) {
+            this.command = command;
             this.sender = sender;
             this.input = input;
 
@@ -203,7 +205,7 @@ final class PrintCommand extends SIRCommand {
 
         private boolean sendConfirmation() {
             if (targets.isEmpty()) {
-                createSender(sender).addPlaceholder("{target}", input).send("reminder.empty");
+                Utils.create(command, sender).addPlaceholder("{target}", input).send("reminder.empty");
                 return false;
             }
 
@@ -211,12 +213,12 @@ final class PrintCommand extends SIRCommand {
                 String target = Lists.newArrayList(targets).get(0).getName();
 
                 return (!(sender instanceof Player) || !targets.contains(sender)) &&
-                        createSender(sender)
+                        Utils.create(command, sender)
                                 .addPlaceholder("{target}", target)
                                 .send("reminder.success");
             }
 
-            return createSender(sender).addPlaceholder("{target}", input).send("reminder.success");
+            return Utils.create(command, sender).addPlaceholder("{target}", input).send("reminder.success");
         }
     }
 

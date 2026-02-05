@@ -31,7 +31,7 @@ final class ColorCommand extends SIRCommand {
     ColorCommand() {
         super(Key.CHAT_COLOR, true);
 
-        editSubCommand("help", (s, a) -> createSender(s).send("help"));
+        editSubCommand("help", (s, a) -> Utils.create(this, s).send("help"));
 
         for (ChatColor color : ChatColor.values()) {
             final String name = color.asBungee().getName();
@@ -44,7 +44,7 @@ final class ColorCommand extends SIRCommand {
                 case ITALIC:
                     editSubCommand(name, (s, a) -> {
                         if (!(s instanceof Player))
-                            return createSender(s).send("need-player");
+                            return Utils.create(this, s).send("need-player");
 
                         SIRUser user = plugin.getUserManager().getUser(s);
                         if (user == null)
@@ -57,7 +57,7 @@ final class ColorCommand extends SIRCommand {
                         boolean added = !formats.remove(to) && formats.add(to);
 
                         String path = added ? "add" : "remove";
-                        return createSender(s)
+                        return Utils.create(this, s)
                                 .addPlaceholder("{format}", to + name)
                                 .send("format." + path);
                     });
@@ -81,14 +81,14 @@ final class ColorCommand extends SIRCommand {
                 case LIGHT_PURPLE:
                     editSubCommand(name, (s, a) -> {
                         if (!(s instanceof Player))
-                            return createSender(s).send("need-player");
+                            return Utils.create(this, s).send("need-player");
 
                         SIRUser user = plugin.getUserManager().getUser(s);
                         if (user == null)
                             return checkPlayer(s, s.getName());
 
                         user.getColorData().setColorStart(color.toString());
-                        return createSender(s)
+                        return Utils.create(this, s)
                                 .addPlaceholder("{color}", color + name)
                                 .send("color");
                     });
@@ -97,24 +97,24 @@ final class ColorCommand extends SIRCommand {
                 case RESET:
                     editSubCommand("reset", (s, a) -> {
                         if (!(s instanceof Player))
-                            return createSender(s).send("need-player");
+                            return Utils.create(this, s).send("need-player");
 
                         SIRUser user = plugin.getUserManager().getUser(s);
                         if (user == null)
                             return checkPlayer(s, s.getName());
 
                         user.getColorData().removeAnyFormats();
-                        return createSender(s).send("reset");
+                        return Utils.create(this, s).send("reset");
                     });
             }
         }
 
         editSubCommand("gradient", (s, a) -> {
             if (!(s instanceof Player))
-                return createSender(s).send("need-player");
+                return Utils.create(this, s).send("need-player");
 
             if (a.length != 2)
-                return createSender(s).send("gradient.usage");
+                return Utils.create(this, s).send("gradient.usage");
 
             SIRUser user = plugin.getUserManager().getUser(s);
             if (user == null)
@@ -124,7 +124,7 @@ final class ColorCommand extends SIRCommand {
             data.setColorStart(a[0]);
             data.setColorEnd(a[1]);
 
-            return createSender(s)
+            return Utils.create(this, s)
                     .addPlaceholder("{gradient}", a[0])
                     .addPlaceholder("{end}", a[1])
                     .send("gradient.success");
@@ -132,7 +132,7 @@ final class ColorCommand extends SIRCommand {
 
         editSubCommand("rainbow", (s, a) -> {
             if (!(s instanceof Player))
-                return createSender(s).send("need-player");
+                return Utils.create(this, s).send("need-player");
 
             SIRUser user = plugin.getUserManager().getUser(s);
             if (user == null)
@@ -141,7 +141,7 @@ final class ColorCommand extends SIRCommand {
             user.getColorData().setColorStart("<R:1>");
             user.getColorData().setColorEnd("</R>");
 
-            return createSender(s)
+            return Utils.create(this, s)
                     .addPlaceholder("{rainbow}", "<R:1>")
                     .addPlaceholder("{end}", "</R>")
                     .send("rainbow");
@@ -181,15 +181,15 @@ final class ColorCommand extends SIRCommand {
     }
 
     @Override
-    protected boolean execute(CommandSender sender, String[] args) {
-        return Objects.requireNonNull(getSubCommand("help")).getPredicate().test(sender, args);
+    public boolean execute(@NotNull CommandSender sender, String[] args) {
+        return Objects.requireNonNull(getSubCommandMap().get("help")).execute(sender, args);
     }
 
     @Override
     public TabBuilder getCompletionBuilder() {
-        final TabBuilder builder = createBasicTabBuilder();
+        final TabBuilder builder = Utils.newBuilder();
 
-        for (BaseCommand sub : getSubCommands()) {
+        for (BaseCommand sub : getSubCommandMap().getSubCommands()) {
             Deque<String> list = new LinkedList<>(sub.getAliases());
             list.addFirst(sub.getName());
 

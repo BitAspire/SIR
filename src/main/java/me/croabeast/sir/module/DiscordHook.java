@@ -92,7 +92,7 @@ final class DiscordHook extends SIRModule implements Actionable, HookLoadable {
 
     @Override
     public void accept(Object... objects) {
-        if (!isEnabled() && !isPluginEnabled()) return;
+        if (!isEnabled() || !isPluginEnabled()) return;
 
         if (Actionable.failsCheck(objects,
                 String.class, Player.class, String[].class, String[].class))
