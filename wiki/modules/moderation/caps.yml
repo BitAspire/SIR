@@ -1,0 +1,27 @@
+# Option to enable or disable the caps lock module.
+enabled: true
+
+# Defines how caps lock will be controlled: BLOCK (block the message) or REPLACE (replace excessive caps).
+control: BLOCK
+
+# Warning message to be sent to the player when excessive caps are detected.
+warnings: "<p> &7Please avoid using multiple caps."
+
+# The maximum number of characters that can be in caps in a message.
+maximum-caps: 10
+
+# Actions to be taken when a player exceeds the maximum allowed violations for caps lock.
+actions:
+  # The number of violations a player can incur before the command(s) are executed.
+  maximum-violations: 5
+
+  # Commands to be executed when the maximum violations are reached.
+  commands:
+    - "mute {player} Caps"
+
+  # Messages to be sent to the player when the command(s) are executed.
+  messages:
+    - "<p> &cYou've been blocked to chat for caps."
+
+# Permission that allows players to bypass the caps lock module.
+bypass: sir.moderation.bypass.caps

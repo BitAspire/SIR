@@ -1,0 +1,21 @@
+worlds:
+  enabled: true
+  whitelist: false
+  list:
+    - custom_world
+
+game-modes:
+  enabled: true
+  whitelist: false
+  list:
+    - SPECTATOR
+
+advancements:
+  enabled: true
+  whitelist: false
+  list:
+    - fusionmc:bastion_advancement_fix
+    - global:fusion_mc
+    - vanillatweaks:classic_fishing_loot
+    - vanillatweaks:double_shulker_shells
+    - vanillatweaks:wandering_trades

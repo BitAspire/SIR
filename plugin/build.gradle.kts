@@ -16,7 +16,7 @@ dependencies {
     }
     compileOnly("com.github.DevLeoko:AdvancedBan:2.3.0")
     compileOnly(files("libraries/CMI.jar"))
-    takionShaded("me.croabeast.takion:shaded-all:1.4")
+    takionShaded(rootProject.files("libraries/shaded-all-1.4.jar"))
 }
 
 val coreMainOutput = coreProject.extensions.getByType<SourceSetContainer>()["main"].output

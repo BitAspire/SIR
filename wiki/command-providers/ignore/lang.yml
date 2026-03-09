@@ -1,0 +1,46 @@
+lang:
+  # Help menu for the ignore command.
+  # Displayed when running /ignore without the required arguments.
+  help:
+    - '&7'
+    - ' &6>> &eIgnore — Help'
+    - '  &7- &b/ignore <player> [-chat]&7: Toggle ignoring a player.'
+    - '    &7Use &b-chat&7 to ignore public chat only.'
+    - '&7'
+
+  # Error when the player argument is missing.
+  need-player: '<P> &cYou must specify a player to use this command.'
+
+  # Error when attempting to ignore yourself.
+  not-yourself: '<P> &cYou cannot ignore yourself.'
+
+  # Notification when the target is ignoring the sender.
+  # {type} = channel display name from lang.channels.
+  ignoring: '<P> &7This player is ignoring you for &e{type}&7.'
+
+  # Success messages for enabling ignore settings.
+  success:
+    # Confirmation when ignoring a specific player.
+    # {target} = player name, {type} = channel label.
+    player: '<P> &7You are now ignoring &a{target}&7 for &e{type}&7.'
+
+    # Confirmation when ignoring everyone.
+    # {type} = channel label.
+    all: '<P> &7You are now ignoring all players for &e{type}&7.'
+
+  # Success messages for disabling ignore settings.
+  remove:
+    # Confirmation when un-ignoring a specific player.
+    # {target} = player name, {type} = channel label.
+    player: '<P> &7You are no longer ignoring &a{target}&7 for &e{type}&7.'
+
+    # Confirmation when stopping ignore-all mode.
+    # {type} = channel label.
+    all: '<P> &7You are no longer ignoring all players for &e{type}&7.'
+
+  # Channel labels used in ignore messages.
+  channels:
+    # Public chat channel label.
+    chat: 'Chat'
+    # Private message channel label.
+    msg: 'Private Messages'

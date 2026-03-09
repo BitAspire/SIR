@@ -1,0 +1,43 @@
+package com.bitaspire.sir.module.tag;
+
+import lombok.Getter;
+import lombok.SneakyThrows;
+import com.bitaspire.sir.ExtensionFile;
+import com.bitaspire.sir.PermissibleUnit;
+import com.bitaspire.sir.user.SIRUser;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.*;
+
+@Getter
+final class Data {
+
+    private final Map<String, Tag> tags = new LinkedHashMap<>();
+
+    @SneakyThrows
+    Data(Tags main) {
+        PermissibleUnit.loadUnits(new ExtensionFile(main, "tags", true)
+                        .getSection("tags"), Tag::new)
+                .forEach(e -> this.tags.put(e.getTag(), e));
+    }
+
+    @NotNull
+    List<Tag> fromGroup(SIRUser user, String group) {
+        List<Tag> tags = new ArrayList<>();
+        if (user == null || !user.isOnline()) return tags;
+
+        for (Tag tag : this.tags.values()) {
+            if (!Objects.equals(tag.getGroup(), group))
+                continue;
+
+            if (tag.isInGroupNonNull(user.getPlayer()))
+                tags.add(tag);
+        }
+
+        return tags;
+    }
+
+    Tag getTag(SIRUser user) {
+        return PermissibleUnit.getUnit(user, tags.values(), true);
+    }
+}

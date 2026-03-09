@@ -1,0 +1,55 @@
+first-join:
+  example:
+    permission: custom.permission # or DEFAULT, optional
+    priority: 0 # or any number, optional
+    sound: # optional
+      enabled: false
+      type: ENTITY_PLAYER_LEVELUP
+      volume: 1.0
+      pitch: 1.0
+    spawn: # optional
+      enabled: false
+      world: custom_world
+      coordinates: 0,90,0
+      rotation: 0,0
+    invulnerable: 3 # optional
+    public: # can be a list or a single string
+      - '&8[&6+&8] &7Welcome &e{player} &7to the server for the first time!'
+    private: # optional, can be a list or a single string
+      - "&7If you need help, contact our staff and they will help you!"
+    commands: # optional, can be a list or a single string
+      - "msg {player} have a lot of fun here :D"
+
+  section1:
+    invulnerable: 3
+    sound:
+      enabled: true
+      type: ENTITY_PLAYER_LEVELUP
+      volume: 1.0
+      pitch: 1.0
+    public: '&8[&6+&8] &7Welcome &e{player} &7to the server for the first time!'
+    private: "&7If you need help, contact our staff and they will help you!"
+
+join:
+  default:
+    invulnerable: 3
+    public: '&8[&a+&8] &7Welcome &e{player} &7to the server!'
+
+  vip:
+    permission: join.vip
+    invulnerable: 5
+    public: '&8[&a+&8] &7Welcome &b&lVIP &e{player} &7to the server!'
+    private: '<R:1>Thanks for playing here :D</R>'
+
+  pro:
+    permission: join.pro
+    priority: 2  # Higher priority (overrides lower)
+    public: '&8[&a+&8] &7Welcome &d&lPRO &e{player} &7to the server!'
+    private: '[TITLE] <G:2C08BA>Hello PRO {PLAYER}</G:028A97><n><G:2C08BA>from world {WORLD}.</G:028A97>'
+
+quit:
+  default:
+    public: '&8[&c-&8] &e{player} &7has left the server.'
+
+  vip:
+    public: '&8[&c-&8] &b&lVIP &e{player} &7has left the server.'

@@ -1,0 +1,97 @@
+package com.bitaspire.sir.module.tag;
+
+import com.bitaspire.sir.PluginDependant;
+import com.bitaspire.sir.UserFormatter;
+import com.bitaspire.sir.module.SIRModule;
+import com.bitaspire.sir.user.SIRUser;
+import org.apache.commons.lang.StringUtils;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public final class Tags extends SIRModule implements UserFormatter<Object>, PluginDependant {
+
+    private static final String PAPI = "PlaceholderAPI";
+
+    Data data;
+    private Object hook;
+
+    @NotNull
+    @Override
+    public String[] getSoftDependencies() {
+        return new String[]{PAPI};
+    }
+
+    @Override
+    public boolean register() {
+        data = new Data(this);
+
+        if (!isPluginEnabled(PAPI))
+            return true;
+
+        try {
+            hook = new TagExpansion(this);
+            return ((com.bitaspire.sir.PAPIExpansion) hook).register();
+        } catch (NoClassDefFoundError e) {
+            return true;
+        }
+    }
+
+    @Override
+    public boolean unregister() {
+        if (hook == null) return true;
+        try {
+            return ((com.bitaspire.sir.PAPIExpansion) hook).unregister();
+        } catch (NoClassDefFoundError e) {
+            return true;
+        }
+    }
+
+    String parseTag(SIRUser user, String string) {
+        if (string.matches("(?i)group:(.+)")) {
+            List<Tag> tags = data.fromGroup(user, string.split(":")[1]);
+            if (tags.isEmpty()) return null;
+
+            String name = tags.get(0).getTag();
+            return StringUtils.isNotBlank(name) ? name : null;
+        }
+
+        if (string.matches("(?i)default")) {
+            Tag tag = data.getTag(user);
+            if (tag == null) return null;
+
+            String name = tag.getTag();
+            return StringUtils.isNotBlank(name) ? name : null;
+        }
+
+        Tag tag = data.getTags().get(string);
+        if (tag == null) return null;
+
+        String name = tag.getTag();
+        return StringUtils.isNotBlank(name) ? name : null;
+    }
+
+    @NotNull
+    public String format(SIRUser user, String string) {
+        if (user == null || StringUtils.isBlank(string) || !isEnabled())
+            return string;
+
+        Pattern pattern = Pattern.compile("(?i)\\{tag_(.+)}");
+        Matcher matcher = pattern.matcher(string);
+
+        while (matcher.find()) {
+            String temp = parseTag(user, matcher.group(1));
+            if (temp != null)
+                string = string.replace(matcher.group(), temp);
+        }
+
+        return string;
+    }
+
+    @NotNull
+    public String format(SIRUser user, String string, Object reference) {
+        return format(user, string);
+    }
+}

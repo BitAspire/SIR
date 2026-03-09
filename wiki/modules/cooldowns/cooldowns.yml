@@ -1,0 +1,18 @@
+cooldowns:
+  # Default Cooldown Settings
+  default:
+    # Permission and Priority
+    permission: DEFAULT           # No special permission needed
+    priority: 0                   # Lowest priority level
+
+    # Spam Check System
+    spam:
+      enabled: false              # Spam detection toggle
+      count: 5                    # Maximum messages allowed
+      time-limit: 10              # Time window in seconds
+      commands:
+        - "kick {player}"
+
+    time: 5
+    messages:
+      - '<P> &cYou can not send another message in {time} seconds.'

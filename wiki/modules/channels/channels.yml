@@ -1,0 +1,84 @@
+# Complete Channel Example (Template)
+example-channel:
+  permission: custom.permission    # Access permission
+  priority: 3                      # Channel priority (higher = more important)
+  group: CUSTOM_GROUP              # Player group association
+  global: true                     # true = server-wide, false = local
+  radius: 0                        # Chat radius (if local)
+  worlds:                          # Allowed worlds
+    - defaultWorldLoL
+    - example-world
+  prefix: "&a&l USER &7"      # Channel prefix
+  suffix: " &8&l• &7"         # Channel suffix
+  color: "{#c0c0c0}"          # Default text color
+  color-options:              # Color permissions
+    normal: true              # Standard colors
+    special: true             # Formatting codes
+    rgb: true                 # Hex colors
+  click-action: "SUGGEST:/msg {player} hello"  # Click interaction
+  hover:                      # Hover text
+    - "Click here to contact this player"
+  format: "{prefix} {player} {suffix}: {color}{message}"
+  # Local subchannel configuration
+  local:                     # Creates a local version of this channel
+    permission: custom.permission.local # Local channel permission
+    radius: 100                         # Chat radius in blocks
+    worlds:                             # Specific worlds for local chat
+      - world
+      - world_nether
+    access:                             # Required for local channels
+      prefix: "@"                       # Message prefix identifier
+      commands:                         # Command alternatives
+        - /localchat
+        - /lc
+    format: "[LOCAL] {prefix} {player}: {message}"  # Local format
+
+default-channel:
+  enabled: true            # Master toggle
+  color-options:           # Default color permissions
+    normal: false          # &a, &b, etc.
+    special: false         # &l, &n, etc.
+    rgb: false             # Hex colors
+  radius: 0                # 0 = global, >0 = local radius
+  cooldown:
+    time: 5                # Seconds between messages
+    message: '<P> &cYou can not send another message in {time} seconds.'
+  format: ' &7{player} &8: &7{message}'
+
+channels:
+  # Default Public Channel
+  default:
+    format: '&7 {player}&8: {#C0C0C0}{message}'
+
+  # VIP Channel with Local Subchannel
+  vip:
+    permission: chat.vip
+    prefix: '&e&l VIP'
+    color-options:
+      normal: true
+    format: '{prefix} &7{player}&8: &#FFFF99{message}'
+    # Local VIP chat configuration
+    local:
+      permission: chat.vip.local
+      radius: 50
+      access:
+        prefix: "@"
+        commands: [ /viplocal ]
+      format: '[VIP-LOCAL] {prefix} {player}: {message}'
+
+  # Staff Local Channel
+  local-staff-channel:
+    global: false              # Dedicated local channel
+    permission: chat.staff
+    priority: 100
+    prefix: '&c&l STAFF'
+    color-options:
+      normal: true
+      special: true
+      rgb: true
+    access:                    # Required for all local channels
+      prefix: "@"
+      commands:
+        - /admin
+        - /admin-chat
+    format: '[STAFF] {prefix} &7{player}&8: #FF9999{message}'

@@ -1,0 +1,48 @@
+emojis:
+  # Basic Emoji
+  1:
+    key: ':admin:'           # Text to replace
+    checks:
+      is-regex: false        # Not using regex pattern
+      is-word: false         # Check anywhere in message
+      case-sensitive: false  # Case-insensitive
+    value: '&5owo'           # Replacement text
+
+  # Simple Heart Emoji
+  2:
+    key: ':heart:'
+    value: '&c<3'
+
+  # Advanced Emoji Examples
+  staff-badge:
+    key: ':staff:'
+    permission: emoji.staff   # Required permission
+    priority: 100             # Higher priority (processes first)
+    group: STAFF              # Limited to STAFF group
+    checks:
+      is-regex: false
+      is-word: true           # Only match whole words
+      case-sensitive: true    # Must match exact case
+    value: '&c⚡'
+
+  custom-face:
+    key: ':happy:'
+    permission: emoji.vip     # VIP permission
+    priority: 50              # Medium priority
+    group: VIP                # VIP group only
+    checks:
+      is-regex: true          # Uses regex pattern
+      is-word: false
+      case-sensitive: false
+    value: '&e◕‿◕'
+
+  rainbow:
+    key: ':rainbow:'
+    permission: emoji.premium  # Premium feature
+    priority: 75               # High priority
+    group: PREMIUM             # Premium users only
+    checks:
+      is-regex: false
+      is-word: true
+      case-sensitive: false
+    value: '&c❤&6♥&e♥&a♥&b♥&9♥&5♥'
