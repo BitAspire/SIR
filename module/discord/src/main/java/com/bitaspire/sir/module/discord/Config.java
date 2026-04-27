@@ -6,9 +6,9 @@ import github.scarsz.discordsrv.dependencies.jda.api.entities.Guild;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.MessageEmbed;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
 import github.scarsz.discordsrv.util.DiscordUtil;
+import github.scarsz.discordsrv.util.WebhookUtil;
 import lombok.SneakyThrows;
 import me.croabeast.common.applier.StringApplier;
-import me.croabeast.common.util.ArrayUtils;
 import me.croabeast.file.Configurable;
 import me.croabeast.prismatic.PrismaticAPI;
 import com.bitaspire.sir.SIRApi;
@@ -68,10 +68,14 @@ final class Config {
 
     private static final class EmbedTemplate {
 
+        // DiscordSRV drops webhook messages with blank content, even if they carry embeds.
+        private static final String WEBHOOK_BLANK_CONTENT = "\u200B";
+
         private final boolean restricted;
         private final String defaultServer;
 
         private final boolean enabled;
+        private final boolean playerWebhook;
         private final boolean timeStamp;
 
         private final Author author;
@@ -98,8 +102,9 @@ final class Config {
             this.titleText = section.getString("embed.title.text");
             this.titleUrl = section.getString("embed.title.url");
 
-            this.enabled = section.getBoolean("embed.enabled", false);
-            this.timeStamp = section.getBoolean("embed.timestamp", false);
+            this.enabled = section.getBoolean("embed.enabled");
+            this.playerWebhook = section.getBoolean("player-webhook");
+            this.timeStamp = section.getBoolean("embed.timestamp");
         }
 
         private static boolean isUrl(String string) {
@@ -187,7 +192,7 @@ final class Config {
         void send(Player player, List<String> ids, UnaryOperator<String> operator) {
             UnaryOperator<String> formatter = createFormatter(player, operator);
             if (!restricted) {
-                sendViaDiscordSRV(ids, formatter);
+                sendViaDiscordSRV(player, ids, formatter);
                 return;
             }
             sendViaEssentialsDiscord(player, formatter);
@@ -197,18 +202,52 @@ final class Config {
             SIRApi.instance().getScheduler().runTask(() -> Essentials.send(player, text, formatter));
         }
 
-        private void sendViaDiscordSRV(List<String> ids, UnaryOperator<String> formatter) {
-            TextChannel main = DiscordSRV.getPlugin().getMainTextChannel();
-            if (ids.isEmpty() || main != null) {
-                if (StringUtils.isNotBlank(text))
-                    main.sendMessage(formatter.apply(text)).queue();
+        private void sendViaDiscordSRV(Player player, List<String> ids, UnaryOperator<String> formatter) {
+            List<TextChannel> channels = resolveChannels(ids);
+            if (channels.isEmpty()) return;
 
-                if (enabled) {
-                    MessageEmbed embed = createEmbed(formatter).build();
-                    main.sendMessageEmbeds(ArrayUtils.toList(embed)).queue();
-                }
+            String formattedText = StringUtils.isNotBlank(text) ? formatter.apply(text) : null;
+            MessageEmbed embed = enabled ? createEmbed(formatter).build() : null;
+
+            for (TextChannel channel : channels)
+                sendToChannel(channel, player, formattedText, embed);
+        }
+
+        private void sendToChannel(TextChannel channel, Player player, String formattedText, MessageEmbed embed) {
+            if (playerWebhook && player != null) {
+                sendViaWebhook(channel, player, formattedText, embed);
                 return;
             }
+
+            if (StringUtils.isNotBlank(formattedText))
+                channel.sendMessage(formattedText).queue();
+
+            if (embed != null)
+                channel.sendMessageEmbeds(Collections.singletonList(embed)).queue();
+        }
+
+        private void sendViaWebhook(TextChannel channel, Player player, String formattedText, MessageEmbed embed) {
+            boolean hasText = StringUtils.isNotBlank(formattedText);
+            if (!hasText && embed == null) return;
+
+            Collection<MessageEmbed> embeds = embed == null
+                    ? Collections.emptyList()
+                    : Collections.singletonList(embed);
+
+            WebhookUtil.deliverMessage(
+                    channel,
+                    player.getName(),
+                    DiscordSRV.getAvatarUrl(player),
+                    hasText ? formattedText : WEBHOOK_BLANK_CONTENT,
+                    embeds
+            );
+        }
+
+        private List<TextChannel> resolveChannels(List<String> ids) {
+            List<TextChannel> channels = new ArrayList<>();
+
+            TextChannel main = DiscordSRV.getPlugin().getMainTextChannel();
+            if (main != null) channels.add(main);
 
             for (String id : ids) {
                 String guildId = null, channelId = id;
@@ -222,19 +261,14 @@ final class Config {
                 TextChannel channel = null;
                 try {
                     Guild guild = getGuild(guildId);
-                    if (guild != null) channel = guild.getTextChannelById(channelId);
+                    if (guild != null)
+                        channel = guild.getTextChannelById(channelId);
                 } catch (Exception ignored) {}
 
-                if (channel == null) continue;
-
-                if (StringUtils.isNotBlank(text))
-                    channel.sendMessage(formatter.apply(text)).queue();
-
-                if (!enabled) continue;
-
-                MessageEmbed embed = createEmbed(formatter).build();
-                channel.sendMessageEmbeds(ArrayUtils.toList(embed)).queue();
+                if (channel != null) channels.add(channel);
             }
+
+            return channels;
         }
 
         private static final class Author {
