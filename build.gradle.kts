@@ -1,8 +1,8 @@
 plugins {
     kotlin("jvm") version "2.3.0"
     id("java-library")
-    id("io.freefair.lombok") version "8.10"
-    id("com.gradleup.shadow") version "8.3.0"
+    id("io.freefair.lombok") version "9.4.0"
+    id("com.gradleup.shadow") version "9.4.1"
 }
 
 allprojects {
@@ -20,6 +20,7 @@ allprojects {
         maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
         maven("https://jitpack.io")
         maven("https://repo.papermc.io/repository/maven-public/")
+        maven("https://croabeast.github.io/repo/")
     }
 }
 
@@ -60,11 +61,11 @@ subprojects {
         compileOnly("org.jetbrains:annotations:26.0.2")
         annotationProcessor("org.jetbrains:annotations:26.0.2")
 
-        compileOnly("org.projectlombok:lombok:1.18.38")
-        annotationProcessor("org.projectlombok:lombok:1.18.38")
+        compileOnly("org.projectlombok:lombok:1.18.44")
+        annotationProcessor("org.projectlombok:lombok:1.18.44")
 
+        compileOnly("me.croabeast.takion:shaded-all:1.5.0")
         compileOnly("me.clip:placeholderapi:2.11.6")
-        compileOnly(rootProject.files("libraries/shaded-all-1.4.jar"))
     }
 }
 
