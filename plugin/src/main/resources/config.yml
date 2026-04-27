@@ -7,7 +7,7 @@
 # When true, the plugin will check for updates to this config file
 update: true
 
-# 🔄 Updater Configuration
+# Updater Configuration
 updater:
 
   # Controls the startup update notification
@@ -22,7 +22,7 @@ updater:
   # When false, administrators won't receive update notifications
   send-op: true
 
-# ⚙️ Core Plugin Options
+# Core Plugin Options
 options:
   # Console Output Formatting
   # Controls whether ANSI color codes are used in console output
@@ -61,7 +61,7 @@ options:
     modules: true
     commands: true
 
-# 🎨 Message Formatting Values
+# Message Formatting Values
 values:
   # Prefix Key Configuration
   # Defines the trigger for the main plugin prefix
