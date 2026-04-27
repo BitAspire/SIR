@@ -14,6 +14,14 @@ lang:
   # Error shown when attempting to message yourself.
   not-yourself: '<P> &cYou cannot send a message to yourself.'
 
+  # Error shown when the target is not accepting private messages from you.
+  # {target} = receiver name, {type} = message channel label.
+  ignoring: '<P> &7This player is ignoring you for &e{type}&7.'
+
+  # Channel labels used in message-related errors.
+  channels:
+    msg: 'Private Messages'
+
   # Format and sound settings for the sender's view.
   for-sender:
     # {receiver} = recipient name, {message} = message text.

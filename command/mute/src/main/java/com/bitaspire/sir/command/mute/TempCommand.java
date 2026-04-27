@@ -77,6 +77,7 @@ final class TempCommand extends Command {
         MessageSender message = Utils.create(this, sender)
                 .addPlaceholder("{reason}", reason)
                 .addPlaceholder("{target}", target.getName())
+                .addPlaceholder("{player}", target.getName())
                 .addPlaceholder("{admin}", sender.getName());
 
         MuteData data = target.getMuteData();

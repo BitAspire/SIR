@@ -34,10 +34,10 @@ public class Reply extends Command {
         SIRUser initiator = main.getApi().getUserManager().getUser(init);
 
         if (initiator.getIgnoreData().isIgnoring(receiver, false))
-            return main.getApi().getLibrary().getLoadedSender()
-                    .setLogger(false)
+            return Utils.create(this, s).setLogger(false)
+                    .addPlaceholder("{target}", initiator.getName())
                     .addPlaceholder("{type}", getLang().get("lang.channels.msg", ""))
-                    .send(getLang().toStringList("lang.ignoring"));
+                    .send("ignoring");
 
         if (getLang().get("lang.vanish-messages.enabled", true) &&
                 initiator.isVanished())

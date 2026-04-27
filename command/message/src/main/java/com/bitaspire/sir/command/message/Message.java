@@ -40,10 +40,10 @@ final class Message extends Command {
             return Utils.create(this, s).setLogger(false).send("not-yourself");
 
         if (target.getIgnoreData().isIgnoring(user, false))
-            return main.getApi().getLibrary().getLoadedSender()
-                    .setLogger(false)
+            return Utils.create(this, s).setLogger(false)
+                    .addPlaceholder("{target}", target.getName())
                     .addPlaceholder("{type}", getLang().get("lang.channels.msg", ""))
-                    .send(getLang().toStringList("lang.ignoring"));
+                    .send("ignoring");
 
         boolean vanished = getLang().get("lang.vanish-messages.enabled", true);
         if (target.isVanished() && vanished)
