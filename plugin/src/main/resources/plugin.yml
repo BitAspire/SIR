@@ -50,3 +50,4 @@ permissions:
       sir.admin.help: true
       sir.admin.commands: true
       sir.admin.support: true
+      sir.admin.migrate: true

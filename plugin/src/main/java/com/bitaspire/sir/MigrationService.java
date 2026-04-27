@@ -6,12 +6,21 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+import java.util.stream.Stream;
 
 final class MigrationService {
 
@@ -49,11 +58,12 @@ final class MigrationService {
         if (isPluginActive("EssentialsDiscord")) {
             migrateEssentialsDiscord(result);
         }
+        migrateEssentialsLang(essentialsFolder, result);
         migrateEssentialsXCommandStates(essentialsFolder, result);
 
         File userdataFolder = new File(essentialsFolder, "userdata");
         if (!userdataFolder.isDirectory()) {
-            result.backupPath = backupPluginFolder(essentialsFolder, essentialsFolder.getName());
+            result.backupPath = backupPluginFolderSnapshot(essentialsFolder, essentialsFolder.getName());
             return result;
         }
 
@@ -63,11 +73,13 @@ final class MigrationService {
 
         File ignoreFile = new File(usersFolder, "ignore.yml");
         File muteFile = new File(usersFolder, "mute.yml");
+        File nickFile = new File(usersFolder, "nick.yml");
 
         YamlConfiguration ignoreConfig = YamlConfiguration.loadConfiguration(ignoreFile);
         YamlConfiguration muteConfig = YamlConfiguration.loadConfiguration(muteFile);
+        YamlConfiguration nickConfig = YamlConfiguration.loadConfiguration(nickFile);
 
-        boolean ignoreChanged = false, muteChanged = false;
+        boolean ignoreChanged = false, muteChanged = false, nickChanged = false;
 
         File[] files = userdataFolder.listFiles((dir, name) -> name.endsWith(".yml"));
         if (files == null) return result;
@@ -82,6 +94,13 @@ final class MigrationService {
 
             result.users++;
             String uuidKey = uuid.toString();
+
+            String nick = resolveEssentialsNick(config);
+            if (isSomething(nick)) {
+                nickConfig.set(uuidKey, translateEssentialsFormatting(translateEssentialsText(nick)));
+                nickChanged = true;
+                result.nickUsers++;
+            }
 
             List<String> ignored = new ArrayList<>(config.getStringList("ignored"));
             if (ignored.isEmpty()) ignored.addAll(config.getStringList("ignore"));
@@ -119,8 +138,9 @@ final class MigrationService {
 
         if (ignoreChanged) ignoreConfig.save(ignoreFile);
         if (muteChanged) muteConfig.save(muteFile);
+        if (nickChanged) nickConfig.save(nickFile);
 
-        result.backupPath = backupPluginFolder(essentialsFolder, essentialsFolder.getName());
+        result.backupPath = backupPluginFolderSnapshot(essentialsFolder, essentialsFolder.getName());
         return result;
     }
 
@@ -133,8 +153,11 @@ final class MigrationService {
             return result;
         }
 
-        result.ok = true;
         result.path = sirFolder.getPath();
+        if (!isLegacySirFolder(sirFolder))
+            return result;
+
+        result.ok = true;
 
         migrateSirUsers(sirFolder, result);
         migrateSirSharedFiles(sirFolder, result);
@@ -142,7 +165,9 @@ final class MigrationService {
         migrateSirModuleStates(sirFolder, result);
         migrateSirCommandStates(sirFolder, result);
 
-        result.backupPath = backupPluginFolder(sirFolder, sirFolder.getName());
+        result.backupPath = isSameFile(sirFolder, plugin.getDataFolder())
+                ? backupLegacySirArtifacts(sirFolder)
+                : backupPluginFolder(sirFolder, sirFolder.getName());
         return result;
     }
 
@@ -208,7 +233,7 @@ final class MigrationService {
                 new File(targetModulesFolder, "motd" + File.separator + "config.yml"),
                 result);
 
-        copyIfPresent(new File(modulesFolder, "chat" + File.separator + "channels.yml"),
+        migrateLegacySirChannels(new File(modulesFolder, "chat" + File.separator + "channels.yml"),
                 new File(targetModulesFolder, "channels" + File.separator + "channels.yml"),
                 result);
         copyIfPresent(new File(modulesFolder, "chat" + File.separator + "config.yml"),
@@ -230,13 +255,13 @@ final class MigrationService {
                 new File(targetModulesFolder, "mentions" + File.separator + "mentions.yml"),
                 result);
 
-        copyIfPresent(new File(modulesFolder, "hook" + File.separator + "discord.yml"),
+        migrateLegacySirDiscordConfig(new File(modulesFolder, "hook" + File.separator + "discord.yml"),
                 new File(targetModulesFolder, "discord" + File.separator + "config.yml"),
                 result);
-        copyIfPresent(new File(modulesFolder, "hook" + File.separator + "login.yml"),
-                new File(targetModulesFolder, "login" + File.separator + "config.yml"),
+        migrateLegacySirLoginConfig(new File(modulesFolder, "hook" + File.separator + "login.yml"),
+                new File(targetModulesFolder, "join-quit" + File.separator + "config.yml"),
                 result);
-        copyIfPresent(new File(modulesFolder, "hook" + File.separator + "vanish.yml"),
+        migrateLegacySirVanishConfig(new File(modulesFolder, "hook" + File.separator + "vanish.yml"),
                 new File(targetModulesFolder, "vanish" + File.separator + "config.yml"),
                 result);
     }
@@ -248,6 +273,261 @@ final class MigrationService {
         copyIfPresent(new File(sirFolder, "webhooks.yml"),
                 new File(plugin.getDataFolder(), "webhooks.yml"),
                 result);
+    }
+
+    private void migrateLegacySirChannels(File sourceFile, File targetFile, Result result) throws IOException {
+        if (!sourceFile.isFile()) return;
+
+        YamlConfiguration source = YamlConfiguration.loadConfiguration(sourceFile);
+        YamlConfiguration target = new YamlConfiguration();
+        target.set("version", 2);
+
+        migrateLegacySirChannelSection(
+                source.getConfigurationSection("default-channel"),
+                target.createSection("default-channel"),
+                true,
+                false
+        );
+
+        ConfigurationSection sourceChannels = source.getConfigurationSection("channels");
+        ConfigurationSection targetChannels = target.createSection("channels");
+
+        if (sourceChannels != null)
+            for (String key : sourceChannels.getKeys(false)) {
+                ConfigurationSection sourceChannel = sourceChannels.getConfigurationSection(key);
+                if (sourceChannel == null) continue;
+
+                ConfigurationSection targetChannel = targetChannels.createSection(key);
+                migrateLegacySirChannelSection(sourceChannel, targetChannel, false, false);
+
+                ConfigurationSection sourceLocal = sourceChannel.getConfigurationSection("local");
+                if (sourceLocal == null) continue;
+
+                String localKey = resolveLegacySirLocalKey(targetChannels, key, sourceLocal.getString("name"));
+                ConfigurationSection targetLocal = targetChannels.createSection(localKey);
+                targetLocal.set("inherits", key);
+
+                migrateLegacySirChannelSection(sourceLocal, targetLocal, false, true);
+            }
+
+        ensureParent(targetFile);
+        target.save(targetFile);
+        result.configs++;
+    }
+
+    private void migrateLegacySirChannelSection(
+            ConfigurationSection source,
+            ConfigurationSection target,
+            boolean defaults,
+            boolean forcedLocal
+    ) {
+        target.set("enabled", source == null || source.getBoolean("enabled", true));
+
+        if (defaults) {
+            target.set("access.default", true);
+            target.set("access.strip-prefix", true);
+            target.set("audience.radius", 0);
+            target.set("audience.same-world", false);
+            target.set("audience.include-sender", true);
+            target.set("logging.enabled", false);
+        }
+
+        if (source == null) return;
+
+        if (source.isSet("description"))
+            target.set("description", source.getString("description"));
+        if (source.isSet("permission"))
+            target.set("permission", source.getString("permission"));
+        if (source.isSet("group"))
+            target.set("group", source.getString("group"));
+        if (source.isSet("priority"))
+            target.set("priority", source.getInt("priority"));
+
+        boolean hasExplicitAccess = hasLegacySirExplicitAccess(source);
+        boolean defaultAccess = defaults || (!forcedLocal && !hasExplicitAccess && resolveLegacySirGlobal(source, false));
+
+        target.set("access.default", defaultAccess);
+        if (defaults || forcedLocal || hasExplicitAccess || source.isSet("access.strip-prefix"))
+            target.set("access.strip-prefix", source.getBoolean("access.strip-prefix", true));
+
+        List<String> prefixes = resolveLegacySirAccessPrefixes(source);
+        if (!prefixes.isEmpty())
+            target.set("access.prefixes", prefixes);
+
+        List<String> commands = resolveLegacySirAccessCommands(source);
+        if (!commands.isEmpty())
+            target.set("access.commands", commands);
+
+        if (defaults || source.isSet("radius"))
+            target.set("audience.radius", Math.max(0, source.getInt("radius", 0)));
+        if (defaults || source.isSet("same-world"))
+            target.set("audience.same-world", source.getBoolean("same-world", false));
+
+        List<String> worlds = source.getStringList("worlds");
+        if (!worlds.isEmpty())
+            target.set("audience.worlds", worlds);
+
+        String recipientPermission = firstNonBlank(
+                source.getString("recipient-permission"),
+                source.getString("permission")
+        );
+        if (hasText(recipientPermission))
+            target.set("audience.permission", recipientPermission);
+
+        String recipientGroup = firstNonBlank(
+                source.getString("recipient-group"),
+                source.getString("group")
+        );
+        if (hasText(recipientGroup))
+            target.set("audience.group", recipientGroup);
+
+        if (defaults || source.isSet("include-sender"))
+            target.set("audience.include-sender", source.getBoolean("include-sender", true));
+
+        if (source.isSet("tag"))
+            target.set("style.tag", source.getString("tag"));
+        if (source.isSet("prefix"))
+            target.set("style.prefix", source.getString("prefix"));
+        if (source.isSet("suffix"))
+            target.set("style.suffix", source.getString("suffix"));
+
+        if (hasText(source.getString("color")))
+            target.set("style.colors.default", source.getString("color"));
+
+        if (defaults || source.isSet("color-options.normal"))
+            target.set("style.colors.normal", source.getBoolean("color-options.normal", false));
+        if (defaults || source.isSet("color-options.special"))
+            target.set("style.colors.special", source.getBoolean("color-options.special", false));
+        if (defaults || source.isSet("color-options.rgb"))
+            target.set("style.colors.rgb", source.getBoolean("color-options.rgb", false));
+
+        List<String> hover = source.getStringList("hover");
+        if (!hover.isEmpty())
+            target.set("style.hover", hover);
+
+        if (source.isSet("format"))
+            target.set("style.format", source.getString("format"));
+        migrateLegacySirClick(source, target);
+
+        String loggingFormat = firstNonBlank(
+                source.getString("logging.format"),
+                source.getString("log-format")
+        );
+        boolean loggingEnabled = source.getBoolean("logging.enabled", hasText(loggingFormat));
+
+        if (defaults || source.isSet("logging.enabled") || hasText(loggingFormat))
+            target.set("logging.enabled", loggingEnabled);
+        if (hasText(loggingFormat))
+            target.set("logging.format", loggingFormat);
+
+        boolean desiredGlobal = resolveLegacySirGlobal(source, forcedLocal);
+        boolean derivedGlobal = !target.isSet("audience.radius") || target.getInt("audience.radius", 0) <= 0;
+
+        if (desiredGlobal != derivedGlobal)
+            target.set("global", desiredGlobal);
+    }
+
+    private void migrateLegacySirClick(ConfigurationSection source, ConfigurationSection target) {
+        Object click = source.get("click-action");
+        if (click == null) click = source.get("click");
+        if (click == null) return;
+
+        if (click instanceof String) {
+            String[] split = ((String) click).replace("\"", "").split(":", 2);
+            if (split.length == 0 || !hasText(split[0])) return;
+
+            target.set("style.click.action", split[0]);
+            if (split.length > 1 && hasText(split[1]))
+                target.set("style.click.value", split[1]);
+            return;
+        }
+
+        if (!(click instanceof ConfigurationSection)) return;
+
+        ConfigurationSection section = (ConfigurationSection) click;
+        String action = firstNonBlank(section.getString("action"), section.getString("type"));
+        String value = firstNonBlank(
+                section.getString("input"),
+                section.getString("value"),
+                section.getString("url")
+        );
+
+        if (hasText(action))
+            target.set("style.click.action", action);
+        if (hasText(value))
+            target.set("style.click.value", value);
+    }
+
+    private boolean hasLegacySirExplicitAccess(ConfigurationSection section) {
+        if (section == null) return false;
+
+        ConfigurationSection access = section.getConfigurationSection("access");
+        if (access == null) return false;
+
+        return hasText(access.getString("prefix"))
+                || !access.getStringList("prefixes").isEmpty()
+                || !access.getStringList("commands").isEmpty();
+    }
+
+    private List<String> resolveLegacySirAccessPrefixes(ConfigurationSection section) {
+        if (section == null) return Collections.emptyList();
+
+        ConfigurationSection access = section.getConfigurationSection("access");
+        if (access == null) return Collections.emptyList();
+
+        LinkedHashSet<String> prefixes = new LinkedHashSet<>();
+        String prefix = access.getString("prefix");
+        if (hasText(prefix)) prefixes.add(prefix);
+        prefixes.addAll(access.getStringList("prefixes"));
+
+        List<String> result = new ArrayList<>();
+        for (String value : prefixes)
+            if (hasText(value)) result.add(value);
+
+        return result;
+    }
+
+    private List<String> resolveLegacySirAccessCommands(ConfigurationSection section) {
+        if (section == null) return Collections.emptyList();
+
+        ConfigurationSection access = section.getConfigurationSection("access");
+        if (access == null) return Collections.emptyList();
+
+        List<String> commands = new ArrayList<>();
+        for (String value : access.getStringList("commands"))
+            if (hasText(value)) commands.add(value);
+
+        return commands;
+    }
+
+    private boolean resolveLegacySirGlobal(ConfigurationSection section, boolean forcedLocal) {
+        if (forcedLocal) return false;
+        if (section == null) return true;
+        if (section.isSet("global")) return section.getBoolean("global");
+        if (section.isSet("radius")) return section.getInt("radius", 0) <= 0;
+        return true;
+    }
+
+    private String resolveLegacySirLocalKey(ConfigurationSection targetChannels, String parentKey, String preferred) {
+        String base = hasText(preferred) ? preferred.trim() : parentKey + "-local";
+        String candidate = base;
+        int index = 2;
+
+        while (targetChannels.isSet(candidate)) {
+            candidate = base + "-" + index;
+            index++;
+        }
+
+        return candidate;
+    }
+
+    private String firstNonBlank(String... values) {
+        if (values == null) return null;
+
+        for (String value : values)
+            if (hasText(value)) return value;
+
+        return null;
     }
 
     private void migrateEssentialsXConfigs(File essentialsFolder, Result result) throws IOException {
@@ -268,7 +548,7 @@ final class MigrationService {
         ConfigurationSection chat = essentialsConfig.getConfigurationSection("chat");
         if (chat == null) return;
 
-        String format = chat.getString("format");
+        String format = resolveEssentialsChatFormat(chat);
         int radius = chat.getInt("radius", 0);
         if (format == null && radius == 0) return;
 
@@ -278,10 +558,13 @@ final class MigrationService {
                 ? YamlConfiguration.loadConfiguration(channelsFile)
                 : new YamlConfiguration();
 
-        if (format != null)
+        if (format != null) {
             target.set("default-channel.format", translateEssentialsChatFormat(format));
+            target.set("default-channel.style.format", translateEssentialsChatFormat(format));
+        }
 
         target.set("default-channel.radius", radius);
+        target.set("default-channel.audience.radius", radius);
 
         ensureParent(channelsFile);
         target.save(channelsFile);
@@ -394,8 +677,220 @@ final class MigrationService {
             result.configs++;
         }
 
-        String backup = backupPluginFolder(discordFolder, discordFolder.getName());
+        String backup = backupPluginFolderSnapshot(discordFolder, discordFolder.getName());
         if (backup != null) result.extraBackups.add(backup);
+    }
+
+    private void migrateEssentialsLang(File essentialsFolder, Result result) throws IOException {
+        File configFile = new File(essentialsFolder, "config.yml");
+        if (!configFile.isFile()) return;
+
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
+        String locale = resolveEssentialsLocale(config);
+
+        String normalizedLocale = locale.trim().replace('-', '_');
+        Properties messages = loadEssentialsMessages(essentialsFolder, normalizedLocale);
+        if (messages == null || messages.isEmpty()) return;
+
+        File targetFile = new File(plugin.getDataFolder(), "commands" + File.separator + "lang.yml");
+        YamlConfiguration target = targetFile.isFile()
+                ? YamlConfiguration.loadConfiguration(targetFile)
+                : new YamlConfiguration();
+
+        boolean changed = false;
+
+        String noPerm = resolveProperty(messages, "noPerm");
+        if (noPerm != null) {
+            String value = translateEssentialsLangMessage(noPerm, Collections.singletonMap("{0}", "{perm}"));
+            target.set("lang.no-permission", value);
+            changed = true;
+        }
+
+        String playerNotFound = resolveProperty(messages, "playerNotFound");
+        if (playerNotFound != null) {
+            String value = translateEssentialsLangMessage(playerNotFound, Collections.singletonMap("{0}", "{target}"));
+            target.set("lang.not-player", value);
+            changed = true;
+        }
+
+        if (changed) {
+            ensureParent(targetFile);
+            target.save(targetFile);
+            result.configs++;
+        }
+
+        migrateEssentialsMessageLang(messages, result);
+        migrateEssentialsIgnoreLang(messages, result);
+        migrateEssentialsMuteLang(messages, result);
+        migrateEssentialsNickLang(messages, result);
+        migrateEssentialsChannelsLang(messages, result);
+    }
+
+    private void migrateEssentialsMessageLang(Properties messages, Result result) throws IOException {
+        File targetFile = new File(plugin.getDataFolder(), "commands" + File.separator + "message" + File.separator + "lang.yml");
+        YamlConfiguration target = targetFile.isFile()
+                ? YamlConfiguration.loadConfiguration(targetFile)
+                : new YamlConfiguration();
+
+        boolean changed = false;
+
+        String consoleName = resolveProperty(messages, "consoleName");
+        if (consoleName != null) {
+            target.set("lang.console-formatting.name", translateEssentialsInlineValue(consoleName, null));
+            changed = true;
+        }
+
+        String msgFormat = resolveProperty(messages, "msgFormat");
+        if (msgFormat != null) {
+            Map<String, String> placeholders = placeholders(
+                    "{0}", "{sender}",
+                    "{1}", "{receiver}",
+                    "{2}", "{message}"
+            );
+            String value = translateEssentialsInlineValue(msgFormat, placeholders);
+
+            target.set("lang.for-sender.message", value);
+            target.set("lang.for-receiver.message", value);
+            target.set("lang.console-formatting.format", value);
+            changed = true;
+        }
+
+        if (!changed) return;
+
+        ensureParent(targetFile);
+        target.save(targetFile);
+        result.configs++;
+    }
+
+    private void migrateEssentialsIgnoreLang(Properties messages, Result result) throws IOException {
+        File targetFile = new File(plugin.getDataFolder(), "commands" + File.separator + "ignore" + File.separator + "lang.yml");
+        YamlConfiguration target = targetFile.isFile()
+                ? YamlConfiguration.loadConfiguration(targetFile)
+                : new YamlConfiguration();
+
+        boolean changed = false;
+
+        String ignoreYourself = resolveProperty(messages, "ignoreYourself");
+        if (ignoreYourself != null) {
+            target.set("lang.not-yourself", translateEssentialsLangMessage(ignoreYourself, null));
+            changed = true;
+        }
+
+        String ignorePlayer = resolveProperty(messages, "ignorePlayer");
+        if (ignorePlayer != null) {
+            target.set("lang.success.player", translateEssentialsLangMessage(ignorePlayer,
+                    Collections.singletonMap("{0}", "{target}")));
+            changed = true;
+        }
+
+        String unignorePlayer = resolveProperty(messages, "unignorePlayer");
+        if (unignorePlayer != null) {
+            target.set("lang.remove.player", translateEssentialsLangMessage(unignorePlayer,
+                    Collections.singletonMap("{0}", "{target}")));
+            changed = true;
+        }
+
+        if (!changed) return;
+
+        ensureParent(targetFile);
+        target.save(targetFile);
+        result.configs++;
+    }
+
+    private void migrateEssentialsMuteLang(Properties messages, Result result) throws IOException {
+        File targetFile = new File(plugin.getDataFolder(), "commands" + File.separator + "mute" + File.separator + "lang.yml");
+        YamlConfiguration target = targetFile.isFile()
+                ? YamlConfiguration.loadConfiguration(targetFile)
+                : new YamlConfiguration();
+
+        boolean changed = false;
+
+        String permMute = firstNonBlank(
+                resolveProperty(messages, "mutedPlayerReason"),
+                resolveProperty(messages, "mutedPlayer")
+        );
+        if (permMute != null) {
+            target.set("lang.action.perm", translateEssentialsLangMessage(permMute, placeholders(
+                    "{0}", "{target}",
+                    "{1}", "{reason}"
+            )));
+            changed = true;
+        }
+
+        String tempMute = firstNonBlank(
+                resolveProperty(messages, "mutedPlayerForReason"),
+                resolveProperty(messages, "mutedPlayerFor")
+        );
+        if (tempMute != null) {
+            target.set("lang.action.temp", translateEssentialsLangMessage(tempMute, placeholders(
+                    "{0}", "{target}",
+                    "{1}", "{time}",
+                    "{2}", "{reason}"
+            )));
+            changed = true;
+        }
+
+        String unmutedPlayer = resolveProperty(messages, "unmutedPlayer");
+        if (unmutedPlayer != null) {
+            target.set("lang.action.unmute", translateEssentialsLangMessage(unmutedPlayer,
+                    Collections.singletonMap("{0}", "{player}")));
+            changed = true;
+        }
+
+        if (!changed) return;
+
+        ensureParent(targetFile);
+        target.save(targetFile);
+        result.configs++;
+    }
+
+    private void migrateEssentialsNickLang(Properties messages, Result result) throws IOException {
+        File targetFile = new File(plugin.getDataFolder(), "commands" + File.separator + "nick" + File.separator + "lang.yml");
+        YamlConfiguration target = targetFile.isFile()
+                ? YamlConfiguration.loadConfiguration(targetFile)
+                : new YamlConfiguration();
+
+        boolean changed = false;
+
+        String nickSet = resolveProperty(messages, "nickSet");
+        if (nickSet != null) {
+            target.set("lang.success.self-set", translateEssentialsLangMessage(nickSet,
+                    Collections.singletonMap("{0}", "{nick}")));
+            changed = true;
+        }
+
+        String nickNoMore = resolveProperty(messages, "nickNoMore");
+        if (nickNoMore != null) {
+            target.set("lang.success.self-reset", translateEssentialsLangMessage(nickNoMore, null));
+            changed = true;
+        }
+
+        if (!changed) return;
+
+        ensureParent(targetFile);
+        target.save(targetFile);
+        result.configs++;
+    }
+
+    private void migrateEssentialsChannelsLang(Properties messages, Result result) throws IOException {
+        File targetFile = new File(plugin.getDataFolder(), "modules" + File.separator + "channels" + File.separator + "config.yml");
+        YamlConfiguration target = targetFile.isFile()
+                ? YamlConfiguration.loadConfiguration(targetFile)
+                : new YamlConfiguration();
+
+        String voiceSilenced = resolveProperty(messages, "voiceSilenced");
+        if (voiceSilenced == null) return;
+
+        target.set("user-muted", translateEssentialsLangMessage(voiceSilenced, null));
+
+        ensureParent(targetFile);
+        target.save(targetFile);
+        result.configs++;
+    }
+
+    private String resolveEssentialsLocale(YamlConfiguration config) {
+        String locale = resolveFirstString(config, "locale", "language", "lang");
+        return locale == null || locale.trim().isEmpty() ? "en" : locale;
     }
 
     private void migrateEssentialsJoinQuit(YamlConfiguration config, Result result) throws IOException {
@@ -494,26 +989,32 @@ final class MigrationService {
         switch (normalized) {
             case "msg":
             case "m":
+            case "w":
+            case "t":
+            case "pm":
             case "tell":
+            case "whisper":
             case "message":
                 return "message";
             case "r":
             case "reply":
                 return "reply";
             case "ignore":
+            case "unignore":
+            case "delignore":
+            case "remignore":
+            case "rmignore":
                 return "ignore";
             case "mute":
+            case "silence":
                 return "mute";
             case "tempmute":
                 return "tempmute";
             case "unmute":
                 return "unmute";
-            case "clearchat":
-            case "clear":
-                return "clear-chat";
-            case "color":
-            case "chatcolor":
-                return "chat-color";
+            case "nick":
+            case "nickname":
+                return "nick";
             default:
                 return null;
         }
@@ -636,6 +1137,8 @@ final class MigrationService {
             case "tempmute":
             case "unmute":
                 return "MuteProvider";
+            case "nick":
+                return "NickProvider";
             case "print":
                 return "PrintProvider";
             default:
@@ -903,12 +1406,14 @@ final class MigrationService {
         result.configs++;
     }
 
-    private void copyIfPresent(File sourceFile, File targetFile, Result result) throws IOException {
-        if (!sourceFile.isFile()) return;
+    private boolean copyIfPresent(File sourceFile, File targetFile, Result result) throws IOException {
+        if (!sourceFile.isFile()) return false;
+        if (isSameFile(sourceFile, targetFile)) return false;
 
         ensureParent(targetFile);
         Files.copy(sourceFile.toPath(), targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         result.configs++;
+        return true;
     }
 
     private void ensureParent(File file) throws IOException {
@@ -926,6 +1431,335 @@ final class MigrationService {
 
     private void copyInt(ConfigurationSection source, YamlConfiguration target, String targetPath, String key) {
         if (source.contains(key)) target.set(targetPath, source.getInt(key));
+    }
+
+    private boolean isLegacySirFolder(File sirFolder) {
+        return new File(sirFolder, "commands" + File.separator + "ignore" + File.separator + "data.yml").isFile()
+                || new File(sirFolder, "commands" + File.separator + "mute" + File.separator + "data.yml").isFile()
+                || new File(sirFolder, "commands" + File.separator + "chat_view" + File.separator + "data.yml").isFile()
+                || new File(sirFolder, "commands" + File.separator + "chat_color" + File.separator + "data.yml").isFile()
+                || new File(sirFolder, "commands" + File.separator + "commands.yml").isFile()
+                || new File(sirFolder, "modules" + File.separator + "modules.yml").isFile()
+                || new File(sirFolder, "modules" + File.separator + "chat").isDirectory()
+                || new File(sirFolder, "modules" + File.separator + "hook").isDirectory()
+                || new File(sirFolder, "modules" + File.separator + "join_quit").isDirectory();
+    }
+
+    private void migrateLegacySirDiscordConfig(File sourceFile, File targetFile, Result result) throws IOException {
+        if (!sourceFile.isFile()) return;
+
+        YamlConfiguration source = YamlConfiguration.loadConfiguration(sourceFile);
+        YamlConfiguration target = targetFile.isFile()
+                ? YamlConfiguration.loadConfiguration(targetFile)
+                : new YamlConfiguration();
+
+        boolean changed = false;
+
+        if (source.contains("default-server")) {
+            target.set("default-server", source.getString("default-server"));
+            changed = true;
+        }
+
+        ConfigurationSection ids = source.getConfigurationSection("ids");
+        if (ids != null) {
+            changed |= migrateLegacySirDiscordIds(ids, target, "first-join", "first-join");
+            changed |= migrateLegacySirDiscordIds(ids, target, "join", "join");
+            changed |= migrateLegacySirDiscordIds(ids, target, "quit", "quit");
+            changed |= migrateLegacySirDiscordIds(ids, target, "global-chat", "global-chat");
+            changed |= migrateLegacySirDiscordIds(ids, target, "advances", "advancements");
+        }
+
+        ConfigurationSection channels = source.getConfigurationSection("channels");
+        if (channels != null) {
+            changed |= migrateLegacySirDiscordMessage(channels.getConfigurationSection("first-join"), target, "first-join");
+            changed |= migrateLegacySirDiscordMessage(channels.getConfigurationSection("join"), target, "join");
+            changed |= migrateLegacySirDiscordMessage(channels.getConfigurationSection("quit"), target, "quit");
+            changed |= migrateLegacySirDiscordMessage(channels.getConfigurationSection("global-chat"), target, "global-chat");
+            changed |= migrateLegacySirDiscordMessage(channels.getConfigurationSection("advances"), target, "advancements");
+        }
+
+        if (!changed) return;
+
+        ensureParent(targetFile);
+        target.save(targetFile);
+        result.configs++;
+    }
+
+    private boolean migrateLegacySirDiscordIds(ConfigurationSection ids, YamlConfiguration target, String sourceKey, String targetKey) {
+        List<String> values = ids.getStringList(sourceKey);
+        if (values.isEmpty()) return false;
+
+        target.set("channel-ids." + targetKey, values);
+        return true;
+    }
+
+    private boolean migrateLegacySirDiscordMessage(ConfigurationSection source, YamlConfiguration target, String targetKey) {
+        if (source == null) return false;
+
+        String base = "messages." + targetKey;
+        boolean changed = false;
+
+        if (source.contains("text")) {
+            target.set(base + ".text", source.getString("text", ""));
+            changed = true;
+        }
+
+        target.set(base + ".player-webhook", source.getBoolean("player-webhook", false));
+        changed = true;
+
+        ConfigurationSection embed = source.getConfigurationSection("embed");
+        if (embed == null) return changed;
+
+        target.set(base + ".embed.enabled",
+                hasLegacySirDiscordEmbedContent(embed) || !hasText(source.getString("text")));
+        if (embed.contains("color"))
+            target.set(base + ".embed.color", embed.get("color"));
+
+        ConfigurationSection author = embed.getConfigurationSection("author");
+        if (author != null) {
+            target.set(base + ".embed.author.name", author.getString("name", ""));
+            target.set(base + ".embed.author.url", author.getString("url"));
+            target.set(base + ".embed.author.icon-url",
+                    author.getString("icon-url", author.getString("iconURL")));
+        }
+
+        if (embed.contains("thumbnail"))
+            target.set(base + ".embed.thumbnail", embed.get("thumbnail"));
+        if (embed.contains("description"))
+            target.set(base + ".embed.description", embed.get("description"));
+
+        Object title = embed.get("title");
+        if (title instanceof ConfigurationSection) {
+            ConfigurationSection titleSection = (ConfigurationSection) title;
+            target.set(base + ".embed.title.text", titleSection.getString("text"));
+            target.set(base + ".embed.title.url", titleSection.getString("url"));
+        } else if (title != null) {
+            target.set(base + ".embed.title.text", String.valueOf(title));
+        }
+
+        target.set(base + ".embed.timestamp",
+                embed.getBoolean("timestamp", embed.getBoolean("timeStamp", false)));
+        return true;
+    }
+
+    private boolean hasLegacySirDiscordEmbedContent(ConfigurationSection embed) {
+        if (embed == null) return false;
+        if (hasText(embed.getString("description")) || hasText(embed.getString("thumbnail")))
+            return true;
+
+        Object title = embed.get("title");
+        if (title instanceof ConfigurationSection) {
+            ConfigurationSection titleSection = (ConfigurationSection) title;
+            if (hasText(titleSection.getString("text")) || hasText(titleSection.getString("url")))
+                return true;
+        } else if (title instanceof String && hasText((String) title)) {
+            return true;
+        }
+
+        ConfigurationSection author = embed.getConfigurationSection("author");
+        return author != null && (hasText(author.getString("name"))
+                || hasText(author.getString("url"))
+                || hasText(author.getString("iconURL"))
+                || hasText(author.getString("icon-url")));
+    }
+
+    private void migrateLegacySirLoginConfig(File sourceFile, File targetFile, Result result) throws IOException {
+        if (!sourceFile.isFile()) return;
+
+        YamlConfiguration source = YamlConfiguration.loadConfiguration(sourceFile);
+        if (!source.contains("spawn-before")) return;
+
+        YamlConfiguration target = targetFile.isFile()
+                ? YamlConfiguration.loadConfiguration(targetFile)
+                : new YamlConfiguration();
+
+        target.set("spawn-before-login", source.getBoolean("spawn-before", true));
+
+        ensureParent(targetFile);
+        target.save(targetFile);
+        result.configs++;
+    }
+
+    private void migrateLegacySirVanishConfig(File sourceFile, File targetFile, Result result) throws IOException {
+        if (!sourceFile.isFile()) return;
+
+        YamlConfiguration source = YamlConfiguration.loadConfiguration(sourceFile);
+        ConfigurationSection chatKey = source.getConfigurationSection("chat-key");
+        if (chatKey == null) return;
+
+        YamlConfiguration target = targetFile.isFile()
+                ? YamlConfiguration.loadConfiguration(targetFile)
+                : new YamlConfiguration();
+
+        target.set("vanish-chat.enabled", chatKey.getBoolean("enabled", false));
+        target.set("vanish-chat.key", chatKey.getString("key", "?"));
+        target.set("vanish-chat.regex", chatKey.getBoolean("regex", false));
+        target.set("vanish-chat.prefix",
+                !"SUFFIX".equalsIgnoreCase(chatKey.getString("place", "PREFIX")));
+        target.set("vanish-chat.not-allowed-messages", chatKey.getStringList("not-allowed"));
+
+        ensureParent(targetFile);
+        target.save(targetFile);
+        result.configs++;
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.trim().isEmpty();
+    }
+
+    private String resolveEssentialsChatFormat(ConfigurationSection chat) {
+        String format = chat.getString("format");
+        if (format != null) return format;
+
+        ConfigurationSection formatSection = chat.getConfigurationSection("format");
+        return formatSection == null ? null : formatSection.getString("normal");
+    }
+
+    private String resolveEssentialsNick(YamlConfiguration config) {
+        return resolveFirstString(config, "nickname", "nick");
+    }
+
+    private Properties loadEssentialsMessages(File essentialsFolder, String locale) throws IOException {
+        for (String resourceName : resolveLangCandidates(locale)) {
+            Properties properties = new Properties();
+            try (InputStream in = resolveEssentialsLangStream(essentialsFolder, resourceName)) {
+                if (in == null) continue;
+
+                properties.load(new InputStreamReader(in, StandardCharsets.UTF_8));
+                return properties;
+            }
+        }
+
+        return null;
+    }
+
+    private List<String> resolveLangCandidates(String locale) {
+        List<String> names = new ArrayList<>();
+        names.add("messages_" + locale + ".properties");
+
+        if (!"en".equalsIgnoreCase(locale))
+            names.add("messages_en.properties");
+
+        names.add("messages.properties");
+        return names;
+    }
+
+    private InputStream resolveEssentialsLangStream(File essentialsFolder, String resourceName) throws IOException {
+        Plugin pluginRef = plugin.getServer().getPluginManager().getPlugin("Essentials");
+        if (pluginRef == null)
+            pluginRef = plugin.getServer().getPluginManager().getPlugin("EssentialsX");
+
+        if (pluginRef != null) {
+            InputStream resource = pluginRef.getResource(resourceName);
+            if (resource != null) return resource;
+        }
+
+        File jarFile = findEssentialsJar(essentialsFolder);
+        if (jarFile == null) return null;
+
+        return readJarEntry(jarFile, resourceName);
+    }
+
+    private File findEssentialsJar(File essentialsFolder) {
+        File pluginsFolder = essentialsFolder.getParentFile();
+        if (pluginsFolder == null || !pluginsFolder.isDirectory()) return null;
+
+        File[] files = pluginsFolder.listFiles((dir, name) -> name.endsWith(".jar")
+                && (name.startsWith("Essentials") || name.startsWith("EssentialsX")));
+        if (files == null || files.length == 0) return null;
+
+        File fallback = null;
+        for (File file : files) {
+            if (fallback == null) fallback = file;
+            if (isPrimaryEssentialsJar(file)) return file;
+        }
+
+        return fallback;
+    }
+
+    private boolean isPrimaryEssentialsJar(File jarFile) {
+        try (JarFile jar = new JarFile(jarFile)) {
+            JarEntry entry = jar.getJarEntry("plugin.yml");
+            if (entry == null) return false;
+
+            try (InputStream in = jar.getInputStream(entry);
+                 InputStreamReader reader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
+                YamlConfiguration pluginConfig = YamlConfiguration.loadConfiguration(reader);
+                String name = pluginConfig.getString("name");
+                return "Essentials".equalsIgnoreCase(name) || "EssentialsX".equalsIgnoreCase(name);
+            }
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
+    private InputStream readJarEntry(File jarFile, String resourceName) throws IOException {
+        try (JarFile jar = new JarFile(jarFile)) {
+            JarEntry entry = jar.getJarEntry(resourceName);
+            if (entry == null) return null;
+
+            try (InputStream entryStream = jar.getInputStream(entry);
+                 ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
+                byte[] data = new byte[1024];
+                int read;
+                while ((read = entryStream.read(data)) != -1)
+                    buffer.write(data, 0, read);
+
+                return new ByteArrayInputStream(buffer.toByteArray());
+            }
+        }
+    }
+
+    private String resolveProperty(Properties properties, String... keys) {
+        for (String key : keys) {
+            String value = properties.getProperty(key);
+            if (value != null && !value.trim().isEmpty()) return value;
+        }
+        return null;
+    }
+
+    private Map<String, String> placeholders(String... values) {
+        if (values.length % 2 != 0)
+            throw new IllegalArgumentException("Placeholders must be declared in key/value pairs.");
+
+        Map<String, String> placeholders = new LinkedHashMap<>();
+        for (int i = 0; i < values.length; i += 2)
+            placeholders.put(values[i], values[i + 1]);
+
+        return placeholders;
+    }
+
+    private String backupLegacySirArtifacts(File sirFolder) throws IOException {
+        File backupsFolder = new File(plugin.getDataFolder(), "back-ups");
+        if (!backupsFolder.exists() && !backupsFolder.mkdirs())
+            throw new IOException("Could not create backups folder.");
+
+        String timestamp = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
+        File target = new File(backupsFolder, "SIR-legacy-" + timestamp);
+
+        boolean moved = false;
+        moved |= moveLegacySirArtifact(sirFolder, target, "commands" + File.separator + "ignore");
+        moved |= moveLegacySirArtifact(sirFolder, target, "commands" + File.separator + "mute");
+        moved |= moveLegacySirArtifact(sirFolder, target, "commands" + File.separator + "chat_view");
+        moved |= moveLegacySirArtifact(sirFolder, target, "commands" + File.separator + "chat_color");
+        moved |= moveLegacySirArtifact(sirFolder, target, "commands" + File.separator + "commands.yml");
+        moved |= moveLegacySirArtifact(sirFolder, target, "modules" + File.separator + "announcements" + File.separator + "announces.yml");
+        moved |= moveLegacySirArtifact(sirFolder, target, "modules" + File.separator + "join_quit");
+        moved |= moveLegacySirArtifact(sirFolder, target, "modules" + File.separator + "chat");
+        moved |= moveLegacySirArtifact(sirFolder, target, "modules" + File.separator + "hook");
+        moved |= moveLegacySirArtifact(sirFolder, target, "modules" + File.separator + "modules.yml");
+
+        return moved ? target.getPath() : null;
+    }
+
+    private boolean moveLegacySirArtifact(File root, File backupRoot, String relativePath) throws IOException {
+        File source = new File(root, relativePath);
+        if (!source.exists()) return false;
+
+        File target = new File(backupRoot, relativePath);
+        ensureParent(target);
+        Files.move(source.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        return true;
     }
 
     private boolean updateDiscordChannel(YamlConfiguration target, String key, String channelId) {
@@ -990,6 +1824,63 @@ final class MigrationService {
                 .replaceAll("(?i)\\{unique}", "{unique}");
     }
 
+    private String translateEssentialsLangMessage(String value, Map<String, String> placeholders) {
+        if (value == null) return null;
+
+        String resolved = translateEssentialsText(value);
+        if (placeholders != null)
+            for (Map.Entry<String, String> entry : placeholders.entrySet())
+                resolved = resolved.replace(entry.getKey(), entry.getValue());
+
+        resolved = translateEssentialsFormatting(resolved);
+        return resolved.contains("<P>") ? resolved : "<P> " + resolved;
+    }
+
+    private String translateEssentialsInlineValue(String value, Map<String, String> placeholders) {
+        if (value == null) return null;
+
+        String resolved = translateEssentialsText(value);
+        if (placeholders != null)
+            for (Map.Entry<String, String> entry : placeholders.entrySet())
+                resolved = resolved.replace(entry.getKey(), entry.getValue());
+
+        return translateEssentialsFormatting(resolved);
+    }
+
+    private String translateEssentialsFormatting(String value) {
+        if (value == null) return null;
+
+        String formatted = value
+                .replace("<dark_red>", "&4")
+                .replace("<red>", "&c")
+                .replace("<gold>", "&6")
+                .replace("<yellow>", "&e")
+                .replace("<dark_green>", "&2")
+                .replace("<green>", "&a")
+                .replace("<aqua>", "&b")
+                .replace("<dark_aqua>", "&3")
+                .replace("<dark_blue>", "&1")
+                .replace("<blue>", "&9")
+                .replace("<light_purple>", "&d")
+                .replace("<dark_purple>", "&5")
+                .replace("<white>", "&f")
+                .replace("<gray>", "&7")
+                .replace("<dark_gray>", "&8")
+                .replace("<black>", "&0")
+                .replace("<reset>", "&r")
+                .replace("<bold>", "&l")
+                .replace("<italic>", "&o")
+                .replace("<underlined>", "&n")
+                .replace("<strikethrough>", "&m")
+                .replace("<obfuscated>", "&k")
+                .replace("<primary>", "&e")
+                .replace("<secondary>", "&6")
+                .replace("<tertiary>", "&7");
+
+        formatted = formatted.replaceAll("<#[0-9A-Fa-f]{6}>", "");
+        return formatted.replaceAll("<[^>]+>", "");
+    }
+
     private String translateEssentialsChatFormat(String value) {
         return value == null ? null : value
                 .replaceAll("(?i)\\{message}", "{message}")
@@ -1030,18 +1921,53 @@ final class MigrationService {
         return child == null ? expected.getPath() : new File(expected, child).getPath();
     }
 
+    private boolean isSameFile(File first, File second) throws IOException {
+        return first != null && second != null
+                && first.getCanonicalFile().equals(second.getCanonicalFile());
+    }
+
+    private String backupPluginFolderSnapshot(File source, String name) throws IOException {
+        if (source == null || !source.exists()) return null;
+
+        File target = createBackupTarget(name);
+        copyFolder(source.toPath(), target.toPath());
+        return target.getPath();
+    }
+
     private String backupPluginFolder(File source, String name) throws IOException {
         if (source == null || !source.exists()) return null;
 
+        File target = createBackupTarget(name);
+        Files.move(source.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        return target.getPath();
+    }
+
+    private File createBackupTarget(String name) throws IOException {
         File backupsFolder = new File(plugin.getDataFolder(), "back-ups");
         if (!backupsFolder.exists() && !backupsFolder.mkdirs())
             throw new IOException("Could not create backups folder.");
 
         String timestamp = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
-        File target = new File(backupsFolder, name + "-" + timestamp);
+        return new File(backupsFolder, name + "-" + timestamp);
+    }
 
-        Files.move(source.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        return target.getPath();
+    private void copyFolder(Path source, Path target) throws IOException {
+        try (Stream<Path> paths = Files.walk(source)) {
+            Iterator<Path> iterator = paths.iterator();
+            while (iterator.hasNext()) {
+                Path current = iterator.next();
+                Path destination = target.resolve(source.relativize(current));
+
+                if (Files.isDirectory(current)) {
+                    Files.createDirectories(destination);
+                    continue;
+                }
+
+                Path parent = destination.getParent();
+                if (parent != null) Files.createDirectories(parent);
+                Files.copy(current, destination, StandardCopyOption.REPLACE_EXISTING);
+            }
+        }
     }
 
     @SuppressWarnings("deprecation")
@@ -1128,6 +2054,8 @@ final class MigrationService {
         private int ignoreUsers = 0;
         private int ignoredEntries = 0;
         private int mutedUsers = 0;
+        private int nickUsers = 0;
+        private final int skipped = 0;
         private int expiredMutes = 0;
         private int invalidUsers = 0;
         private int configs = 0;

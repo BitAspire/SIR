@@ -2,13 +2,13 @@ package com.bitaspire.sir;
 
 import lombok.SneakyThrows;
 import me.croabeast.command.TabBuilder;
-import me.croabeast.common.util.ServerInfoUtils;
 import me.croabeast.file.ConfigurableFile;
 import com.bitaspire.sir.command.CommandManager;
 import com.bitaspire.sir.command.ProviderInformation;
 import com.bitaspire.sir.module.ModuleManager;
 import com.bitaspire.sir.module.SIRModule;
 import me.croabeast.takion.message.MessageSender;
+import me.croabeast.vnc.VNC;
 import org.apache.commons.lang.SystemUtils;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -164,15 +164,17 @@ final class MainCommand implements TabExecutor {
         if (args.length < 2) return displayer.send("migrate.help");
 
         String source = args[1];
-        if (!source.equalsIgnoreCase("Essentials"))
+        if (!source.equalsIgnoreCase("Essentials") && !source.equalsIgnoreCase("SIR"))
             return displayer.addPlaceholder("{source}", source).send("migrate.unknown");
 
         MigrationService service = new MigrationService(main);
         try {
-            String displaySource = "Essentials";
+            String displaySource = source.equalsIgnoreCase("SIR") ? "SIR" : "Essentials";
             displayer.addPlaceholder("{source}", displaySource).send("migrate.start");
 
-            MigrationService.Result result = service.migrateEssentialsX();
+            MigrationService.Result result = source.equalsIgnoreCase("SIR")
+                    ? service.migrateSir()
+                    : service.migrateEssentialsX();
             if (!result.isOk())
                 return displayer
                         .addPlaceholder("{path}", result.getPath())
@@ -189,6 +191,8 @@ final class MainCommand implements TabExecutor {
                     .addPlaceholder("{ignoreUsers}", result.getIgnoreUsers())
                     .addPlaceholder("{ignored}", result.getIgnoredEntries())
                     .addPlaceholder("{mutedUsers}", result.getMutedUsers())
+                    .addPlaceholder("{nickUsers}", result.getNickUsers())
+                    .addPlaceholder("{skipped}", result.getSkipped())
                     .addPlaceholder("{expired}", result.getExpiredMutes())
                     .addPlaceholder("{invalid}", result.getInvalidUsers())
                     .addPlaceholder("{configs}", result.getConfigs())
@@ -230,14 +234,14 @@ final class MainCommand implements TabExecutor {
                 return mainSender.setTargets(player).setLogger(false).send(
                         "",
                         " &eSIR &7- &f" + main.getDescription().getVersion() + "&7:",
-                        "   &8• &7Server Software: &f" + ServerInfoUtils.SERVER_FORK,
+                        "   &8• &7Server Software: &f" + VNC.SERVER_FORK,
                         "   &8• &7Developer: &fCroaBeast",
                         "   &8• &7Java Version: &f" + SystemUtils.JAVA_VERSION,
                         ""
                 );
 
             case "modules":
-                if (args.length == 1 && ServerInfoUtils.SERVER_VERSION >= 14) {
+                if (args.length == 1 && VNC.isAtLeast("1.14")) {
                     if (player == null)
                         return mainSender.send("&cThis command is only for players.");
 
@@ -248,7 +252,7 @@ final class MainCommand implements TabExecutor {
                 return handleLegacyModules(sender, args);
 
             case "commands":
-                if (args.length == 1 && ServerInfoUtils.SERVER_VERSION >= 14) {
+                if (args.length == 1 && VNC.isAtLeast("1.14")) {
                     if (player == null)
                         return mainSender.send("&cThis command is only for players.");
 
