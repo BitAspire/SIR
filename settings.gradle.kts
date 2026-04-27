@@ -7,5 +7,5 @@ include(
 )
 include(
     "command:clear-chat", "command:color", "command:ignore", "command:message",
-    "command:mute", "command:print", "command:settings"
+    "command:mute", "command:nick", "command:print", "command:settings"
 )

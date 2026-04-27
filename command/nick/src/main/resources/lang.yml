@@ -1,0 +1,23 @@
+lang:
+  help:
+    - '&7'
+    - ' &6>> &eNick - Help'
+    - '  &7- &b/nick <nick>&7: Sets your nick.'
+    - '  &7- &b/nick --reset&7: Resets your current nick.'
+    - '  &7- &b/nick <player> <nick>&7: Sets another player nick.'
+    - '  &7- &b/nick <player> --reset&7: Resets another player nick.'
+    - '&7'
+
+  not-player: '<P> &cPlayer not found: &f{target}&c.'
+  player-only: '<P> &cOnly players can change their own nick.'
+  invalid-nick: '<P> &cYou must provide a nick.'
+
+  success:
+    self-set: '<P> &7Your nick is now &f{nick}&7.'
+    self-reset: '<P> &7Your nick has been reset.'
+    other-set: '<P> &7Changed &e{target}&7 nick to &f{nick}&7.'
+    other-reset: '<P> &7Reset &e{target}&7 nick.'
+
+  notify:
+    set: '<P> &e{admin}&7 changed your nick to &f{nick}&7.'
+    reset: '<P> &e{admin}&7 reset your nick.'

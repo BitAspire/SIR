@@ -7,6 +7,7 @@ import lombok.Setter;
 import me.croabeast.common.Registrable;
 import me.croabeast.common.util.Exceptions;
 import me.croabeast.file.ConfigurableFile;
+import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.scheduler.GlobalTask;
 import com.bitaspire.sir.user.*;
 import me.leoko.advancedban.manager.PunishmentManager;
@@ -45,6 +46,7 @@ final class UserManagerImpl implements UserManager, Registrable {
     private final ConfigurableFile muteFile;
     private final ConfigurableFile channelFile;
     private final ConfigurableFile colorFile;
+    private final ConfigurableFile nickFile;
 
     public UserManagerImpl(SIRPlugin plugin) {
         this.plugin = plugin;
@@ -53,6 +55,7 @@ final class UserManagerImpl implements UserManager, Registrable {
         muteFile = createFile("mute");
         channelFile = createFile("chat-view");
         colorFile = createFile("chat-color");
+        nickFile = createFile("nick");
 
         listener = new Listener() {
             @EventHandler(priority = EventPriority.LOW)
@@ -176,6 +179,7 @@ final class UserManagerImpl implements UserManager, Registrable {
         saveFile(muteFile);
         saveFile(channelFile);
         saveFile(colorFile);
+        saveFile(nickFile);
     }
 
     private void saveFile(ConfigurableFile file) {
@@ -665,6 +669,75 @@ final class UserManagerImpl implements UserManager, Registrable {
         }
     }
 
+    final class NickImpl extends BaseData implements NickData {
+
+        private final BaseUser user;
+        private String nick;
+
+        NickImpl(BaseUser user) {
+            super(nickFile, user.getUuid().toString());
+            this.user = user;
+        }
+
+        @Nullable
+        public String getNick() {
+            return nick;
+        }
+
+        @Override
+        public void setNick(@Nullable String nick) {
+            this.nick = normalizeNick(nick);
+            apply();
+            save(true);
+        }
+
+        @Override
+        public void resetNick() {
+            nick = null;
+            apply();
+            save(true);
+        }
+
+        @NotNull
+        String getEffectiveName() {
+            return hasNick() ? nick : user.getDefaultName();
+        }
+
+        void load() {
+            nick = file == null ? null : normalizeNick(file.get(uuid, (String) null));
+            apply();
+        }
+
+        void save(boolean save) {
+            if (file == null) return;
+
+            file.set(uuid, nick);
+            if (save) file.save();
+        }
+
+        @Nullable
+        private String normalizeNick(@Nullable String value) {
+            if (StringUtils.isBlank(value)) return null;
+            return PrismaticAPI.colorize(value.trim());
+        }
+
+        private void apply() {
+            Player player = user.getPlayer();
+            if (player == null) return;
+
+            String effective = getEffectiveName();
+            player.setDisplayName(effective);
+
+            try {
+                player.setPlayerListName(effective);
+            } catch (Exception ignored) {}
+
+            try {
+                player.setCustomName(effective);
+            } catch (Exception ignored) {}
+        }
+    }
+
     @Getter
     abstract class BaseUser implements SIRUser {
 
@@ -672,6 +745,7 @@ final class UserManagerImpl implements UserManager, Registrable {
         private final MuteImpl muteData;
         private final ChannelImpl channelData;
         private final ColorImpl colorData;
+        private final NickImpl nickData;
         private final ImmuneImpl immuneData;
 
         @Getter
@@ -687,11 +761,17 @@ final class UserManagerImpl implements UserManager, Registrable {
             muteData = new MuteImpl(this);
             channelData = new ChannelImpl(uuid);
             colorData = new ColorImpl(uuid);
+            nickData = new NickImpl(this);
             immuneData = new ImmuneImpl(this);
         }
 
         @NotNull
-        public abstract String getName();
+        public final String getName() {
+            return nickData.getEffectiveName();
+        }
+
+        @NotNull
+        abstract String getDefaultName();
 
         @Nullable
         public String getPrefix() {
@@ -764,6 +844,7 @@ final class UserManagerImpl implements UserManager, Registrable {
             muteData.load();
             channelData.load();
             colorData.load();
+            nickData.load();
         }
 
         void save(boolean save) {
@@ -771,6 +852,7 @@ final class UserManagerImpl implements UserManager, Registrable {
             muteData.save(save);
             channelData.save(save);
             colorData.save(save);
+            nickData.save(save);
         }
     }
 
@@ -781,13 +863,13 @@ final class UserManagerImpl implements UserManager, Registrable {
         private final OfflinePlayer offline;
         @NotNull
         private final Player player;
-        private final String name;
+        private final String accountName;
 
         OnlineUser(Player player) {
             super(player.getUniqueId());
             this.offline = Bukkit.getOfflinePlayer(uuid);
             this.player = player;
-            this.name = this.player.getName();
+            this.accountName = this.player.getName();
         }
 
         @Override
@@ -806,8 +888,8 @@ final class UserManagerImpl implements UserManager, Registrable {
         }
 
         @NotNull
-        public String getName() {
-            return name;
+        String getDefaultName() {
+            return accountName;
         }
 
         @Override
@@ -844,7 +926,7 @@ final class UserManagerImpl implements UserManager, Registrable {
         }
 
         @NotNull
-        public String getName() {
+        String getDefaultName() {
             if (offline != null && offline.getName() != null)
                 return offline.getName();
 

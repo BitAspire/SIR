@@ -39,6 +39,18 @@ public interface SIRUser {
     String getName();
 
     /**
+     * Gets the nickname data associated with this user.
+     *
+     * <p> This data stores the effective nickname shown by SIR and can be used
+     * to set or reset a custom nick for both online and offline users.
+     *
+     * @return the nickname data for this user
+     * @see NickData
+     */
+    @NotNull
+    NickData getNickData();
+
+    /**
      * Gets the unique identifier (UUID) of this user.
      * @return the UUID of the user
      */

@@ -1,0 +1,16 @@
+main: com.bitaspire.sir.command.nick.NickProvider
+title: "&7Nick"
+description:
+  - "&7Lets players change their nick."
+
+commands:
+  nick:
+    permission: sir.nick
+    override-existing: true
+    aliases: [ nickname ]
+    sub-commands:
+      other: sir.nick.other
+      help: ''
+
+    description: 'Changes your nick or another player nick.'
+    usage: '/nick <nick|player> [nick|--reset]'
