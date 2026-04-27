@@ -16,6 +16,7 @@ public abstract class StandaloneProvider implements CommandProvider {
     private ProviderInformation information;
 
     private MenuToggleable.Button button;
+    private boolean enabledState;
 
     private File dataFolder;
     private ClassLoader classLoader;
@@ -24,31 +25,39 @@ public abstract class StandaloneProvider implements CommandProvider {
         this.api = api;
         this.information = information;
         this.classLoader = loader;
+        this.enabledState = api.getCommandManager().isProviderEnabled(information.getName());
 
-        button = new MenuToggleable.Button(information, this, api.getCommandManager().isProviderEnabled(information.getName()));
-        button.setDefaultItems();
-        button.allowToggle(false);
+        if (MenuToggleable.supportsButtons()) {
+            button = new MenuToggleable.Button(information, this, enabledState);
+            button.setDefaultItems();
+            button.allowToggle(false);
 
-        button.setOnClick(b -> event -> {
-            if (event.isRightClick()) {
-                api.getCommandManager().openOverrideMenu(event);
-                return;
-            }
+            button.setOnClick(b -> event -> {
+                if (event.isRightClick()) {
+                    api.getCommandManager().openOverrideMenu(event);
+                    return;
+                }
 
-            if (!event.isLeftClick()) return;
+                if (!event.isLeftClick()) return;
 
-            b.toggle();
-            api.getLibrary().getLogger().log("Provider '" + getName() + "' loaded: " + b.isEnabled());
-            b.toggleRegistering();
-            api.getCommandManager().setProviderEnabled(information.getName(), b.isEnabled());
-        });
+                b.toggle();
+                enabledState = b.isEnabled();
+                api.getLibrary().getLogger().log("Provider '" + getName() + "' loaded: " + b.isEnabled());
+                b.toggleRegistering();
+                api.getCommandManager().setProviderEnabled(information.getName(), b.isEnabled());
+            });
+        }
 
         dataFolder = new File(api.getPlugin().getDataFolder(), "commands" + File.separator + getName());
     }
 
     @Override
     public final boolean isEnabled() {
-        return button.isEnabled();
+        return button != null ? button.isEnabled() : enabledState;
+    }
+
+    void setEnabledState(boolean enabled) {
+        this.enabledState = enabled;
     }
 
     @NotNull

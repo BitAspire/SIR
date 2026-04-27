@@ -211,7 +211,7 @@ public final class SettingsProvider extends StandaloneProvider implements Settin
             ChatToggleable toggleable = list.get(index);
             Slot slot = Slot.fromXY(x, y);
 
-            menu.addPane(0,
+            menu.addPane(0, slot,
                     ButtonBuilder.of(getApi().getPlugin(), slot, isToggled(viewer, toggleable))
                             .setItem(buildToggleItem(toggleable, true), true)
                             .setItem(buildToggleItem(toggleable, false), false)

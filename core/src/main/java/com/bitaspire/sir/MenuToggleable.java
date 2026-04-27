@@ -7,9 +7,11 @@ import me.croabeast.common.Registrable;
 import me.croabeast.common.gui.ItemCreator;
 import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.takion.character.SmallCaps;
+import me.croabeast.vnc.VNC;
 import org.bukkit.Material;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -20,8 +22,21 @@ public interface MenuToggleable {
     @NotNull
     Information getInformation();
 
-    @NotNull
+    @Nullable
     Button getButton();
+
+    static boolean supportsButtons() {
+        return !VNC.isBefore("1.14") && hasClass("org.bukkit.persistence.PersistentDataType");
+    }
+
+    static boolean hasClass(String name) {
+        try {
+            Class.forName(name);
+            return true;
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
 
     class Button extends ToggleButton {
 
@@ -29,7 +44,7 @@ public interface MenuToggleable {
         private final Registrable registrable;
 
         public Button(Information information, Registrable registrable, boolean enabled) {
-            super(information.getSlot(), 1, 1, Priority.HIGHEST, enabled, SIRApi.instance().getPlugin());
+            super(1, 1, Priority.HIGHEST, enabled, SIRApi.instance().getPlugin());
             this.information = information;
             this.registrable = registrable;
         }
@@ -39,8 +54,9 @@ public interface MenuToggleable {
         }
 
         @NotNull
+        @SuppressWarnings("unchecked")
         public Consumer<InventoryClickEvent> getAction() {
-            return Objects.requireNonNull(onClick);
+            return (Consumer<InventoryClickEvent>) Objects.requireNonNull(onClick);
         }
 
         public void setOnClick(Function<Button, Consumer<InventoryClickEvent>> function) {

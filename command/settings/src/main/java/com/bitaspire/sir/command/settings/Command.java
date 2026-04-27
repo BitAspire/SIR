@@ -1,11 +1,11 @@
 package com.bitaspire.sir.command.settings;
 
 import me.croabeast.command.TabBuilder;
-import me.croabeast.common.util.ServerInfoUtils;
 import com.bitaspire.sir.ChatToggleable;
 import com.bitaspire.sir.ExtensionFile;
 import com.bitaspire.sir.command.SIRCommand;
 import com.bitaspire.sir.user.SIRUser;
+import me.croabeast.vnc.VNC;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -41,7 +41,7 @@ final class Command extends SIRCommand {
             return Utils.create(this, sender).setLogger(false).send("player-only");
 
         if (args.length == 0) {
-            if (ServerInfoUtils.SERVER_VERSION >= 14) {
+            if (VNC.isAtLeast("1.14")) {
                 main.openMainMenu(player);
                 return true;
             }

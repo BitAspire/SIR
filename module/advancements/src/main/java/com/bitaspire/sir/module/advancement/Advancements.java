@@ -1,8 +1,8 @@
 package com.bitaspire.sir.module.advancement;
 
-import me.croabeast.common.util.ServerInfoUtils;
 import com.bitaspire.sir.ChatToggleable;
 import com.bitaspire.sir.module.SIRModule;
+import me.croabeast.vnc.VNC;
 
 public final class Advancements extends SIRModule implements ChatToggleable {
 
@@ -13,7 +13,7 @@ public final class Advancements extends SIRModule implements ChatToggleable {
 
     @Override
     public boolean register() {
-        if (ServerInfoUtils.SERVER_VERSION < 12)
+        if (VNC.isBefore("1.12"))
             return false;
 
         config = new Config(this);
@@ -27,8 +27,18 @@ public final class Advancements extends SIRModule implements ChatToggleable {
 
     @Override
     public boolean unregister() {
-        listener.unregister();
-        data.unload();
+        if (listener != null) {
+            listener.unregister();
+            listener = null;
+        }
+
+        if (data != null) {
+            data.unload();
+            data = null;
+        }
+
+        config = null;
+        messages = null;
         return true;
     }
 }

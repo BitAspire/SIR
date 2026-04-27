@@ -1,7 +1,6 @@
 package com.bitaspire.sir;
 
 import lombok.experimental.UtilityClass;
-import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.jetbrains.annotations.Nullable;
 
@@ -40,6 +39,7 @@ public class SoundUtils {
     private Sound parseRegistry(String rawSound) {
         try {
             Class<?> registryClass = Class.forName("org.bukkit.Registry");
+            Class<?> keyClass = Class.forName("org.bukkit.NamespacedKey");
             Object registry;
 
             try {
@@ -50,23 +50,27 @@ public class SoundUtils {
 
             if (registry == null) return null;
 
-            NamespacedKey key = toKey(rawSound);
+            Object key = toKey(rawSound, keyClass);
             if (key == null) return null;
 
-            Method getMethod = registry.getClass().getMethod("get", NamespacedKey.class);
+            Method getMethod = registry.getClass().getMethod("get", keyClass);
             return (Sound) getMethod.invoke(registry, key);
-        } catch (Exception ignored) {
+        } catch (Throwable ignored) {
             return null;
         }
     }
 
     @Nullable
-    private NamespacedKey toKey(String rawSound) {
+    private Object toKey(String rawSound, Class<?> keyClass) {
         String trimmed = rawSound.trim().toLowerCase(Locale.ROOT);
-        if (trimmed.contains(":"))
-            return NamespacedKey.fromString(trimmed);
+        String value = trimmed.contains(":") ?
+                trimmed :
+                "minecraft:" + trimmed.replace('_', '.');
 
-        String normalized = trimmed.replace('_', '.');
-        return NamespacedKey.fromString("minecraft:" + normalized);
+        try {
+            return keyClass.getMethod("fromString", String.class).invoke(null, value);
+        } catch (Throwable ignored) {
+            return null;
+        }
     }
 }

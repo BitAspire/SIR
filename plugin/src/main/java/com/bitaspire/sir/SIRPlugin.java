@@ -4,7 +4,6 @@ import lombok.Getter;
 import lombok.SneakyThrows;
 import me.croabeast.common.MetricsLoader;
 import me.croabeast.common.util.Exceptions;
-import me.croabeast.common.util.ServerInfoUtils;
 import me.croabeast.file.ConfigurableFile;
 import me.croabeast.scheduler.GlobalScheduler;
 import com.bitaspire.sir.command.CommandManager;
@@ -14,6 +13,7 @@ import com.bitaspire.sir.module.ModuleManager;
 import com.bitaspire.sir.module.SIRModule;
 import com.bitaspire.sir.user.UserManager;
 import me.croabeast.takion.TakionLib;
+import me.croabeast.vnc.VNC;
 import me.croabeast.vault.chat.ChatProvider;
 import me.croabeast.vault.economy.EconomyProvider;
 import org.bukkit.command.PluginCommand;
@@ -114,8 +114,8 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
                 "      &f&oDeveloped by " + getDescription().getAuthors().get(0),
                 "===================================",
                 "&e[Server]",
-                "- Fork & Version: " + ServerInfoUtils.SERVER_FORK,
-                "- Java Version: " + ServerInfoUtils.JAVA_VERSION
+                "- Fork & Version: " + VNC.SERVER_FORK,
+                "- Java Version: " + VNC.JAVA_VERSION
         );
 
         logger.add(true, "&e[Modules]");
@@ -235,13 +235,18 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
                 "==================================="
         );
 
-        userManager.shutdown();
+        if (userManager != null)
+            userManager.shutdown();
 
-        commandManager.saveStates();
-        moduleManager.saveStates();
+        if (commandManager != null)
+            commandManager.saveStates();
+        if (moduleManager != null)
+            moduleManager.saveStates();
 
-        commandManager.unloadAll();
-        moduleManager.unloadAll();
+        if (commandManager != null)
+            commandManager.unloadAll();
+        if (moduleManager != null)
+            moduleManager.unloadAll();
 
         logger.add(true,
                 "SIR disabled completely in " + timer.current() + " ms.",

@@ -480,6 +480,9 @@ public final class CommandManager {
         if (current == enabled) return true;
 
         setProviderEnabled(info.getName(), enabled);
+        if (loaded.provider instanceof StandaloneProvider)
+            ((StandaloneProvider) loaded.provider).setEnabledState(enabled);
+
         if (enabled) {
             registerProvider(loaded.provider, info, syncCommands);
         } else {
@@ -524,8 +527,7 @@ public final class CommandManager {
             int y = 1 + row;
 
             MenuToggleable.Button button = buttons.get(index);
-            button.setSlot(Slot.fromXY(x, y));
-            menu.addPane(0, button);
+            menu.addPane(0, Slot.fromXY(x, y), button);
         }
 
         return menu;

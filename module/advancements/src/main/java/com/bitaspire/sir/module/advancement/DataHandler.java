@@ -8,7 +8,7 @@ import me.croabeast.scheduler.GlobalTask;
 import com.bitaspire.sir.DelayLogger;
 import com.bitaspire.sir.Timer;
 import com.bitaspire.sir.ExtensionFile;
-import me.croabeast.takion.rule.GameRule;
+import me.croabeast.vnc.VNC;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.advancement.Advancement;
@@ -128,7 +128,40 @@ final class DataHandler implements Loadable {
                     "==========================="
             ).sendLines();
 
-            GameRule<Boolean> rule = GameRule.ANNOUNCE_ADVANCEMENTS;
+            if (supportsGameRules())
+                GameRuleSupport.disableAnnouncements(main, processedWorlds);
+        });
+    }
+
+    @Override
+    public void unload() {
+        if (!isLoaded()) return;
+
+        if (supportsGameRules())
+            GameRuleSupport.restoreAnnouncements(main, processedWorlds);
+
+        task = null;
+        processedWorlds.clear();
+        information.clear();
+    }
+
+    private static boolean supportsGameRules() {
+        return !VNC.isBefore("1.12") && hasClass("org.bukkit.GameRule");
+    }
+
+    private static boolean hasClass(String name) {
+        try {
+            Class.forName(name);
+            return true;
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    private static final class GameRuleSupport {
+
+        private static void disableAnnouncements(Advancements main, Set<World> processedWorlds) {
+            me.croabeast.takion.rule.GameRule<Boolean> rule = me.croabeast.takion.rule.GameRule.ANNOUNCE_ADVANCEMENTS;
             for (World world : Bukkit.getWorlds()) {
                 if (main.config.isProhibited(Config.Type.WORLD, world.getName()))
                     continue;
@@ -140,26 +173,19 @@ final class DataHandler implements Loadable {
                     rule.setValue(world, false);
                 } catch (Exception ignored) {}
             }
-        });
-    }
-
-    @Override
-    public void unload() {
-        if (!isLoaded()) return;
-
-        GameRule<Boolean> rule = GameRule.ANNOUNCE_ADVANCEMENTS;
-        for (World world : Bukkit.getWorlds()) {
-            if (main.config.isProhibited(Config.Type.WORLD, world.getName()))
-                continue;
-
-            try {
-                if (processedWorlds.contains(world) && !rule.getValue(world))
-                    rule.setValue(world, true);
-            } catch (Exception ignored) {}
         }
 
-        task = null;
-        processedWorlds.clear();
-        information.clear();
+        private static void restoreAnnouncements(Advancements main, Set<World> processedWorlds) {
+            me.croabeast.takion.rule.GameRule<Boolean> rule = me.croabeast.takion.rule.GameRule.ANNOUNCE_ADVANCEMENTS;
+            for (World world : Bukkit.getWorlds()) {
+                if (main.config.isProhibited(Config.Type.WORLD, world.getName()))
+                    continue;
+
+                try {
+                    if (processedWorlds.contains(world) && !rule.getValue(world))
+                        rule.setValue(world, true);
+                } catch (Exception ignored) {}
+            }
+        }
     }
 }

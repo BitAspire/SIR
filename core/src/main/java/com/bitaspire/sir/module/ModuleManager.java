@@ -1,8 +1,9 @@
 package com.bitaspire.sir.module;
 
 import com.github.stefvanschie.inventoryframework.gui.GuiItem;
-import com.github.stefvanschie.inventoryframework.gui.InventoryComponent;
+import com.github.stefvanschie.inventoryframework.gui.GuiComponent;
 import com.github.stefvanschie.inventoryframework.gui.type.AnvilGui;
+import com.github.stefvanschie.inventoryframework.pane.OutlinePane;
 import com.github.stefvanschie.inventoryframework.pane.Pane;
 import com.github.stefvanschie.inventoryframework.pane.util.Slot;
 import me.croabeast.common.gui.ButtonBuilder;
@@ -587,11 +588,11 @@ public final class ModuleManager {
             SIRModule module = loadedModules.get(index);
 
             MenuToggleable.Button button = module.getButton();
+            if (button == null) continue;
             button.setEnabledItem(buildModuleItem(module, true));
             button.setDisabledItem(buildModuleItem(module, false));
 
-            button.setSlot(Slot.fromXY(x, y));
-            menu.addPane(0, button);
+            menu.addPane(0, Slot.fromXY(x, y), button);
         }
 
         return menu;
@@ -631,8 +632,17 @@ public final class ModuleManager {
         SIRModule module = getModule(name);
         if (module == null) return;
 
-        if (module.isEnabled() != enabled)
-            module.getButton().toggleAll();
+        if (module.isEnabled() != enabled) {
+            MenuToggleable.Button button = module.getButton();
+            if (button != null) {
+                button.toggleAll();
+            } else {
+                if (enabled) module.register();
+                else module.unregister();
+
+                module.setEnabledState(enabled);
+            }
+        }
 
         setModuleEnabled(module.getName(), enabled);
     }
@@ -698,7 +708,7 @@ public final class ModuleManager {
 
             if (value instanceof Boolean) {
                 boolean enabled = configuration.getBoolean(path);
-                menu.addPane(page, ButtonBuilder
+                menu.addPane(page, slot, ButtonBuilder
                         .of(api.getPlugin(), slot, enabled)
                         .setItem(
                                 ItemCreator.of(Material.LIME_STAINED_GLASS_PANE)
@@ -902,12 +912,14 @@ public final class ModuleManager {
             AnvilGui anvilGui = new AnvilGui(PrismaticAPI.colorize("&8" + key), api.getPlugin());
             anvilGui.setCost((short) 0);
 
-            InventoryComponent input = anvilGui.getFirstItemComponent();
+            GuiComponent input = anvilGui.getFirstItemComponent();
             ItemStack base = new ItemStack(Material.PAPER);
-            input.setItem(ItemCreator.of(base)
-                    .modifyName("&f" + (StringUtils.isBlank(current) ? "<empty>" : current)).create(), 0, 0);
+            OutlinePane inputPane = new OutlinePane(1, 1);
+            inputPane.addItem(ItemCreator.of(base)
+                    .modifyName("&f" + (StringUtils.isBlank(current) ? "<empty>" : current)).create());
+            input.addPane(Slot.fromXY(0, 0), inputPane);
 
-            InventoryComponent result = anvilGui.getResultComponent();
+            GuiComponent result = anvilGui.getResultComponent();
             GuiItem resultItem = ItemCreator.of(Material.LIME_STAINED_GLASS_PANE)
                     .modifyName("&a&lSave")
                     .modifyLore("&7Click to save the value.")
@@ -920,7 +932,9 @@ public final class ModuleManager {
                         showConfigMenu(module, click.getWhoClicked(), rootPath);
                     })
                     .create(api.getPlugin());
-            result.setItem(resultItem, 0, 0);
+            OutlinePane resultPane = new OutlinePane(1, 1);
+            resultPane.addItem(resultItem);
+            result.addPane(Slot.fromXY(0, 0), resultPane);
 
             anvilGui.show(viewer);
         } catch (NoClassDefFoundError error) {

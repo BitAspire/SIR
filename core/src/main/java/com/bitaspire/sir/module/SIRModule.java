@@ -32,6 +32,7 @@ public abstract class SIRModule implements SIRExtension, MenuToggleable {
     private ModuleInformation information;
 
     private Button button;
+    private boolean enabledState;
 
     private File dataFolder;
     private ClassLoader classLoader;
@@ -39,24 +40,28 @@ public abstract class SIRModule implements SIRExtension, MenuToggleable {
     final void init(@NotNull SIRApi api, @NotNull URLClassLoader loader, @NotNull ModuleInformation information) {
         this.api = api;
         this.information = information;
+        this.enabledState = api.getModuleManager().isEnabled(information.getName());
 
-        button = new Button(buildInformation(), this, api.getModuleManager().isEnabled(information.getName()));
-        button.setDefaultItems();
-        button.allowToggle(false);
+        if (MenuToggleable.supportsButtons()) {
+            button = new Button(buildInformation(), this, enabledState);
+            button.setDefaultItems();
+            button.allowToggle(false);
 
-        button.setOnClick(b -> event -> {
-            if (event.isRightClick()) {
-                api.getModuleManager().openConfigMenu(event);
-                return;
-            }
+            button.setOnClick(b -> event -> {
+                if (event.isRightClick()) {
+                    api.getModuleManager().openConfigMenu(event);
+                    return;
+                }
 
-            if (!event.isLeftClick()) return;
+                if (!event.isLeftClick()) return;
 
-            b.toggle();
-            api.getLibrary().getLogger().log("Module '" + getName() + "' loaded: " + b.isEnabled());
-            b.toggleRegistering();
-            api.getModuleManager().setModuleEnabled(getName(), b.isEnabled());
-        });
+                b.toggle();
+                enabledState = b.isEnabled();
+                api.getLibrary().getLogger().log("Module '" + getName() + "' loaded: " + b.isEnabled());
+                b.toggleRegistering();
+                api.getModuleManager().setModuleEnabled(getName(), b.isEnabled());
+            });
+        }
 
         this.classLoader = loader;
 
@@ -124,7 +129,11 @@ public abstract class SIRModule implements SIRExtension, MenuToggleable {
 
     @Override
     public final boolean isEnabled() {
-        return button.isEnabled();
+        return button != null ? button.isEnabled() : enabledState;
+    }
+
+    void setEnabledState(boolean enabled) {
+        this.enabledState = enabled;
     }
 
     @NotNull
