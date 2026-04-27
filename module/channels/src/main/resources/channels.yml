@@ -1,84 +1,89 @@
-# Complete Channel Example (Template)
-example-channel:
-  permission: custom.permission    # Access permission
-  priority: 3                      # Channel priority (higher = more important)
-  group: CUSTOM_GROUP              # Player group association
-  global: true                     # true = server-wide, false = local
-  radius: 0                        # Chat radius (if local)
-  worlds:                          # Allowed worlds
-    - defaultWorldLoL
-    - example-world
-  prefix: "&a&l USER &7"      # Channel prefix
-  suffix: " &8&l• &7"         # Channel suffix
-  color: "{#c0c0c0}"          # Default text color
-  color-options:              # Color permissions
-    normal: true              # Standard colors
-    special: true             # Formatting codes
-    rgb: true                 # Hex colors
-  click-action: "SUGGEST:/msg {player} hello"  # Click interaction
-  hover:                      # Hover text
-    - "Click here to contact this player"
-  format: "{prefix} {player} {suffix}: {color}{message}"
-  # Local subchannel configuration
-  local:                     # Creates a local version of this channel
-    permission: custom.permission.local # Local channel permission
-    radius: 100                         # Chat radius in blocks
-    worlds:                             # Specific worlds for local chat
-      - world
-      - world_nether
-    access:                             # Required for local channels
-      prefix: "@"                       # Message prefix identifier
-      commands:                         # Command alternatives
-        - /localchat
-        - /lc
-    format: "[LOCAL] {prefix} {player}: {message}"  # Local format
+version: 2
+
+# Channels v2
+# - If `inherits` is not declared, the channel inherits from `default-channel`.
+# - If `access.default` is false and there are no prefixes/commands, the channel is not reachable directly.
+# - Every filter inside `audience` is cumulative.
+# - If `logging.enabled` is false, SIR uses the legacy chat logger behavior.
+# - Legacy or hybrid files are auto-migrated to channels v2 on load.
 
 default-channel:
-  enabled: true            # Master toggle
-  color-options:           # Default color permissions
-    normal: false          # &a, &b, etc.
-    special: false         # &l, &n, etc.
-    rgb: false             # Hex colors
-  radius: 0                # 0 = global, >0 = local radius
-  cooldown:
-    time: 5                # Seconds between messages
-    message: '<P> &cYou can not send another message in {time} seconds.'
-  format: ' &7{player} &8: &7{message}'
+  enabled: true
+  access:
+    default: true
+  audience:
+    radius: 120
+    include-sender: true
+  style:
+    tag: '&8[&aLocal&8]'
+    colors:
+      normal: false
+      special: false
+      rgb: false
+      default: '&f'
+    format: '{tag} &7{player}&8: {color}{message}'
+  logging:
+    enabled: false
 
 channels:
-  # Default Public Channel
-  default:
-    format: '&7 {player}&8: {#C0C0C0}{message}'
-
-  # VIP Channel with Local Subchannel
-  vip:
-    permission: chat.vip
-    prefix: '&e&l VIP'
-    color-options:
-      normal: true
-    format: '{prefix} &7{player}&8: &#FFFF99{message}'
-    # Local VIP chat configuration
-    local:
-      permission: chat.vip.local
-      radius: 50
-      access:
-        prefix: "@"
-        commands: [ /viplocal ]
-      format: '[VIP-LOCAL] {prefix} {player}: {message}'
-
-  # Staff Local Channel
-  local-staff-channel:
-    global: false              # Dedicated local channel
-    permission: chat.staff
+  global:
     priority: 100
-    prefix: '&c&l STAFF'
-    color-options:
-      normal: true
-      special: true
-      rgb: true
-    access:                    # Required for all local channels
-      prefix: "@"
-      commands:
-        - /admin
-        - /admin-chat
-    format: '[STAFF] {prefix} &7{player}&8: #FF9999{message}'
+    access:
+      prefixes: [ "!" ]
+      commands: [ "/g", "/global" ]
+      strip-prefix: true
+    style:
+      tag: '&8[&6Global&8]'
+      hover:
+        - '&7Message sent to the whole server.'
+      format: '{tag} &7{player}&8: {color}{message}'
+
+  staff:
+    permission: 'sir.channel.staff.use'
+    priority: 200
+    access:
+      prefixes: [ "#" ]
+      commands: [ "/sc", "/staffchat" ]
+    audience:
+      permission: 'sir.channel.staff.see'
+      include-sender: true
+    style:
+      tag: '&8[&cStaff&8]'
+      colors:
+        normal: true
+        special: true
+        rgb: true
+        default: '&c'
+      hover:
+        - '&7Only visible to staff.'
+      format: '{tag} &f{player}&8: {color}{message}'
+    logging:
+      enabled: true
+      format: '&7[Staff] {player}: {message}'
+
+  vip-local:
+    permission: 'sir.channel.vip.use'
+    access:
+      prefixes: [ "@" ]
+      commands: [ "/viplocal" ]
+    audience:
+      radius: 50
+      permission: 'sir.channel.vip.see'
+      include-sender: true
+    style:
+      tag: '&8[&bVIP Local&8]'
+      prefix: '&6VIP'
+      colors:
+        normal: true
+        default: '&f'
+      format: '{tag} {prefix} &7{player}&8: {color}{message}'
+
+  trade:
+    inherits: 'global'
+    access:
+      prefixes: [ "$" ]
+      commands: [ "/tradechat", "/tc" ]
+    style:
+      tag: '&8[&2Trade&8]'
+      hover:
+        - '&7Trade offers and market chatter.'

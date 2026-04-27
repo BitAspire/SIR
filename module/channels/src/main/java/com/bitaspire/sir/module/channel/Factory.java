@@ -1,5 +1,16 @@
 package com.bitaspire.sir.module.channel;
 
+import com.bitaspire.sir.SIRApi;
+import com.bitaspire.sir.UserFormatter;
+import com.bitaspire.sir.channel.Access;
+import com.bitaspire.sir.channel.Audience;
+import com.bitaspire.sir.channel.ChatChannel;
+import com.bitaspire.sir.channel.Click;
+import com.bitaspire.sir.channel.Logging;
+import com.bitaspire.sir.channel.Style;
+import com.bitaspire.sir.module.channel.channel.Resolver;
+import com.bitaspire.sir.user.ColorData;
+import com.bitaspire.sir.user.SIRUser;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -10,11 +21,6 @@ import me.croabeast.common.applier.StringApplier;
 import me.croabeast.common.util.ReplaceUtils;
 import me.croabeast.file.Configurable;
 import me.croabeast.prismatic.PrismaticAPI;
-import com.bitaspire.sir.ChatChannel;
-import com.bitaspire.sir.SIRApi;
-import com.bitaspire.sir.UserFormatter;
-import com.bitaspire.sir.user.ColorData;
-import com.bitaspire.sir.user.SIRUser;
 import me.croabeast.takion.chat.ChatComponent;
 import me.croabeast.takion.chat.MultiComponent;
 import me.croabeast.takion.format.Format;
@@ -26,6 +32,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -34,7 +41,7 @@ import java.util.function.Function;
 final class Factory {
 
     private final String DEFAULT_FORMAT = " &7{player}: {message}";
-    private final String[] CHAT_KEYS = {"{prefix}", "{sir-prefix}", "{suffix}", "{sir-suffix}", "{color}", "{message}"};
+    private final String[] CHAT_KEYS = {"{tag}", "{prefix}", "{sir-prefix}", "{suffix}", "{sir-suffix}", "{color}", "{message}"};
 
     @Getter
     abstract class BaseChannel implements ChatChannel {
@@ -43,6 +50,7 @@ final class Factory {
         private final Channels main;
 
         private final ConfigurationSection section;
+        private final String name;
         private final boolean global;
 
         private final ChatChannel parent;
@@ -50,30 +58,23 @@ final class Factory {
         private final String permission;
         private final int priority;
 
-        @Nullable
-        private final String prefix, suffix;
-        private final String color;
+        private final Access access;
+        private final Audience audience;
+        private final Style style;
+        private final Logging logging;
 
         @Getter(AccessLevel.NONE)
         private final ColorChecker checker;
 
-        private final int radius;
-        private final List<String> worldsNames;
-
-        private final Access localAccess;
-        private final Click clickAction;
-
-        @Nullable
-        private final List<String> hoverList;
-
-        @Setter
-        private String chatFormat;
-        private final String logFormat;
-
         BaseChannel(Channels main, ConfigurationSection section, ChatChannel parent) {
+            this(main, section, parent, section.getString("name", section.getName()));
+        }
+
+        BaseChannel(Channels main, ConfigurationSection section, ChatChannel parent, String name) {
             this.main = main;
             this.section = section;
             this.parent = parent;
+            this.name = StringUtils.defaultIfBlank(name, section.getName());
 
             global = section.getBoolean("global", true);
 
@@ -83,61 +84,127 @@ final class Factory {
                     permission.matches("(?i)DEFAULT") ? 0 : 1
             );
 
-            prefix = fromParent("prefix", ChatChannel::getPrefix, null);
-            suffix = fromParent("suffix", ChatChannel::getSuffix, null);
-
-            color = fromParent("color", ChatChannel::getColor, null);
-
-            checker = new ColorChecker(
-                    fromBoolean("color-options.normal"), fromBoolean("color-options.special"),
-                    fromBoolean("color-options.rgb")
+            access = new AccessImpl(
+                    fromParent("access.default", c -> c.getAccess().isDefault(), false),
+                    accessPrefixes(),
+                    accessCommands(),
+                    fromParent("access.strip-prefix", c -> c.getAccess().shouldStripPrefix(), true)
             );
 
-            radius = fromParent("radius", ChatChannel::getRadius, global ? -1 : 100);
-            worldsNames = fromList("worlds", ChatChannel::getWorldsNames);
+            audience = new AudienceImpl(
+                    fromParent("radius", c -> c.getAudience().getRadius(), global ? -1 : 100),
+                    fromParent("same-world", c -> c.getAudience().isSameWorld(), false),
+                    fromList("worlds", c -> c.getAudience().getWorldsNames()),
+                    fromParent("recipient-permission", c -> c.getAudience().getPermission(), permission),
+                    fromParent("recipient-group", c -> c.getAudience().getGroup(), getGroup()),
+                    fromParent("include-sender", c -> c.getAudience().shouldIncludeSender(), true)
+            );
 
-            ConfigurationSection s = section.getConfigurationSection("access");
-            Access access = s != null ? new AccessImpl(s) : null;
+            style = new StyleImpl(
+                    fromParent("tag", c -> c.getStyle().getTag(), null),
+                    fromParent("prefix", c -> c.getStyle().getPrefix(), null),
+                    fromParent("suffix", c -> c.getStyle().getSuffix(), null),
+                    fromParent("color", c -> c.getStyle().getColor(), null),
+                    fromParent("color-options.normal", c -> c.getStyle().allowsNormalColors(), false),
+                    fromParent("color-options.special", c -> c.getStyle().allowsSpecialColors(), false),
+                    fromParent("color-options.rgb", c -> c.getStyle().allowsRgbColors(), false),
+                    clickAction(),
+                    fromList("hover", c -> c.getStyle().getHover()),
+                    fromParent("format", c -> c.getStyle().getFormat(), DEFAULT_FORMAT).trim()
+            );
 
-            localAccess = useParents("access") ? parent.getLocalAccess() : access;
+            checker = new ColorChecker(
+                    style.allowsNormalColors(),
+                    style.allowsSpecialColors(),
+                    style.allowsRgbColors()
+            );
 
-            Object previous = section.get("click-action");
-            previous = previous != null ? previous : section.get("click");
+            logging = new LoggingImpl(
+                    fromParent("logging.enabled", c -> c.getLogging().isEnabled(), false),
+                    resolveLogFormat(main)
+            );
+        }
 
-            Click click = null;
-            if (previous instanceof ConfigurationSection) {
-                click = new ClickImpl((ConfigurationSection) previous);
-            }
-            if (previous instanceof String) {
-                click = new ClickImpl((String) previous);
-            }
-
-            clickAction = ((!section.isSet("click-action") || !section.isSet("click"))
-                    && parent != null) ?
-                    parent.getClickAction() : click;
-
-            hoverList = fromList("hover", ChatChannel::getHoverList);
-            chatFormat = fromParent("format", ChatChannel::getChatFormat, DEFAULT_FORMAT).trim();
-
-            logFormat = (main.config.useSimpleLogger() ?
-                    main.config.getSimpleLoggerFormat() : chatFormat).trim();
+        @NotNull
+        @Override
+        public String getName() {
+            return name;
         }
 
         private boolean useParents(String path) {
             return !section.isSet(path) && parent != null;
         }
 
-        private boolean fromBoolean(String path) {
-            return (useParents(path) ? parent.getSection() : section).getBoolean(path);
-        }
-
         @SuppressWarnings("unchecked")
-        private <T> T fromParent(String path, Function<ChatChannel, T> f, T def) {
-            return useParents(path) ? f.apply(parent) : (T) section.get(path, def);
+        private <T> T fromParent(String path, Function<ChatChannel, T> mapper, T def) {
+            return useParents(path) ? mapper.apply(parent) : (T) section.get(path, def);
         }
 
-        private List<String> fromList(String p, Function<ChatChannel, List<String>> list) {
-            return useParents(p) ? list.apply(parent) : Configurable.toStringList(section, p, null);
+        private List<String> fromList(String path, Function<ChatChannel, List<String>> mapper) {
+            List<String> list = useParents(path) ? mapper.apply(parent) : Configurable.toStringList(section, path, null);
+            return immutable(list);
+        }
+
+        private List<String> accessPrefixes() {
+            List<String> list;
+
+            if (section.isSet("access.prefix")) {
+                String prefix = StringUtils.trimToNull(section.getString("access.prefix"));
+                list = prefix == null ? Collections.emptyList() : Collections.singletonList(prefix);
+            }
+            else if (section.isSet("access.prefixes"))
+                list = Resolver.strings(section, "access.prefixes");
+            else
+                list = parent != null ? parent.getAccess().getPrefixes() : Collections.emptyList();
+
+            return immutable(list);
+        }
+
+        private List<String> accessCommands() {
+            List<String> list = section.isSet("access.commands") ?
+                    Configurable.toStringList(section, "access.commands") :
+                    (parent != null ? parent.getAccess().getCommands() : Collections.emptyList());
+
+            return immutable(list);
+        }
+
+        @Nullable
+        private Click clickAction() {
+            Object configured = section.get("click-action");
+            configured = configured != null ? configured : section.get("click");
+
+            if (configured instanceof ConfigurationSection)
+                return new ClickImpl((ConfigurationSection) configured);
+            if (configured instanceof String)
+                return new ClickImpl((String) configured);
+
+            return (!section.isSet("click-action") && !section.isSet("click") && parent != null) ?
+                    parent.getStyle().getClick() : null;
+        }
+
+        @NotNull
+        private String resolveLogFormat(Channels main) {
+            String configured = useParents("logging.format") ?
+                    parent.getLogging().getFormat() :
+                    section.getString("logging.format");
+
+            String fallback = (main.config.useSimpleLogger() ?
+                    main.config.getSimpleLoggerFormat() :
+                    style.getFormat()).trim();
+
+            if (loggingEnabled() && StringUtils.isNotBlank(configured))
+                return configured.trim();
+
+            return fallback;
+        }
+
+        private boolean loggingEnabled() {
+            return fromParent("logging.enabled", c -> c.getLogging().isEnabled(), false);
+        }
+
+        @NotNull
+        private List<String> immutable(@Nullable List<String> list) {
+            return list == null ? Collections.emptyList() : Collections.unmodifiableList(list);
         }
 
         @NotNull
@@ -145,26 +212,34 @@ final class Factory {
             Set<SIRUser> previous = api.getUserManager().getUsers();
             if (user == null) return previous;
 
+            Audience audience = getAudience();
             CollectionBuilder<SIRUser> users = CollectionBuilder
                     .of(previous)
                     .filter(u -> {
                         World world = u.getPlayer().getWorld();
-                        return getWorlds().contains(world);
+                        return audience.getWorlds().contains(world);
                     });
 
-            final int radius = getRadius();
+            if (audience.isSameWorld()) {
+                World parserWorld = user.getPlayer().getWorld();
+                users.filter(u -> u.getPlayer().getWorld().equals(parserWorld));
+            }
+
+            final int radius = audience.getRadius();
             if (radius > 0) {
-                Set<SIRUser> e = user.getNearbyUsers(radius);
-                if (!e.isEmpty()) users.filter(e::contains);
+                Set<SIRUser> nearby = user.getNearbyUsers(radius);
+                if (!nearby.isEmpty()) users.filter(nearby::contains);
             }
 
-            if (isLocal()) {
-                if (StringUtils.isNotBlank(getGroup()))
-                    users.filter(u -> isInGroup(u.getPlayer()));
+            if (StringUtils.isNotBlank(audience.getGroup()))
+                users.filter(u -> api.getChat().getPermissionProvider().isInGroup(u.getPlayer(), audience.getGroup()));
 
-                users.filter(u -> u.hasPermission(getPermission()));
+            users.filter(u -> StringUtils.isBlank(audience.getPermission())
+                    || audience.getPermission().matches("(?i)DEFAULT")
+                    || hasPermission(u, audience.getPermission()));
+
+            if (isLocal() && !getAccess().isDefault())
                 users.filter(u -> u.getChannelData().isToggled(getName()));
-            }
 
             users.filter(u -> !u.getIgnoreData().isIgnoring(user, true));
             return users.toSet();
@@ -180,12 +255,25 @@ final class Factory {
         }
 
         public String[] getChatValues(String message) {
-            return new String[] {prefix, prefix, suffix, suffix, color, message};
+            Style style = getStyle();
+            return new String[] {
+                    style.getTag(),
+                    style.getPrefix(),
+                    style.getPrefix(),
+                    style.getSuffix(),
+                    style.getSuffix(),
+                    style.getColor(),
+                    message
+            };
+        }
+
+        private boolean hasPermission(SIRUser user, String permission) {
+            return api.getUserManager().hasPermission(user, permission);
         }
 
         @NotNull
         public String formatString(Player target, Player parser, String string, boolean chat) {
-            String format = chat ? chatFormat : logFormat;
+            String format = chat ? style.getFormat() : logging.getFormat();
 
             StringApplier applier = StringApplier.simplified(format)
                     .apply(s -> api.getLibrary().getPlaceholderManager().replace(parser, s))
@@ -236,12 +324,68 @@ final class Factory {
             return "BaseChannel{path=" + section.getCurrentPath() +
                     ", permission='" + permission + '\'' +
                     ", priority=" + priority + ", global=" + global +
-                    ", format='" + chatFormat + '\'' + '}';
+                    ", format='" + style.getFormat() + '\'' + '}';
         }
     }
 
     @Getter
-    class ClickImpl implements ChatChannel.Click {
+    @RequiredArgsConstructor
+    class AccessImpl implements Access {
+
+        private final boolean defaultAccess;
+        private final List<String> prefixes;
+        private final List<String> commands;
+        private final boolean stripPrefix;
+
+        @Override
+        public boolean isDefault() {
+            return defaultAccess;
+        }
+
+        @Override
+        public boolean shouldStripPrefix() {
+            return stripPrefix;
+        }
+
+        @Override
+        public String toString() {
+            return "Access{default=" + defaultAccess +
+                    ", prefixes=" + prefixes +
+                    ", commands=" + commands +
+                    ", stripPrefix=" + stripPrefix + '}';
+        }
+    }
+
+    @Getter
+    @RequiredArgsConstructor
+    class AudienceImpl implements Audience {
+
+        private final int radius;
+        private final boolean sameWorld;
+        private final List<String> worldsNames;
+        private final String permission;
+        private final String group;
+        private final boolean includeSender;
+
+        @Override
+        public boolean shouldIncludeSender() {
+            return includeSender;
+        }
+
+        @Override
+        public String toString() {
+            return "Audience{radius=" + radius +
+                    ", sameWorld=" + sameWorld +
+                    ", worlds=" + worldsNames +
+                    ", permission='" + permission + '\'' +
+                    ", group='" + group + '\'' +
+                    ", includeSender=" + includeSender + '}';
+        }
+    }
+
+    @Getter
+    @RequiredArgsConstructor
+    class ClickImpl implements Click {
 
         private final ChatComponent.Click action;
         private final String input;
@@ -252,11 +396,10 @@ final class Factory {
         }
 
         private ClickImpl(String string) {
-            String[] array = string
-                    .replace("\"", "").split(":", 2);
+            String[] array = string.replace("\"", "").split(":", 2);
 
             action = ChatComponent.Click.fromName(array[0]);
-            input = array[1];
+            input = array.length > 1 ? array[1] : null;
         }
 
         @Override
@@ -266,19 +409,83 @@ final class Factory {
     }
 
     @Getter
-    class AccessImpl implements ChatChannel.Access {
+    class StyleImpl implements Style {
 
+        private final String tag;
         private final String prefix;
-        private final List<String> commands;
+        private final String suffix;
+        private final String color;
+        private final boolean normalColors;
+        private final boolean specialColors;
+        private final boolean rgbColors;
+        private final Click click;
+        private final List<String> hover;
 
-        private AccessImpl(ConfigurationSection section) {
-            this.prefix = section.getString("prefix");
-            this.commands = Configurable.toStringList(section, "commands");
+        @Setter
+        private String format;
+
+        private StyleImpl(
+                String tag,
+                String prefix,
+                String suffix,
+                String color,
+                boolean normalColors,
+                boolean specialColors,
+                boolean rgbColors,
+                Click click,
+                List<String> hover,
+                String format
+        ) {
+            this.tag = tag;
+            this.prefix = prefix;
+            this.suffix = suffix;
+            this.color = color;
+            this.normalColors = normalColors;
+            this.specialColors = specialColors;
+            this.rgbColors = rgbColors;
+            this.click = click;
+            this.hover = hover;
+            this.format = format;
+        }
+
+        @Override
+        public boolean allowsNormalColors() {
+            return normalColors;
+        }
+
+        @Override
+        public boolean allowsSpecialColors() {
+            return specialColors;
+        }
+
+        @Override
+        public boolean allowsRgbColors() {
+            return rgbColors;
         }
 
         @Override
         public String toString() {
-            return "Access{prefix='" + prefix + '\'' + ", commands=" + commands + '}';
+            return "Style{tag='" + tag + '\'' +
+                    ", prefix='" + prefix + '\'' +
+                    ", suffix='" + suffix + '\'' +
+                    ", color='" + color + '\'' +
+                    ", normal=" + normalColors +
+                    ", special=" + specialColors +
+                    ", rgb=" + rgbColors +
+                    ", format='" + format + '\'' + '}';
+        }
+    }
+
+    @Getter
+    @RequiredArgsConstructor
+    class LoggingImpl implements Logging {
+
+        private final boolean enabled;
+        private final String format;
+
+        @Override
+        public String toString() {
+            return "Logging{enabled=" + enabled + ", format='" + format + '\'' + '}';
         }
     }
 
@@ -289,20 +496,21 @@ final class Factory {
         final boolean normal, special, rgb;
 
         boolean notColor(Player player, String perm) {
-            boolean b;
+            boolean allowed;
             switch (perm) {
                 case "special":
-                    b = special;
+                    allowed = special;
                     break;
                 case "rgb":
-                    b = rgb;
+                    allowed = rgb;
                     break;
-                case "normal": default:
-                    b = normal;
+                case "normal":
+                default:
+                    allowed = normal;
                     break;
             }
 
-            return !SIRApi.instance().getUserManager().hasPermission(player, PERM + perm) && !b;
+            return !SIRApi.instance().getUserManager().hasPermission(player, PERM + perm) && !allowed;
         }
 
         String check(Player player, String string) {

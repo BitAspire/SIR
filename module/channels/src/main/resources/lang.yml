@@ -1,6 +1,6 @@
 lang:
   # Usage hint for /chat-view.
-  help: "<P> &7Usage: &b/chat-view &3<local format name>"
+  help: "<P> &7Usage: &b/chat-view &3<local-channel>"
 
   # Visibility toggle confirmation messages.
   # {channel} = affected channel name.

@@ -2,8 +2,10 @@ package com.bitaspire.sir.module.channel;
 
 import lombok.RequiredArgsConstructor;
 import me.croabeast.common.util.ReplaceUtils;
-import com.bitaspire.sir.ChatChannel;
 import com.bitaspire.sir.SIRApi;
+import com.bitaspire.sir.channel.Access;
+import com.bitaspire.sir.channel.ChatChannel;
+import com.bitaspire.sir.channel.Click;
 import com.bitaspire.sir.module.DiscordService;
 import com.bitaspire.sir.module.ModuleManager;
 import com.bitaspire.sir.user.SIRUser;
@@ -18,20 +20,43 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Predicate;
 
 @RequiredArgsConstructor
 final class Listener extends com.bitaspire.sir.Listener {
 
     private final Channels main;
 
+    private boolean handleEmptyMessage(MessageSender sender, String message) {
+        if (!main.config.allowsEmpty() || !StringUtils.isBlank(message))
+            return false;
+
+        sender.copy().send(main.config.getAllowEmptyMessages());
+        return true;
+    }
+
+    private String stripPrefix(ChatChannel channel, String message) {
+        Access access = channel.getAccess();
+
+        String prefix = access.getMatchingPrefix(message);
+        if (StringUtils.isBlank(prefix) || !access.shouldStripPrefix())
+            return message;
+
+        return StringUtils.stripStart(message.substring(prefix.length()), null);
+    }
+
+    private void dispatch(SIRUser user, ChatChannel channel, String message, boolean async) {
+        ChatEvent chat = new ChatEvent(user, channel, message, async);
+        chat.setGlobal(channel.isGlobal());
+        chat.call();
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onChat(AsyncPlayerChatEvent event) {
         if (event.isCancelled() || !main.isEnabled()) return;
 
-        main.getApi().getLibrary().getLogger().log("1");
         SIRUser user = main.getApi().getUserManager().getUser(event.getPlayer());
         if (user == null) return;
 
@@ -51,31 +76,28 @@ final class Listener extends com.bitaspire.sir.Listener {
         }
 
         String message = event.getMessage();
-        if (main.config.allowsEmpty() && StringUtils.isBlank(message)) {
-            sender.copy().send(main.config.getAllowEmptyMessages());
+        if (handleEmptyMessage(sender, message)) {
             event.setCancelled(true);
             return;
         }
 
         boolean async = event.isAsynchronous();
 
-        ChatChannel local = main.data.getLocal(user, message, true);
-        if (local != null &&
-                ((Predicate<ChatChannel>) channel -> {
-                    ChatChannel.Access access = local.getLocalAccess();
-                    if (access == null) return false;
+        ChatChannel routed = main.data.getAccessible(user, message, true);
+        if (routed != null) {
+            event.setCancelled(true);
 
-                    String prefix = access.getPrefix();
-                    if (StringUtils.isBlank(prefix)) return false;
+            String routedMessage = stripPrefix(routed, message);
+            if (StringUtils.isBlank(routedMessage)) {
+                handleEmptyMessage(sender, routedMessage);
+                return;
+            }
 
-                    String msg = message.substring(prefix.length());
-                    event.setCancelled(true);
+            dispatch(user, routed, routedMessage, async);
+            return;
+        }
 
-                    new ChatEvent(user, local, msg, async).call();
-                    return true;
-                }).test(local)) return;
-
-        ChatChannel channel = main.data.getGlobal(user);
+        ChatChannel channel = main.data.getFallback(user);
         if (channel == null) return;
 
         String output = channel.formatString(user.getPlayer(), message, true);
@@ -85,10 +107,7 @@ final class Listener extends com.bitaspire.sir.Listener {
         }
 
         event.setCancelled(true);
-
-        ChatEvent global = new ChatEvent(user, channel, message, async);
-        global.setGlobal(true);
-        global.call();
+        dispatch(user, channel, message, async);
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
@@ -98,14 +117,22 @@ final class Listener extends com.bitaspire.sir.Listener {
         SIRUser user = main.getApi().getUserManager().getUser(event.getPlayer());
         String[] args = event.getMessage().split(" ");
 
-        ChatChannel local = main.data.getLocal(user, args[0], false);
-        if (local == null) return;
+        ChatChannel channel = main.data.getAccessible(user, args[0], false);
+        if (channel == null) return;
 
         event.setCancelled(true);
 
+        MessageSender sender = main.getApi().getLibrary()
+                .getLoadedSender()
+                .setTargets(event.getPlayer());
+
         String message = SIRApi.joinArray(1, args);
-        if (StringUtils.isNotBlank(message))
-            new ChatEvent(user, local, message, event.isAsynchronous()).call();
+        if (StringUtils.isBlank(message)) {
+            handleEmptyMessage(sender, message);
+            return;
+        }
+
+        dispatch(user, channel, message, event.isAsynchronous());
     }
 
     @EventHandler
@@ -136,11 +163,13 @@ final class Listener extends com.bitaspire.sir.Listener {
         lib.getLogger().log(channel.formatString(player, message, false));
         String[] values = channel.getChatValues(message);
 
-        List<String> hover = channel.getHoverList();
-        if (hover != null)
+        List<String> hover = channel.getStyle().getHover();
+        if (hover != null && !hover.isEmpty()) {
+            hover = new ArrayList<>(hover);
             hover.replaceAll(s -> ReplaceUtils.replaceEach(keys, values, s));
+        }
 
-        ChatChannel.Click click = channel.getClickAction();
+        Click click = channel.getStyle().getClick();
         String input = click != null ? click.getInput() : null;
 
         if (StringUtils.isNotBlank(input))
@@ -149,7 +178,10 @@ final class Listener extends com.bitaspire.sir.Listener {
         Channel chat = lib.getChannelManager().identify("chat");
 
         Set<SIRUser> users = event.getRecipients();
-        users.add(event.getUser());
+        boolean includeSender = channel.getAudience().shouldIncludeSender();
+
+        if (includeSender) users.add(event.getUser());
+        else users.remove(event.getUser());
 
         for (SIRUser user : users) {
             Player p = user.getPlayer();
@@ -158,7 +190,7 @@ final class Listener extends com.bitaspire.sir.Listener {
             temp = chat.formatString(p, player, temp);
 
             MultiComponent component = MultiComponent.fromString(lib, temp);
-            if (hover != null) component.setHoverToAll(hover);
+            if (hover != null && !hover.isEmpty()) component.setHoverToAll(hover);
             if (click != null)
                 component.setClickToAll(click.getAction(), input);
 

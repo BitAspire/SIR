@@ -5,5 +5,5 @@ commands:
     aliases: [ chatview, chat-toggle, chattoggle, ctoggle ]
     override-existing: true
 
-    description: 'A command to toggle local channels view.'
+    description: 'Toggle visibility for local chat channels.'
     usage: '/chat-view'

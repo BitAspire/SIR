@@ -2,10 +2,10 @@ package com.bitaspire.sir.module.mention;
 
 import me.croabeast.common.util.ReplaceUtils;
 import me.croabeast.prismatic.PrismaticAPI;
-import com.bitaspire.sir.ChatChannel;
 import com.bitaspire.sir.ChatToggleable;
 import com.bitaspire.sir.SoundSection;
 import com.bitaspire.sir.UserFormatter;
+import com.bitaspire.sir.channel.ChatChannel;
 import com.bitaspire.sir.module.SIRModule;
 import com.bitaspire.sir.user.SIRUser;
 import me.croabeast.takion.chat.MultiComponent;

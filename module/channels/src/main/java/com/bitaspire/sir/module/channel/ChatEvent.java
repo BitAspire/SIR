@@ -2,7 +2,7 @@ package com.bitaspire.sir.module.channel;
 
 import lombok.Getter;
 import lombok.Setter;
-import com.bitaspire.sir.ChatChannel;
+import com.bitaspire.sir.channel.ChatChannel;
 import com.bitaspire.sir.user.SIRUser;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;

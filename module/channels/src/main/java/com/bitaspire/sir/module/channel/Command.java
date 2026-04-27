@@ -4,8 +4,10 @@ import me.croabeast.command.TabBuilder;
 import me.croabeast.file.ConfigurableFile;
 import me.croabeast.file.ConfigurableUnit;
 import com.bitaspire.sir.command.SIRCommand;
+import com.bitaspire.sir.channel.ChatChannel;
 import com.bitaspire.sir.user.ChannelData;
 import com.bitaspire.sir.user.SIRUser;
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -25,7 +27,10 @@ final class Command extends SIRCommand {
     private List<String> getKeys(SIRUser user) {
         return main.data.getLocals().values()
                 .stream()
-                .filter(c -> !c.hasPermission(user))
+                .filter(c -> c.isLocalAccessible())
+                .filter(c -> !c.getAccess().isDefault())
+                .filter(c -> c.isDefaultPermission() || c.hasPermission(user))
+                .filter(c -> StringUtils.isBlank(c.getGroup()) || c.isInGroup(user))
                 .map(ConfigurableUnit::getName)
                 .collect(Collectors.toList());
     }
@@ -48,7 +53,7 @@ final class Command extends SIRCommand {
 
         String key = null;
         for (String k : getKeys(user))
-            if (k.matches("(?i)" + args[0])) {
+            if (k.equalsIgnoreCase(args[0])) {
                 key = k;
                 break;
             }
