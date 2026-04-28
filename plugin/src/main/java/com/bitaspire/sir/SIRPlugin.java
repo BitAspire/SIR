@@ -73,16 +73,16 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
         try {
             MigrationService service = new MigrationService(this);
             MigrationService.Result result = service.migrateSir();
-            if (!result.isOk()) return;
+            if (result.isOk()) {
+                getLogger().info("SIR legacy migration completed from " + result.getPath() + ".");
+                getLogger().info("Migrated " + result.getUsers() + " users, "
+                        + result.getConfigs() + " configs, "
+                        + result.getModuleStates() + " module states, "
+                        + result.getCommandStates() + " command states.");
 
-            getLogger().info("SIR legacy migration completed from " + result.getPath() + ".");
-            getLogger().info("Migrated " + result.getUsers() + " users, "
-                    + result.getConfigs() + " configs, "
-                    + result.getModuleStates() + " module states, "
-                    + result.getCommandStates() + " command states.");
-
-            if (result.getBackupPath() != null)
-                getLogger().info("Legacy data backup stored at " + result.getBackupPath() + ".");
+                if (result.getBackupPath() != null)
+                    getLogger().info("Legacy data backup stored at " + result.getBackupPath() + ".");
+            }
         } catch (Exception exception) {
             getLogger().warning("SIR legacy migration failed: " + exception.getMessage());
         }
