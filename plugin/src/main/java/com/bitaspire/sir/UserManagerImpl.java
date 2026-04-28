@@ -32,7 +32,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.*;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 final class UserManagerImpl implements UserManager, Registrable {
@@ -186,23 +185,31 @@ final class UserManagerImpl implements UserManager, Registrable {
         if (file != null) file.save();
     }
 
+    private boolean matchesName(BaseUser user, String input) {
+        if (user == null || StringUtils.isBlank(input)) return false;
+
+        String effective = user.getName();
+        return matchesName(user.getDefaultName(), input)
+                || matchesName(effective, input)
+                || matchesName(org.bukkit.ChatColor.stripColor(effective), input);
+    }
+
+    private boolean matchesName(String candidate, String input) {
+        return StringUtils.isNotBlank(candidate) && candidate.equalsIgnoreCase(input);
+    }
+
     @Override
     public SIRUser getUser(UUID uuid) {
-        if (uuid == null) return null;
-
-        SIRUser user = userMap.get(uuid);
-        return user != null && user.isOnline() ? user : null;
+        return uuid == null ? null : userMap.get(uuid);
     }
 
     @Override
     public SIRUser getUser(String name) {
         if (StringUtils.isBlank(name)) return null;
 
-        for (SIRUser user : userMap.values()) {
+        for (BaseUser user : userMap.values()) {
             if (user == null || !user.isOnline()) continue;
-
-            String userName = user.getName();
-            if (userName.equals(name)) return user;
+            if (matchesName(user, name)) return user;
         }
 
         return null;
@@ -210,17 +217,7 @@ final class UserManagerImpl implements UserManager, Registrable {
 
     @Override
     public SIRUser fromClosest(String input) {
-        if (StringUtils.isBlank(input)) return null;
-
-        for (SIRUser user : userMap.values()) {
-            if (user == null || !user.isOnline()) continue;
-
-            String userName = user.getName();
-            if (userName.matches("(?i)" + Pattern.quote(input)))
-                return user;
-        }
-
-        return null;
+        return getUser(input);
     }
 
     @NotNull

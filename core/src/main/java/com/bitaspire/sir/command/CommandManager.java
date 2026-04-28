@@ -23,6 +23,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.InputStream;
@@ -119,6 +120,10 @@ public final class CommandManager {
         }
     }
 
+    private static String key(@Nullable String s) {
+        return s == null ? "" : s.trim().toLowerCase(Locale.ROOT);
+    }
+
     private void log(LogLevel level, String... messages) {
         api.getLibrary().getLogger().log(level, messages);
     }
@@ -127,9 +132,9 @@ public final class CommandManager {
         if (command == null) return;
 
         String name = command.getName();
-        if (name.isEmpty()) return;
+        if (StringUtils.isBlank(name)) return;
 
-        String key = name.toLowerCase(Locale.ENGLISH);
+        String key = key(name);
         if (!command.isEnabled()) {
             log(LogLevel.INFO, "Command '" + name + "' is disabled, skipping registration.");
             return;
@@ -430,7 +435,8 @@ public final class CommandManager {
     }
 
     public SIRCommand getCommand(String name) {
-        return name == null ? null : commands.get(name.toLowerCase(Locale.ENGLISH));
+        String key = key(name);
+        return key.isEmpty() ? null : commands.get(key);
     }
 
     public SettingsService getSettingsService() {
@@ -552,13 +558,12 @@ public final class CommandManager {
             return;
         }
 
-        String parentKey = name.toLowerCase(Locale.ENGLISH);
+        String parentKey = key(name);
         for (SIRCommand loaded : new ArrayList<>(commands.values())) {
             if (!loaded.hasParent()) continue;
 
             SIRCommand parent = loaded.getParent();
-            if (parent == null || !parentKey.equals(parent.getName().toLowerCase(Locale.ENGLISH)))
-                continue;
+            if (parent == null || !parentKey.equals(key(parent.getName()))) continue;
 
             try {
                 loaded.unregister(syncCommands);
@@ -566,7 +571,7 @@ public final class CommandManager {
                 e.printStackTrace();
             }
 
-            commands.remove(loaded.getName().toLowerCase(Locale.ENGLISH));
+            commands.remove(key(loaded.getName()));
             log(LogLevel.INFO, "Disabled dependent command '" + loaded.getName() + "' (parent '" + name + "').");
         }
 
@@ -576,7 +581,7 @@ public final class CommandManager {
             e.printStackTrace();
         }
 
-        commands.remove(name.toLowerCase(Locale.ENGLISH));
+        commands.remove(parentKey);
     }
 
     public void unload(CommandProvider provider, boolean syncCommands) {
@@ -677,8 +682,7 @@ public final class CommandManager {
 
             for (String commandKey : commandsSection.getKeys(false)) {
                 if (StringUtils.isBlank(commandKey)) continue;
-                state.overrides.put(commandKey.toLowerCase(Locale.ENGLISH),
-                        commandsSection.getBoolean(commandKey));
+                state.overrides.put(key(commandKey), commandsSection.getBoolean(commandKey));
             }
         }
     }
@@ -702,7 +706,7 @@ public final class CommandManager {
             return section.getBoolean("override-existing", false);
         }
 
-        String key = commandKey.toLowerCase(Locale.ENGLISH);
+        String key = key(commandKey);
         Boolean override = state.overrides.get(key);
         if (override == null) {
             override = section.getBoolean("override-existing", false);
