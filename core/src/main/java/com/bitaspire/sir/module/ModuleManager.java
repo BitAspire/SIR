@@ -651,7 +651,7 @@ public final class ModuleManager {
         event.setCancelled(true);
         api.getLibrary().getLoadedSender().setTargets(event.getWhoClicked())
                 .setLogger(!(event.getWhoClicked() instanceof Player))
-                .send("<P> &cThis option is only available on &fSIR+&c.");
+                .send("<P> &cThis config editor is not available yet.");
     }
 
     private GuiItem buildModuleItem(SIRModule module, boolean enabled) {
