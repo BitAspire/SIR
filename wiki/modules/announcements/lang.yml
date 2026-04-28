@@ -1,8 +1,0 @@
-lang:
-  # Help message for the announce command.
-  # Displayed for /announce help or invalid usage.
-  help: '<P> &7Usage: &b/announce &7[help|preview] [<announcement_id>]'
-
-  # Error when an announcement ID is missing or invalid.
-  # The valid IDs are listed in announces.yml.
-  select: '<P> &cPlease select a valid announcement from &fannounces.yml&c.'

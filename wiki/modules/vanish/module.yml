@@ -1,6 +1,0 @@
-main: com.bitaspire.sir.module.vanish.Vanish
-name: Vanish
-title: "&7Vanish Hook"
-description:
-  - "Handles if any vanish plugin can modify player's"
-  - "vanish status to handle join & quit messages."
