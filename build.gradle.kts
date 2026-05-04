@@ -64,7 +64,7 @@ subprojects {
         compileOnly("org.projectlombok:lombok:1.18.44")
         annotationProcessor("org.projectlombok:lombok:1.18.44")
 
-        compileOnly("me.croabeast.takion:shaded-all:1.5.0")
+        compileOnly("me.croabeast.takion:shaded:1.5.1:all")
         compileOnly("me.clip:placeholderapi:2.11.6")
     }
 }
