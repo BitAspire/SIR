@@ -38,6 +38,22 @@ public interface MenuToggleable {
         }
     }
 
+    @NotNull
+    static String formatMenuText(@Nullable String text) {
+        return PrismaticAPI.colorize(text == null ? "" : text);
+    }
+
+    @NotNull
+    static String smallCapsMenuText(@Nullable String text) {
+        if (text == null) return "";
+        return hasColorTags(text) ? text : SmallCaps.toSmallCaps(text);
+    }
+
+    static boolean hasColorTags(@NotNull String text) {
+        int open = text.indexOf('<');
+        return open >= 0 && text.indexOf('>', open) > open;
+    }
+
     class Button extends ToggleButton {
 
         private final Information information;
@@ -74,22 +90,20 @@ public interface MenuToggleable {
         }
 
         private GuiItem defaultItem(String title, boolean enabled) {
+            String resolvedTitle = smallCapsMenuText(title != null ? title : information.getTitle());
+            String status = enabled ? " &a&l✔" : " &c&l❌";
+
             return ItemCreator.of(
                             enabled ?
                                     Material.LIME_STAINED_GLASS_PANE :
                                     Material.RED_STAINED_GLASS_PANE
                     )
-                    .modifyName("&7• &f" +
-                            SmallCaps.toSmallCaps(title != null ?
-                                    title :
-                                    information.getTitle()) +
-                            ':' + (enabled ? " &a&l✔" : " &c&l❌")
-                    )
+                    .modifyName(formatMenuText("&7• &f" + resolvedTitle + ':' + status))
                     .modifyMeta(m -> m.setLore(CollectionBuilder
                             .of(information.getDescription())
-                            .apply(SmallCaps::toSmallCaps)
+                            .apply(MenuToggleable::smallCapsMenuText)
                             .apply(s -> "&7 " + s)
-                            .apply(PrismaticAPI::colorize)
+                            .apply(MenuToggleable::formatMenuText)
                             .toList()
                     ))
                     .create();

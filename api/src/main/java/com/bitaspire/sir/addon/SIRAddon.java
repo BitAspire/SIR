@@ -1,4 +1,4 @@
-package com.bitaspire.sir.module;
+package com.bitaspire.sir.addon;
 
 import com.github.stefvanschie.inventoryframework.pane.util.Slot;
 import lombok.AccessLevel;
@@ -7,12 +7,13 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import me.croabeast.common.util.ArrayUtils;
 import com.bitaspire.sir.Information;
+import com.bitaspire.sir.MenuToggleable;
 import com.bitaspire.sir.SIRApi;
 import com.bitaspire.sir.SIRExtension;
-import com.bitaspire.sir.MenuToggleable;
 import com.bitaspire.sir.command.CommandProvider;
 import com.bitaspire.sir.command.SIRCommand;
 import me.croabeast.takion.logger.TakionLogger;
+import org.jetbrains.annotations.ApiStatus;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -26,10 +27,10 @@ import java.util.stream.Collectors;
 
 @Accessors(makeFinal = true)
 @Getter
-public abstract class SIRModule implements SIRExtension, MenuToggleable {
+public abstract class SIRAddon implements SIRExtension, MenuToggleable {
 
     private SIRApi api;
-    private ModuleInformation information;
+    private AddonInformation information;
 
     private Button button;
     private boolean enabledState;
@@ -37,10 +38,11 @@ public abstract class SIRModule implements SIRExtension, MenuToggleable {
     private File dataFolder;
     private ClassLoader classLoader;
 
-    final void init(@NotNull SIRApi api, @NotNull URLClassLoader loader, @NotNull ModuleInformation information) {
+    @ApiStatus.Internal
+    public final void init(@NotNull SIRApi api, @NotNull URLClassLoader loader, @NotNull AddonInformation information) {
         this.api = api;
         this.information = information;
-        this.enabledState = api.getModuleManager().isEnabled(information.getName());
+        this.enabledState = api.getAddonManager().isEnabled(information.getName());
 
         if (MenuToggleable.supportsButtons()) {
             button = new Button(buildInformation(), this, enabledState);
@@ -48,24 +50,19 @@ public abstract class SIRModule implements SIRExtension, MenuToggleable {
             button.allowToggle(false);
 
             button.setOnClick(b -> event -> {
-                if (event.isRightClick()) {
-                    api.getModuleManager().openConfigMenu(event);
-                    return;
-                }
-
                 if (!event.isLeftClick()) return;
 
                 b.toggle();
                 enabledState = b.isEnabled();
-                api.getLibrary().getLogger().log("Module '" + getName() + "' loaded: " + b.isEnabled());
+                api.getLibrary().getLogger().log("Addon '" + getName() + "' loaded: " + b.isEnabled());
                 b.toggleRegistering();
-                api.getModuleManager().setModuleEnabled(getName(), b.isEnabled());
+                api.getAddonManager().setEnabled(getName(), b.isEnabled());
             });
         }
 
         this.classLoader = loader;
 
-        dataFolder = new File(api.getPlugin().getDataFolder(), "modules" + File.separator + getName());
+        dataFolder = new File(api.getPlugin().getDataFolder(), "addons" + File.separator + getName());
         if (!dataFolder.exists()) dataFolder.mkdirs();
     }
 
@@ -116,7 +113,7 @@ public abstract class SIRModule implements SIRExtension, MenuToggleable {
     @NotNull
     public final File getDataFolder() {
         if (dataFolder == null && api != null)
-            dataFolder = new File(api.getPlugin().getDataFolder(), "modules" + File.separator + getName());
+            dataFolder = new File(api.getPlugin().getDataFolder(), "addons" + File.separator + getName());
 
         if (dataFolder != null && !dataFolder.exists())
             dataFolder.mkdirs();
@@ -124,15 +121,20 @@ public abstract class SIRModule implements SIRExtension, MenuToggleable {
         return Objects.requireNonNull(dataFolder);
     }
 
-    @Setter(AccessLevel.PACKAGE)
     private boolean registered = false;
+
+    @ApiStatus.Internal
+    public final void setRegistered(boolean registered) {
+        this.registered = registered;
+    }
 
     @Override
     public final boolean isEnabled() {
         return button != null ? button.isEnabled() : enabledState;
     }
 
-    void setEnabledState(boolean enabled) {
+    @ApiStatus.Internal
+    public final void setEnabledState(boolean enabled) {
         this.enabledState = enabled;
     }
 

@@ -15,6 +15,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -44,7 +45,8 @@ public abstract class SIRCommand extends BukkitCommand {
         setArgumentCheck((s, a) -> Utils.create(s).addPlaceholder("{arg}", a).send("wrong-arg", "<P> &cInvalid argument: &f{arg}&c."));
     }
 
-    void applyFile(CommandFile file) {
+    @ApiStatus.Internal
+    public final void applyFile(CommandFile file) {
         this.file = Objects.requireNonNull(file, "Command file cannot be null");
         reloadOptions();
     }

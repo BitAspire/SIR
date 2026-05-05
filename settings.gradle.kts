@@ -1,5 +1,5 @@
 rootProject.name = "SIR"
-include("core", "plugin")
+include("api", "plugin")
 include(
     "module:advancements", "module:channels", "module:discord", "module:announcements",
     "module:cooldowns", "module:emojis", "module:join-quit", "module:login",

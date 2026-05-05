@@ -2,6 +2,7 @@ package com.bitaspire.sir;
 
 import me.croabeast.common.util.ArrayUtils;
 import me.croabeast.scheduler.GlobalScheduler;
+import com.bitaspire.sir.addon.AddonManager;
 import com.bitaspire.sir.command.CommandManager;
 import com.bitaspire.sir.module.ModuleManager;
 import com.bitaspire.sir.user.SIRUser;
@@ -39,6 +40,11 @@ public interface SIRApi {
 
     @NotNull
     ModuleManager getModuleManager();
+
+    @NotNull
+    default AddonManager getAddonManager() {
+        throw new UnsupportedOperationException("AddonManager is only available in SIR+");
+    }
 
     @NotNull
     UserManager getUserManager();

@@ -1,3 +1,6 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.gradle.api.file.DuplicatesStrategy
+
 repositories {
     maven("https://repo.essentialsx.net/releases/")
     flatDir {
@@ -5,29 +8,44 @@ repositories {
     }
 }
 
-val coreProject = project(":core")
+val apiProject = project(":api")
 val takionShaded: Configuration by configurations.creating
 
 dependencies {
-    implementation(coreProject)
+    implementation(apiProject)
 
     compileOnly("net.essentialsx:EssentialsX:2.21.0") {
         exclude("*", "*")
     }
     compileOnly("com.github.DevLeoko:AdvancedBan:2.3.0")
     compileOnly(files("libraries/CMI.jar"))
-    takionShaded("me.croabeast.takion:shaded-all:1.5.0")
+
+    takionShaded("me.croabeast.takion:shaded:1.5.1:all")
 }
 
-val coreMainOutput = coreProject.extensions.getByType<SourceSetContainer>()["main"].output
+val apiMainOutput = apiProject.extensions.getByType<SourceSetContainer>()["main"].output
 
-val moduleJarTasks = rootProject.subprojects.filter { it.path.startsWith(":module:") }.map { it.tasks.named<Jar>("jar") }
-val commandJarTasks = rootProject.subprojects.filter { it.path.startsWith(":command:") }.map { it.tasks.named<Jar>("jar") }
+val moduleJarTasks = rootProject.subprojects
+    .filter { it.path.startsWith(":module:") }
+    .map { it.tasks.named<Jar>("jar") }
+
+val commandJarTasks = rootProject.subprojects
+    .filter { it.path.startsWith(":command:") }
+    .map { it.tasks.named<Jar>("jar") }
 
 tasks.named<Jar>("jar") {
-    dependsOn(coreProject.tasks.named("classes"))
-    from(coreMainOutput)
-    from(takionShaded.files.map { if (it.isDirectory) it else zipTree(it) })
+    enabled = false
+}
+
+tasks.named<ShadowJar>("shadowJar") {
+    archiveBaseName.set("SIR")
+    archiveClassifier.set("")
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    dependsOn(apiProject.tasks.named("classes"))
+    from(apiMainOutput)
+
+    configurations = listOf(takionShaded)
 
     dependsOn(moduleJarTasks)
     moduleJarTasks.forEach { jarTask ->
@@ -43,7 +61,19 @@ tasks.named<Jar>("jar") {
         }
     }
 
-    archiveBaseName.set("SIR")
+    doFirst {
+        val nestedJars = (moduleJarTasks + commandJarTasks).map { it.get().archiveFile.get().asFile }
+        val shadowedNestedJars = nestedJars.filter { it.name.endsWith("-all.jar") }
+
+        check(shadowedNestedJars.isEmpty()) {
+            "Plugin modules and command providers must use regular jars, not shadow jars: " +
+                shadowedNestedJars.joinToString { it.name }
+        }
+    }
+}
+
+tasks.assemble {
+    dependsOn(tasks.named("shadowJar"))
 }
 
 tasks.processResources {

@@ -5,6 +5,7 @@ import lombok.Getter;
 import me.croabeast.file.Configurable;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.configuration.ConfigurationSection;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -27,7 +28,8 @@ public final class CommandFile {
     final boolean hasParent;
     final String parentName;
 
-    CommandFile(String name, ConfigurationSection section, SIRCommand parent, boolean override) {
+    @ApiStatus.Internal
+    public CommandFile(String name, ConfigurationSection section, SIRCommand parent, boolean override) {
         Objects.requireNonNull(section, "Configuration section cannot be null");
 
         this.name = Objects.requireNonNull(name, "Command name cannot be null");
@@ -62,7 +64,7 @@ public final class CommandFile {
         this.override = resolvedOverride;
     }
 
-    boolean hasParent() {
+    public boolean hasParent() {
         return hasParent && StringUtils.isNotBlank(parentName);
     }
 }

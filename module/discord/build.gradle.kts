@@ -7,7 +7,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly(project(":core"))
+    compileOnly(project(":api"))
 
     compileOnly("net.essentialsx:EssentialsX:2.21.0") {
         exclude("*", "*")

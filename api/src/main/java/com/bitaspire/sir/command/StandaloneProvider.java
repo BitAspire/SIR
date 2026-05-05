@@ -3,6 +3,7 @@ package com.bitaspire.sir.command;
 import lombok.Getter;
 import com.bitaspire.sir.SIRApi;
 import com.bitaspire.sir.MenuToggleable;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -21,7 +22,8 @@ public abstract class StandaloneProvider implements CommandProvider {
     private File dataFolder;
     private ClassLoader classLoader;
 
-    final void init(@NotNull SIRApi api, @NotNull ClassLoader loader, @NotNull ProviderInformation information) {
+    @ApiStatus.Internal
+    public final void init(@NotNull SIRApi api, @NotNull ClassLoader loader, @NotNull ProviderInformation information) {
         this.api = api;
         this.information = information;
         this.classLoader = loader;
@@ -34,7 +36,7 @@ public abstract class StandaloneProvider implements CommandProvider {
 
             button.setOnClick(b -> event -> {
                 if (event.isRightClick()) {
-                    api.getCommandManager().openOverrideMenu(event);
+                    api.getCommandManager().openOverrideMenu(this, event, true);
                     return;
                 }
 
@@ -56,8 +58,14 @@ public abstract class StandaloneProvider implements CommandProvider {
         return button != null ? button.isEnabled() : enabledState;
     }
 
-    void setEnabledState(boolean enabled) {
+    @ApiStatus.Internal
+    public final void setEnabledState(boolean enabled) {
         this.enabledState = enabled;
+    }
+
+    @ApiStatus.Internal
+    public final void setRegistered(boolean registered) {
+        this.registered = registered;
     }
 
     @NotNull

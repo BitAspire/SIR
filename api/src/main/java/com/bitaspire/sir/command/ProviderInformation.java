@@ -12,6 +12,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -28,7 +29,8 @@ public final class ProviderInformation implements Information {
     @Setter(AccessLevel.PACKAGE)
     private Slot slot = Slot.fromXY(0, 0);
 
-    ProviderInformation(@NotNull YamlConfiguration configuration) {
+    @ApiStatus.Internal
+    public ProviderInformation(@NotNull YamlConfiguration configuration) {
         main = configuration.getString("main");
         Preconditions.checkArgument(StringUtils.isNotBlank(main), "Command provider main class cannot be null or empty");
 
@@ -60,11 +62,13 @@ public final class ProviderInformation implements Information {
         commands = Collections.unmodifiableMap(map);
     }
 
-    boolean hasNoCommand(@Nullable String name) {
+    @ApiStatus.Internal
+    public boolean hasNoCommand(@Nullable String name) {
         return name == null || !commands.containsKey(name.toLowerCase(Locale.ENGLISH));
     }
 
-    ConfigurationSection getCommandSection(@Nullable String name) {
+    @ApiStatus.Internal
+    public ConfigurationSection getCommandSection(@Nullable String name) {
         return name == null ? null : commands.get(name.toLowerCase(Locale.ENGLISH));
     }
 }

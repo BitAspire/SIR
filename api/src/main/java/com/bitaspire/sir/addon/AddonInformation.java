@@ -1,4 +1,4 @@
-package com.bitaspire.sir.module;
+package com.bitaspire.sir.addon;
 
 import com.github.stefvanschie.inventoryframework.pane.util.Slot;
 import com.google.common.base.Preconditions;
@@ -9,6 +9,7 @@ import com.bitaspire.sir.Information;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
@@ -16,7 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Getter
-public final class ModuleInformation implements Information {
+public final class AddonInformation implements Information {
 
     @NotNull
     private final String main, name, title;
@@ -26,9 +27,10 @@ public final class ModuleInformation implements Information {
 
     private final List<String> depend, softDepend;
 
-    ModuleInformation(FileConfiguration configuration) {
+    @ApiStatus.Internal
+    public AddonInformation(FileConfiguration configuration) {
         String main = configuration.getString("main");
-        Preconditions.checkArgument(StringUtils.isNotBlank(main), "Module main class cannot be null or empty");
+        Preconditions.checkArgument(StringUtils.isNotBlank(main), "Addon main class cannot be null or empty");
         this.main = main;
 
         String[] mainParts = main.split("\\.");

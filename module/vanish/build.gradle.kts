@@ -6,7 +6,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly(project(":core"))
+    compileOnly(project(":api"))
 
     compileOnly("net.essentialsx:EssentialsX:2.21.0")
     compileOnly("com.github.LeonMangler:SuperVanish:6.2.18-3")
