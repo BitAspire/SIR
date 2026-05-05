@@ -83,21 +83,39 @@ jobs:
               "repos/$GITHUB_REPOSITORY/git/refs/tags/$TAG" || true
           fi
 
-          PREVIOUS_TAG=$(gh release list \
-            --repo "$GITHUB_REPOSITORY" \
-            --exclude-drafts \
-            --limit 100 \
-            --json tagName \
-            --jq ".[].tagName | select(. != \"$TAG\")" \
-            | head -n 1)
+          BUMP_SUBJECT="chore: bump version to $VERSION"
+          BUMP_COMMIT=$(git log --format='%H%x09%s' "$HEAD_SHA" \
+            | awk -F '\t' -v subject="$BUMP_SUBJECT" '$2 == subject { print $1; exit }')
 
-          if [ -n "$PREVIOUS_TAG" ]; then
-            RANGE="$PREVIOUS_TAG..$HEAD_SHA"
-            FULL_CHANGELOG="https://github.com/$GITHUB_REPOSITORY/compare/$PREVIOUS_TAG...$TAG"
+          if [ -n "$BUMP_COMMIT" ]; then
+            if BUMP_PARENT=$(git rev-parse "$BUMP_COMMIT^" 2>/dev/null); then
+              RANGE="$BUMP_PARENT..$HEAD_SHA"
+              CHANGELOG_BASE="$BUMP_PARENT"
+            else
+              RANGE="$HEAD_SHA"
+              CHANGELOG_BASE="$BUMP_COMMIT"
+            fi
           else
-            RANGE="$HEAD_SHA"
-            FULL_CHANGELOG="https://github.com/$GITHUB_REPOSITORY/commits/$TAG"
+            RELEASE_TAGS=$(gh release list \
+              --repo "$GITHUB_REPOSITORY" \
+              --exclude-drafts \
+              --limit 100 \
+              --json tagName \
+              --jq ".[].tagName | select(. != \"$TAG\")")
+
+            PREVIOUS_TAG=$(printf '%s\n' "$RELEASE_TAGS" | awk 'NF { print; exit }')
+
+            if [ -z "$PREVIOUS_TAG" ]; then
+              echo "Could not find '$BUMP_SUBJECT' or a previous release tag."
+              echo "Refusing to generate release notes from the full repository history."
+              exit 1
+            fi
+
+            RANGE="$PREVIOUS_TAG..$HEAD_SHA"
+            CHANGELOG_BASE="$PREVIOUS_TAG"
           fi
+
+          FULL_CHANGELOG="https://github.com/$GITHUB_REPOSITORY/compare/$CHANGELOG_BASE...$TAG"
 
           QUERY='
           query($owner:String!, $repo:String!, $oid:GitObjectID!) {
@@ -128,6 +146,12 @@ jobs:
 
           declare -A SEEN_PULL_REQUESTS
           CONTRIBUTORS=$(mktemp)
+          PREVIOUS_CONTRIBUTORS=$(mktemp)
+
+          if [ -n "${CHANGELOG_BASE:-}" ] && git rev-parse "$CHANGELOG_BASE" >/dev/null 2>&1; then
+            git log --format='%aN' "$CHANGELOG_BASE" \
+              | sort -fu > "$PREVIOUS_CONTRIBUTORS"
+          fi
 
           {
             echo "## What's Changed"
@@ -157,7 +181,7 @@ jobs:
             if [ -n "$PR_NUMBER" ]; then
               if [ -z "${SEEN_PULL_REQUESTS[$PR_NUMBER]+x}" ]; then
                 echo "- $PR_TITLE by @$PR_AUTHOR in #$PR_NUMBER" >> release-notes.md
-                echo "$PR_AUTHOR" >> "$CONTRIBUTORS"
+                [ -n "$PR_AUTHOR" ] && echo "$PR_AUTHOR" >> "$CONTRIBUTORS"
                 SEEN_PULL_REQUESTS[$PR_NUMBER]=1
               fi
             else
@@ -175,6 +199,20 @@ jobs:
           fi
 
           if [ -s "$CONTRIBUTORS" ]; then
+            NEW_CONTRIBUTORS=$(mktemp)
+            sort -u "$CONTRIBUTORS" \
+              | grep -Fvxif "$PREVIOUS_CONTRIBUTORS" \
+              > "$NEW_CONTRIBUTORS" || true
+
+            if [ -s "$NEW_CONTRIBUTORS" ]; then
+              {
+                echo
+                echo "## New Contributors"
+                echo
+                sed 's/^/- @/' "$NEW_CONTRIBUTORS"
+              } >> release-notes.md
+            fi
+
             {
               echo
               echo "## Contributors"
