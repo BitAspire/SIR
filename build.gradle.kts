@@ -1,8 +1,12 @@
+import org.gradle.api.publish.PublishingExtension
+import org.gradle.api.publish.maven.MavenPublication
+
 plugins {
     kotlin("jvm") version "2.3.0"
     id("java-library")
     id("io.freefair.lombok") version "9.4.0"
     id("com.gradleup.shadow") version "9.4.1"
+    id("maven-publish")
 }
 
 allprojects {
@@ -28,6 +32,7 @@ subprojects {
     apply(plugin = "java-library")
     apply(plugin = "io.freefair.lombok")
     apply(plugin = "com.gradleup.shadow")
+    apply(plugin = "maven-publish")
     java {
         withSourcesJar()
         withJavadocJar()
@@ -64,7 +69,15 @@ subprojects {
         annotationProcessor("org.projectlombok:lombok:1.18.44")
 
         compileOnly("me.croabeast.takion:shaded:1.5.1:all")
-        compileOnly("me.clip:placeholderapi:2.11.6")
+        compileOnly("me.clip:placeholderapi:2.12.2")
+    }
+
+    configure<PublishingExtension> {
+        publications {
+            create<MavenPublication>("mavenJava") {
+                from(components["java"])
+            }
+        }
     }
 }
 
