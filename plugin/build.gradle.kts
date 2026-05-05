@@ -17,7 +17,9 @@ dependencies {
     compileOnly("net.essentialsx:EssentialsX:2.21.0") {
         exclude("*", "*")
     }
-    compileOnly("com.github.DevLeoko:AdvancedBan:2.3.0")
+    compileOnly("com.github.DevLeoko:AdvancedBan:2.3.0") {
+        exclude(group = "org.bstats")
+    }
     compileOnly(files("libraries/CMI.jar"))
 
     takionShaded("me.croabeast.takion:shaded:1.5.1:all")
