@@ -1,12 +1,8 @@
-import org.gradle.api.publish.PublishingExtension
-import org.gradle.api.publish.maven.MavenPublication
-
 plugins {
     kotlin("jvm") version "2.3.0"
     id("java-library")
     id("io.freefair.lombok") version "9.4.0"
     id("com.gradleup.shadow") version "9.4.1"
-    id("maven-publish")
 }
 
 allprojects {
@@ -29,10 +25,16 @@ allprojects {
 }
 
 subprojects {
+    if (path.startsWith(":module:")) {
+        group = "com.bitaspire.sir.module"
+    } else if (path.startsWith(":command:")) {
+        group = "com.bitaspire.sir.command"
+    }
+
     apply(plugin = "java-library")
     apply(plugin = "io.freefair.lombok")
     apply(plugin = "com.gradleup.shadow")
-    apply(plugin = "maven-publish")
+
     java {
         withSourcesJar()
         withJavadocJar()
@@ -70,14 +72,6 @@ subprojects {
 
         compileOnly("me.croabeast.takion:shaded:1.5.1:all")
         compileOnly("me.clip:placeholderapi:2.12.2")
-    }
-
-    configure<PublishingExtension> {
-        publications {
-            create<MavenPublication>("mavenJava") {
-                from(components["java"])
-            }
-        }
     }
 }
 

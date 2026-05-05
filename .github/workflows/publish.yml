@@ -1,0 +1,277 @@
+name: Package & Publish SIR
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+  release:
+    types: [ created ]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK (Temurin 21)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Build with Gradle
+        run: ./gradlew --no-daemon clean build :plugin:shadowJar
+
+      - name: Get version from Gradle
+        id: version
+        run: |
+          VERSION=$(./gradlew -q properties | awk -F': ' '/^version:/ {print $2; exit}')
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Upload SIR artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: SIR-artifacts-${{ env.VERSION }}
+          if-no-files-found: error
+          path: |
+            api/build/libs/api-${{ env.VERSION }}.jar
+            api/build/libs/api-${{ env.VERSION }}-sources.jar
+            api/build/libs/api-${{ env.VERSION }}-javadoc.jar
+            command/*/build/libs/*-${{ env.VERSION }}.jar
+            command/*/build/libs/*-${{ env.VERSION }}-sources.jar
+            command/*/build/libs/*-${{ env.VERSION }}-javadoc.jar
+            !command/all/build/libs/**
+            module/*/build/libs/*-${{ env.VERSION }}.jar
+            module/*/build/libs/*-${{ env.VERSION }}-sources.jar
+            module/*/build/libs/*-${{ env.VERSION }}-javadoc.jar
+            !module/all/build/libs/**
+            plugin/build/libs/SIR-${{ env.VERSION }}.jar
+
+      - name: Checkout Maven repository
+        if: github.event_name != 'pull_request'
+        uses: actions/checkout@v4
+        with:
+          repository: CroaBeast/repo
+          path: maven-repo
+          token: ${{ secrets.MAVEN_DEPLOY_TOKEN }}
+
+      - name: Deploy API, modules and commands to Maven repository
+        if: github.event_name != 'pull_request'
+        run: |
+          set -e
+
+          write_metadata () {
+            GROUP_ID="$1"
+            GROUP_PATH="$2"
+            ARTIFACT_ID="$3"
+            META_DIR="maven-repo/$GROUP_PATH/$ARTIFACT_ID"
+
+            mkdir -p "$META_DIR"
+
+            cat > "$META_DIR/maven-metadata.xml" << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <metadata>
+            <groupId>$GROUP_ID</groupId>
+            <artifactId>$ARTIFACT_ID</artifactId>
+            <versioning>
+              <latest>$VERSION</latest>
+              <release>$VERSION</release>
+              <versions>
+                <version>$VERSION</version>
+              </versions>
+              <lastUpdated>$(date -u +%Y%m%d%H%M%S)</lastUpdated>
+            </versioning>
+          </metadata>
+          EOF
+          }
+
+          deploy_jar_artifact () {
+            GROUP_ID="$1"
+            GROUP_PATH="$2"
+            ARTIFACT_ID="$3"
+            SRC_DIR="$4"
+
+            DEST_DIR="maven-repo/$GROUP_PATH/$ARTIFACT_ID/$VERSION"
+            ART="$ARTIFACT_ID-$VERSION"
+
+            mkdir -p "$DEST_DIR"
+
+            MAIN_JAR="$SRC_DIR/$ART.jar"
+            SRC_JAR="$SRC_DIR/$ART-sources.jar"
+            DOC_JAR="$SRC_DIR/$ART-javadoc.jar"
+
+            [ -f "$MAIN_JAR" ] && cp "$MAIN_JAR" "$DEST_DIR/$ART.jar"
+            [ -f "$SRC_JAR" ] && cp "$SRC_JAR" "$DEST_DIR/$ART-sources.jar"
+            [ -f "$DOC_JAR" ] && cp "$DOC_JAR" "$DEST_DIR/$ART-javadoc.jar"
+
+            cat > "$DEST_DIR/$ART.pom" << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <project>
+            <modelVersion>4.0.0</modelVersion>
+            <groupId>$GROUP_ID</groupId>
+            <artifactId>$ARTIFACT_ID</artifactId>
+            <version>$VERSION</version>
+            <packaging>jar</packaging>
+          </project>
+          EOF
+
+            write_metadata "$GROUP_ID" "$GROUP_PATH" "$ARTIFACT_ID"
+          }
+
+          deploy_api () {
+            GROUP_ID="com.bitaspire.sir"
+            GROUP_PATH="com/bitaspire/sir"
+            ARTIFACT_ID="api"
+            SRC_DIR="api/build/libs"
+            DEST_DIR="maven-repo/$GROUP_PATH/$ARTIFACT_ID/$VERSION"
+            ART="$ARTIFACT_ID-$VERSION"
+
+            mkdir -p "$DEST_DIR"
+
+            cp "$SRC_DIR/$ART.jar" "$DEST_DIR/$ART.jar"
+            cp "$SRC_DIR/$ART-sources.jar" "$DEST_DIR/$ART-sources.jar"
+            cp "$SRC_DIR/$ART-javadoc.jar" "$DEST_DIR/$ART-javadoc.jar"
+
+            cat > "$DEST_DIR/$ART.pom" << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <project>
+            <modelVersion>4.0.0</modelVersion>
+            <groupId>$GROUP_ID</groupId>
+            <artifactId>$ARTIFACT_ID</artifactId>
+            <version>$VERSION</version>
+            <packaging>jar</packaging>
+            <dependencies>
+              <dependency>
+                <groupId>org.spigotmc</groupId>
+                <artifactId>spigot-api</artifactId>
+                <version>1.16.5-R0.1-SNAPSHOT</version>
+              </dependency>
+              <dependency>
+                <groupId>org.jetbrains</groupId>
+                <artifactId>annotations</artifactId>
+                <version>26.0.2</version>
+              </dependency>
+              <dependency>
+                <groupId>me.croabeast.takion</groupId>
+                <artifactId>shaded</artifactId>
+                <version>1.5.1</version>
+                <classifier>all</classifier>
+              </dependency>
+              <dependency>
+                <groupId>me.clip</groupId>
+                <artifactId>placeholderapi</artifactId>
+                <version>2.12.2</version>
+              </dependency>
+              <dependency>
+                <groupId>com.github.stefvanschie.inventoryframework</groupId>
+                <artifactId>IF</artifactId>
+                <version>0.12.0</version>
+              </dependency>
+            </dependencies>
+          </project>
+          EOF
+
+            write_metadata "$GROUP_ID" "$GROUP_PATH" "$ARTIFACT_ID"
+          }
+
+          deploy_aggregate_pom () {
+            GROUP_ID="$1"
+            GROUP_PATH="$2"
+            ARTIFACT_ID="$3"
+            shift 3
+
+            DEST_DIR="maven-repo/$GROUP_PATH/$ARTIFACT_ID/$VERSION"
+            ART="$ARTIFACT_ID-$VERSION"
+
+            mkdir -p "$DEST_DIR"
+
+            cat > "$DEST_DIR/$ART.pom" << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <project>
+            <modelVersion>4.0.0</modelVersion>
+            <groupId>$GROUP_ID</groupId>
+            <artifactId>$ARTIFACT_ID</artifactId>
+            <version>$VERSION</version>
+            <packaging>pom</packaging>
+            <dependencies>
+          EOF
+
+            for DEP in "$@"; do
+              cat >> "$DEST_DIR/$ART.pom" << EOF
+              <dependency>
+                <groupId>$GROUP_ID</groupId>
+                <artifactId>$DEP</artifactId>
+                <version>$VERSION</version>
+              </dependency>
+          EOF
+            done
+
+            cat >> "$DEST_DIR/$ART.pom" << EOF
+            </dependencies>
+          </project>
+          EOF
+
+            write_metadata "$GROUP_ID" "$GROUP_PATH" "$ARTIFACT_ID"
+          }
+
+          MODULES=(
+            advancements announcements channels cooldowns discord emojis
+            join-quit login mentions moderation motd tags vanish
+          )
+          COMMANDS=(
+            clear-chat color ignore message mute nick print settings
+          )
+
+          deploy_api
+
+          for MODULE in "${MODULES[@]}"; do
+            deploy_jar_artifact \
+              "com.bitaspire.sir.module" \
+              "com/bitaspire/sir/module" \
+              "$MODULE" \
+              "module/$MODULE/build/libs"
+          done
+
+          for COMMAND in "${COMMANDS[@]}"; do
+            deploy_jar_artifact \
+              "com.bitaspire.sir.command" \
+              "com/bitaspire/sir/command" \
+              "$COMMAND" \
+              "command/$COMMAND/build/libs"
+          done
+
+          deploy_aggregate_pom \
+            "com.bitaspire.sir.module" \
+            "com/bitaspire/sir/module" \
+            "all" \
+            "${MODULES[@]}"
+
+          deploy_aggregate_pom \
+            "com.bitaspire.sir.command" \
+            "com/bitaspire/sir/command" \
+            "all" \
+            "${COMMANDS[@]}"
+
+      - name: Commit Maven repository changes
+        if: github.event_name != 'pull_request'
+        run: |
+          cd maven-repo
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add .
+          git commit -m "Deploy SIR $VERSION" || echo "No changes to commit"
+          git push

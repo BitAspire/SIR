@@ -1,5 +1,4 @@
 group = "com.bitaspire.sir"
-version = "0.1.0"
 
 dependencies {
     api("org.spigotmc:spigot-api:1.16.5-R0.1-SNAPSHOT")
