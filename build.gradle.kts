@@ -7,7 +7,7 @@ plugins {
 
 allprojects {
     group = "com.bitaspire.sir"
-    version = "2.0.2"
+    version = "2.1.0"
 
     repositories {
         mavenCentral()
@@ -28,7 +28,6 @@ subprojects {
     apply(plugin = "java-library")
     apply(plugin = "io.freefair.lombok")
     apply(plugin = "com.gradleup.shadow")
-
     java {
         withSourcesJar()
         withJavadocJar()
