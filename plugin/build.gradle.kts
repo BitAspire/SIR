@@ -26,11 +26,11 @@ dependencies {
 val apiMainOutput = apiProject.extensions.getByType<SourceSetContainer>()["main"].output
 
 val moduleJarTasks = rootProject.subprojects
-    .filter { it.path.startsWith(":module:") }
+    .filter { it.path.startsWith(":module:") && it.path != ":module:all" }
     .map { it.tasks.named<Jar>("jar") }
 
 val commandJarTasks = rootProject.subprojects
-    .filter { it.path.startsWith(":command:") }
+    .filter { it.path.startsWith(":command:") && it.path != ":command:all" }
     .map { it.tasks.named<Jar>("jar") }
 
 tasks.named<Jar>("jar") {
