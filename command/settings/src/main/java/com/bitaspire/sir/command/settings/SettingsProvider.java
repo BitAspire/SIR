@@ -11,11 +11,11 @@ import me.croabeast.common.gui.ChestBuilder;
 import me.croabeast.common.gui.ItemCreator;
 import com.bitaspire.sir.ChatToggleable;
 import com.bitaspire.sir.ExtensionFile;
+import com.bitaspire.sir.MenuToggleable;
 import com.bitaspire.sir.PluginDependant;
 import com.bitaspire.sir.command.*;
 import com.bitaspire.sir.module.SIRModule;
 import com.bitaspire.sir.user.SIRUser;
-import me.croabeast.takion.character.SmallCaps;
 import me.croabeast.takion.logger.LogLevel;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Material;
@@ -283,7 +283,7 @@ public final class SettingsProvider extends StandaloneProvider implements Settin
     private GuiItem buildToggleItem(@NotNull ChatToggleable toggleable, boolean enabled) {
         List<String> description = new ArrayList<>();
         for (String line : buildToggleDescription(toggleable))
-            description.add("&7" + SmallCaps.toSmallCaps(line));
+            description.add("&7" + MenuToggleable.smallCapsMenuText(line));
 
         Map<String, String> ph = placeholders(
                 "title", buildToggleTitle(toggleable),
@@ -373,7 +373,7 @@ public final class SettingsProvider extends StandaloneProvider implements Settin
         String result = input;
         for (Map.Entry<String, String> e : placeholders.entrySet())
             result = result.replace("{" + e.getKey() + "}", e.getValue());
-        return result;
+        return MenuToggleable.formatMenuText(result);
     }
 
     @NotNull

@@ -49,8 +49,8 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
         economy = EconomyProvider.detect();
 
         configuration = new ConfigImpl(this);
-        moduleManager = new ModuleManager(this);
-        commandManager = new CommandManager(this);
+        moduleManager = new ModuleManagerImpl(this);
+        commandManager = new CommandManagerImpl(this);
 
         (new Listener() {
             @EventHandler

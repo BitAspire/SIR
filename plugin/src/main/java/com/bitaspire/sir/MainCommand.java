@@ -118,7 +118,7 @@ final class MainCommand implements TabExecutor {
         if (next == null)
             return sender.send("<P> &cInvalid state. Use: enable, disable, toggle.");
 
-        moduleManager.updateModuleEnabled(module.getName(), next);
+        moduleManager.updateEnabled(module.getName(), next);
         moduleManager.saveStates();
 
         return sender.send(
