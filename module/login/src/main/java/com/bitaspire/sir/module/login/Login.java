@@ -9,7 +9,7 @@ public final class Login extends SIRModule implements PluginDependant {
     Listeners listeners;
 
     @Getter
-    private final String[] dependencies = {"AuthMe", "UserLogin", "nLogin", "OpeNLogin", "NexAuth"};
+    private final String[] dependencies = {"AuthMe", "nLogin", "OpeNLogin"};
 
     @Override
     public boolean register() {

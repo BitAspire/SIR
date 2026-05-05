@@ -1,13 +1,10 @@
 package com.bitaspire.sir.module.login;
 
-import com.elchologamer.userlogin.api.event.AuthenticationEvent;
 import com.nickuc.login.api.event.bukkit.auth.AuthenticateEvent;
 import com.nickuc.openlogin.bukkit.api.events.AsyncLoginEvent;
 import com.nickuc.openlogin.bukkit.api.events.AsyncRegisterEvent;
 import fr.xephi.authme.events.LoginEvent;
 import com.bitaspire.sir.module.JoinQuitService;
-import su.nexmedia.auth.api.event.AuthPlayerLoginEvent;
-import su.nexmedia.auth.api.event.AuthPlayerRegisterEvent;
 
 import lombok.RequiredArgsConstructor;
 import me.croabeast.common.Registrable;
@@ -19,11 +16,14 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.plugin.PluginManager;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @RequiredArgsConstructor
 final class Listeners implements Registrable {
 
     private final Login main;
-    private Listener listener;
+    private final List<Listener> listeners = new ArrayList<>();
 
     void logUser(Player player) {
         SIRUser user = main.getApi().getUserManager().getUser(player);
@@ -35,44 +35,39 @@ final class Listeners implements Registrable {
 
     @Override
     public boolean isRegistered() {
-        return listener != null && listener.isRegistered();
+        return !listeners.isEmpty() && listeners.stream().allMatch(Listener::isRegistered);
     }
 
     @Override
     public boolean register() {
-        PluginManager manager = Bukkit.getPluginManager();
+        if (isRegistered()) return true;
 
-        if (manager.isPluginEnabled("UserLogin"))
-            listener = new Listener() {
-                @EventHandler
-                private void onLogin(AuthenticationEvent event) {
-                    logUser(event.getPlayer());
-                }
-            };
+        PluginManager manager = Bukkit.getPluginManager();
+        listeners.clear();
 
         if (manager.isPluginEnabled("AuthMe"))
-            listener = new Listener() {
+            listeners.add(new Listener() {
                 @EventHandler
                 private void onLogin(LoginEvent event) {
                     logUser(event.getPlayer());
                 }
-            };
+            });
 
         if (manager.isPluginEnabled("nLogin"))
             try {
                 Class.forName("com.nickuc.login.api.nLoginAPIHolder");
-                listener = new Listener() {
+                listeners.add(new Listener() {
                     @EventHandler
                     private void onLogin(AuthenticateEvent event) {
                         logUser(event.getPlayer());
                     }
-                };
+                });
             } catch (Exception e) {
                 main.getApi().getLibrary().getLogger().log(LogLevel.WARN, "Update nLogin to version 10.0+ to use the login feature.");
             }
 
         if (manager.isPluginEnabled("OpeNLogin"))
-            listener = new Listener() {
+            listeners.add(new Listener() {
                 @EventHandler
                 private void onLogin(AsyncLoginEvent event) {
                     logUser(event.getPlayer());
@@ -81,25 +76,23 @@ final class Listeners implements Registrable {
                 private void onRegister(AsyncRegisterEvent event) {
                     logUser(event.getPlayer());
                 }
-            };
+            });
 
-        if (manager.isPluginEnabled("NexAuth"))
-            listener = new Listener() {
-                @EventHandler
-                private void onLogin(AuthPlayerLoginEvent event) {
-                    logUser(event.getPlayer());
-                }
-                @EventHandler
-                private void onRegister(AuthPlayerRegisterEvent event) {
-                    logUser(event.getPlayer());
-                }
-            };
+        boolean registered = true;
+        for (Listener listener : listeners)
+            registered &= listener.register();
 
-        return listener == null || listener.register();
+        if (!registered) unregister();
+        return registered;
     }
 
     @Override
     public boolean unregister() {
-        return listener == null || listener.unregister();
+        boolean unregistered = true;
+        for (Listener listener : listeners)
+            unregistered &= listener.unregister();
+
+        listeners.clear();
+        return unregistered;
     }
 }

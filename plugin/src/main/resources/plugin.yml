@@ -15,9 +15,7 @@ softdepend:
   - PlaceholderAPI
   - InteractiveChat
   # Login plugins
-  - UserLogin
   - AuthMe
-  - NexAuth
   - nLogin
   - OpeNLogin
   # Vanish plugins
