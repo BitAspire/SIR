@@ -115,6 +115,7 @@ final class Listeners implements Registrable {
                 private void onVanish(CMIPlayerVanishEvent event) {
                     new VanishEvent(userManager.getUser(event.getPlayer()), false).call();
                 }
+
                 @EventHandler
                 private void onUnVanish(CMIPlayerUnVanishEvent event) {
                     new VanishEvent(userManager.getUser(event.getPlayer()), true).call();

@@ -13,8 +13,6 @@ allprojects {
         mavenCentral()
         mavenLocal()
 
-        flatDir { dirs(rootProject.file("libraries")) }
-
         maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
         maven("https://oss.sonatype.org/content/repositories/snapshots/")
         maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
