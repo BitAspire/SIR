@@ -404,8 +404,12 @@ final class UserManagerImpl implements UserManager, Registrable {
                 return PunishmentManager.get().isMuted(id);
             }
 
-            return Exceptions.isPluginEnabled("CMI") &&
-                    CMIUser.getUser(player).isMuted();
+            if (Exceptions.isPluginEnabled("CMI")) {
+                CMIUser cmiUser = CMIUser.getUser(player);
+                return cmiUser != null && cmiUser.isMuted();
+            }
+
+            return false;
         }
 
         @Override
@@ -806,8 +810,10 @@ final class UserManagerImpl implements UserManager, Registrable {
             if (essentials != null)
                 return ((Essentials) essentials).getUser(player).isVanished();
 
-            if (manager.getPlugin("CMI") != null)
-                return CMIUser.getUser(player).isVanished();
+            if (manager.getPlugin("CMI") != null) {
+                CMIUser cmiUser = CMIUser.getUser(player);
+                if (cmiUser != null) return cmiUser.isVanished();
+            }
 
             for (MetadataValue meta : player.getMetadata("vanished"))
                 if (meta.asBoolean()) return true;
