@@ -562,38 +562,46 @@ final class ModuleManagerImpl implements ModuleManager {
     public ChestBuilder getMenu() {
         List<SIRModule> loadedModules = getModules();
 
-        int itemsPerRow = 5;
-        int rowsOfItems = (loadedModules.size() + itemsPerRow - 1) / itemsPerRow;
-        int rows = Math.min(6, Math.max(3, rowsOfItems + 2));
+        int rows = MenuVisuals.mainRowsFor(loadedModules.size());
+        int totalPages = MenuVisuals.pageCount(loadedModules.size(), MenuVisuals.MAIN_ITEMS_PER_PAGE);
         String title = "&8" + SmallCaps.toSmallCaps("Loaded SIR Modules:");
         ChestBuilder menu = ChestBuilder.of(api.getPlugin(), rows, title);
 
-        menu.addSingleItem(
-                0, 1, 1,
-                ItemCreator.of(Material.BARRIER)
-                        .modifyLore("&8More modules will be added soon.")
-                        .modifyName("&c&lCOMING SOON...")
-                        .setActionToEmpty()
-                        .create(api.getPlugin()),
-                pane -> pane.setPriority(Pane.Priority.LOW)
+        MenuVisuals.addFrame(
+                menu,
+                api.getPlugin(),
+                rows,
+                totalPages,
+                Material.BOOKSHELF,
+                "SIR Modules",
+                "&7Loaded modules: &f" + loadedModules.size(),
+                "&7Left-click a module to toggle it.",
+                "&7Right-click opens the config editor."
         );
+        MenuVisuals.addPageControls(menu, api.getPlugin(), rows, totalPages);
+
+        if (loadedModules.isEmpty()) {
+            menu.addSingleItem(
+                    0, 4, 1,
+                    MenuVisuals.emptyItem(api.getPlugin(), "No Modules", "No module jars are loaded right now."),
+                    pane -> pane.setPriority(Pane.Priority.LOW)
+            );
+            return menu;
+        }
 
         for (int index = 0; index < loadedModules.size(); index++) {
-            int row = index / itemsPerRow;
-            if (row >= 4) break;
-
-            int column = index % itemsPerRow;
-            int x = 3 + column;
-            int y = 1 + row;
-
+            int page = index / MenuVisuals.MAIN_ITEMS_PER_PAGE;
+            Slot slot = MenuVisuals.mainSlot(index % MenuVisuals.MAIN_ITEMS_PER_PAGE);
+            if (slot == null) continue;
             SIRModule module = loadedModules.get(index);
 
             MenuToggleable.Button button = module.getButton();
             if (button == null) continue;
             button.setEnabledItem(buildModuleItem(module, true));
             button.setDisabledItem(buildModuleItem(module, false));
+            configureModuleButton(module, button);
 
-            menu.addPane(0, Slot.fromXY(x, y), button);
+            menu.addPane(page, slot, button);
         }
 
         return menu;
@@ -656,31 +664,51 @@ final class ModuleManagerImpl implements ModuleManager {
 
     public void openConfigMenu(@NotNull InventoryClickEvent event) {
         event.setCancelled(true);
-        api.getLibrary().getLoadedSender().setTargets(event.getWhoClicked())
-                .setLogger(!(event.getWhoClicked() instanceof Player))
-                .send("<P> &cThis config editor is not available yet.");
+        SIRModule module = getClickedModule(event);
+        if (module != null) {
+            showConfigMenu(module, event.getWhoClicked());
+            return;
+        }
+
+        sendConfigMessage(event.getWhoClicked(), "Could not resolve the selected module.");
     }
 
     private GuiItem buildModuleItem(SIRModule module, boolean enabled) {
         ModuleInformation info = module.getInformation();
+        return MenuVisuals.toggleItem(api.getPlugin(), info, enabled, "Module", "toggle module", "open config");
+    }
 
-        List<String> lore = new ArrayList<>();
-        for (String line : info.getDescription()) {
-            if (StringUtils.isBlank(line)) continue;
-            lore.add(MenuToggleable.formatMenuText("&7 " + MenuToggleable.smallCapsMenuText(line)));
-        }
+    private void configureModuleButton(@NotNull SIRModule module, @NotNull MenuToggleable.Button button) {
+        button.allowToggle(false);
+        button.setOnClick(b -> event -> {
+            event.setCancelled(true);
 
-        lore.add("");
-        lore.add(MenuToggleable.formatMenuText("&f➤ &7Left-click: toggle module"));
+            if (event.isRightClick()) {
+                showConfigMenu(module, event.getWhoClicked());
+                return;
+            }
 
-        Material material = enabled ? Material.LIME_STAINED_GLASS_PANE : Material.RED_STAINED_GLASS_PANE;
-        String title = MenuToggleable.smallCapsMenuText(info.getTitle());
-        String status = enabled ? " &a&l✔" : " &c&l❌";
+            if (!event.isLeftClick()) return;
+            updateEnabled(module, !b.isEnabled());
+        });
+    }
 
-        return ItemCreator.of(material)
-                .modifyName(MenuToggleable.formatMenuText("&7• &f" + title + ":" + status))
-                .modifyLore(lore)
-                .create(api.getPlugin());
+    @Nullable
+    private SIRModule getClickedModule(@NotNull InventoryClickEvent event) {
+        int rawSlot = event.getRawSlot();
+        int x = rawSlot % 9;
+        int y = rawSlot / 9;
+        if (rawSlot < 0 || x < 2 || x > 6 || y < 1 || y > 4) return null;
+
+        int index = ((y - 1) * MenuVisuals.MAIN_ITEMS_PER_ROW) + (x - 2);
+        List<SIRModule> loadedModules = getModules();
+        return index >= 0 && index < loadedModules.size() ? loadedModules.get(index) : null;
+    }
+
+    private void sendConfigMessage(@NotNull HumanEntity viewer, @NotNull String message) {
+        api.getLibrary().getLoadedSender().setTargets(viewer)
+                .setLogger(!(viewer instanceof Player))
+                .send("<P> &c" + message);
     }
 
     private void showConfigMenu(@NotNull SIRModule module, @NotNull HumanEntity viewer) {
@@ -689,20 +717,46 @@ final class ModuleManagerImpl implements ModuleManager {
 
     private void showConfigMenu(@NotNull SIRModule module, @NotNull HumanEntity viewer, @Nullable String rootPath) {
         File configFile = new File(module.getDataFolder(), "config.yml");
-        if (!configFile.exists()) return;
+        if (!configFile.exists()) {
+            sendConfigMessage(viewer, "This module does not have a config.yml file.");
+            return;
+        }
 
         YamlConfiguration configuration = YamlConfiguration.loadConfiguration(configFile);
         ConfigurationSection section = rootPath == null ? configuration : configuration.getConfigurationSection(rootPath);
-        if (section == null) return;
+        if (section == null) {
+            sendConfigMessage(viewer, "This config section no longer exists.");
+            return;
+        }
 
         List<String> keys = new ArrayList<>(section.getKeys(false));
         keys.removeIf(StringUtils::isBlank);
         keys.sort(String.CASE_INSENSITIVE_ORDER);
 
-        int itemsPerPage = 28;
+        int itemsPerPage = MenuVisuals.CENTER_ITEMS_PER_PAGE;
         int rows = getCenterMenuRows(keys.size());
+        int totalPages = MenuVisuals.pageCount(keys.size(), itemsPerPage);
         String title = "&8" + SmallCaps.toSmallCaps(module.getName() + " Config" + (rootPath == null ? ":" : " - " + rootPath + ":"));
         ChestBuilder menu = ChestBuilder.of(api.getPlugin(), rows, title);
+        MenuVisuals.addFrame(
+                menu,
+                api.getPlugin(),
+                rows,
+                totalPages,
+                Material.WRITABLE_BOOK,
+                module.getName() + " Config",
+                "&7Section: &f" + (rootPath == null ? "root" : rootPath),
+                "&7Keys: &f" + keys.size(),
+                "&7Use entries to edit module settings."
+        );
+
+        if (keys.isEmpty()) {
+            menu.addSingleItem(
+                    0, 4, 1,
+                    MenuVisuals.emptyItem(api.getPlugin(), "No Options", "This section has no editable keys."),
+                    pane -> pane.setPriority(Pane.Priority.LOW)
+            );
+        }
 
         for (int index = 0; index < keys.size(); index++) {
             String key = keys.get(index);
@@ -718,17 +772,11 @@ final class ModuleManagerImpl implements ModuleManager {
                 menu.addPane(page, slot, ButtonBuilder
                         .of(api.getPlugin(), slot, enabled)
                         .setItem(
-                                ItemCreator.of(Material.LIME_STAINED_GLASS_PANE)
-                                        .modifyName("&7• &f" + SmallCaps.toSmallCaps(key) + ": &a&l✔")
-                                        .modifyLore("&f➤ &7Toggle option", "&7Current: &aEnabled")
-                                        .create(api.getPlugin()),
+                                MenuVisuals.booleanItem(api.getPlugin(), key, true),
                                 true
                         )
                         .setItem(
-                                ItemCreator.of(Material.RED_STAINED_GLASS_PANE)
-                                        .modifyName("&7• &f" + SmallCaps.toSmallCaps(key) + ": &c&l❌")
-                                        .modifyLore("&f➤ &7Toggle option", "&7Current: &cDisabled")
-                                        .create(api.getPlugin()),
+                                MenuVisuals.booleanItem(api.getPlugin(), key, false),
                                 false
                         )
                         .modify(button -> button.allowToggle(false))
@@ -744,17 +792,17 @@ final class ModuleManagerImpl implements ModuleManager {
                 List<String> values = configuration.getStringList(path);
                 menu.addSingleItem(
                         page, slot.getX(9), slot.getY(9),
-                        ItemCreator.of(Material.WRITABLE_BOOK)
-                                .modifyName("&7• &f" + SmallCaps.toSmallCaps(key) + ":")
-                                .modifyLore(
-                                        "&7Values: &f" + values.size(),
-                                        "&f➤ &7Open book editor"
-                                )
-                                .setAction(click -> {
+                        MenuVisuals.configItem(
+                                api.getPlugin(),
+                                Material.WRITABLE_BOOK,
+                                key,
+                                "String list",
+                                Arrays.asList("&7Values: &f" + values.size(), "&7Path: &f" + path),
+                                "open book editor",
+                                click -> {
                                     click.setCancelled(true);
                                     openListEditor(module, configFile, path, values, click.getWhoClicked(), rootPath);
-                                })
-                                .create(api.getPlugin()),
+                                }),
                         pane -> pane.setPriority(Pane.Priority.LOW)
                 );
             } else if (value instanceof ConfigurationSection) {
@@ -762,133 +810,64 @@ final class ModuleManagerImpl implements ModuleManager {
                 int childCount = child == null ? 0 : child.getKeys(false).size();
                 menu.addSingleItem(
                         page, slot.getX(9), slot.getY(9),
-                        ItemCreator.of(Material.BOOKSHELF)
-                                .modifyName("&7• &f" + SmallCaps.toSmallCaps(key) + ":")
-                                .modifyLore(
-                                        "&7Keys: &f" + childCount,
-                                        "&f➤ &7Open section"
-                                )
-                                .setAction(click -> {
+                        MenuVisuals.configItem(
+                                api.getPlugin(),
+                                Material.MAP,
+                                key,
+                                "Section",
+                                Arrays.asList("&7Keys: &f" + childCount, "&7Path: &f" + path),
+                                "open section",
+                                click -> {
                                     click.setCancelled(true);
                                     showConfigMenu(module, click.getWhoClicked(), path);
-                                })
-                                .create(api.getPlugin()),
+                                }),
                         pane -> pane.setPriority(Pane.Priority.LOW)
                 );
             } else {
                 String current = configuration.getString(path, "");
                 menu.addSingleItem(
                         page, slot.getX(9), slot.getY(9),
-                        ItemCreator.of(Material.PAPER)
-                                .modifyName("&7• &f" + SmallCaps.toSmallCaps(key) + ":")
-                                .modifyLore(
-                                        "&7Current: &f" + (StringUtils.isBlank(current) ? "<empty>" : current),
-                                        "&f➤ &7Edit value"
-                                )
-                                .setAction(click -> {
+                        MenuVisuals.configItem(
+                                api.getPlugin(),
+                                Material.PAPER,
+                                key,
+                                "Value",
+                                Arrays.asList("&7Current: &f" + MenuVisuals.preview(current), "&7Path: &f" + path),
+                                "edit value",
+                                click -> {
                                     click.setCancelled(true);
                                     openStringEditor(module, configFile, path, current, click.getWhoClicked(), rootPath);
-                                })
-                                .create(api.getPlugin()),
+                                }),
                         pane -> pane.setPriority(Pane.Priority.LOW)
                 );
             }
         }
 
-        int totalPages = Math.max(1, (keys.size() + itemsPerPage - 1) / itemsPerPage);
-        int bottomRow = rows - 1;
+        MenuVisuals.addPageControls(menu, api.getPlugin(), rows, totalPages);
 
         for (int page = 0; page < totalPages; page++) {
-            if (page > 0) {
-                int target = page - 1;
-                menu.addSingleItem(
-                        page, 1, bottomRow,
-                        ItemCreator.of(Material.ARROW)
-                                .modifyLore("&7Go to previous page.")
-                                .modifyName("&e&lPrevious")
-                                .setAction(click -> {
-                                    click.setCancelled(true);
-                                    menu.setDisplayedPage(target);
-                                    menu.showGui(click.getWhoClicked());
-                                })
-                                .create(api.getPlugin()),
-                        pane -> pane.setPriority(Pane.Priority.LOW)
-                );
-            }
-
-            if (page < totalPages - 1) {
-                int target = page + 1;
-                menu.addSingleItem(
-                        page, 7, bottomRow,
-                        ItemCreator.of(Material.ARROW)
-                                .modifyLore("&7Go to next page.")
-                                .modifyName("&e&lNext")
-                                .setAction(click -> {
-                                    click.setCancelled(true);
-                                    menu.setDisplayedPage(target);
-                                    menu.showGui(click.getWhoClicked());
-                                })
-                                .create(api.getPlugin()),
-                        pane -> pane.setPriority(Pane.Priority.LOW)
-                );
-            }
-
             if (rootPath != null) {
                 String parentPath = rootPath.contains(".")
                         ? rootPath.substring(0, rootPath.lastIndexOf('.'))
                         : null;
                 menu.addSingleItem(
-                        page, 3, bottomRow,
-                        ItemCreator.of(Material.ARROW)
-                                .modifyLore("&7Return to the previous section.")
-                                .modifyName("&a&lBack")
-                                .setAction(e -> {
-                                    e.setCancelled(true);
-                                    showConfigMenu(module, e.getWhoClicked(), parentPath);
-                                })
-                                .create(api.getPlugin()),
-                        pane -> pane.setPriority(Pane.Priority.LOW)
-                );
-
-                menu.addSingleItem(
-                        page, 4, bottomRow,
-                        ItemCreator.of(Material.ARROW)
-                                .modifyLore("&7Return to the modules menu.")
-                                .modifyName("&a&lBack to Modules")
-                                .setAction(e -> {
-                                    e.setCancelled(true);
-                                    getMenu().showGui(e.getWhoClicked());
-                                })
-                                .create(api.getPlugin()),
+                        page, 0, 0,
+                        MenuVisuals.back(api.getPlugin(), "Previous Section", "&7Return to the previous config section.", e -> {
+                            e.setCancelled(true);
+                            showConfigMenu(module, e.getWhoClicked(), parentPath);
+                        }),
                         pane -> pane.setPriority(Pane.Priority.LOW)
                 );
             } else {
                 menu.addSingleItem(
-                        page, 3, bottomRow,
-                        ItemCreator.of(Material.ARROW)
-                                .modifyLore("&7Return to the modules menu.")
-                                .modifyName("&a&lBack to Modules")
-                                .setAction(e -> {
-                                    e.setCancelled(true);
-                                    getMenu().showGui(e.getWhoClicked());
-                                })
-                                .create(api.getPlugin()),
+                        page, 0, 0,
+                        MenuVisuals.back(api.getPlugin(), "Modules", "&7Return to the modules menu.", e -> {
+                            e.setCancelled(true);
+                            getMenu().showGui(e.getWhoClicked());
+                        }),
                         pane -> pane.setPriority(Pane.Priority.LOW)
                 );
             }
-
-            menu.addSingleItem(
-                    page, 5, bottomRow,
-                    ItemCreator.of(Material.BARRIER)
-                            .modifyName("&c&lClose")
-                            .modifyLore("&7Close this menu.")
-                            .setAction(e -> {
-                                e.setCancelled(true);
-                                e.getWhoClicked().closeInventory();
-                            })
-                            .create(api.getPlugin()),
-                    pane -> pane.setPriority(Pane.Priority.LOW)
-            );
         }
 
         menu.showGui(viewer);
