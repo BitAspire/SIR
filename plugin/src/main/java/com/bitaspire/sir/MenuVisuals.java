@@ -3,6 +3,7 @@ package com.bitaspire.sir;
 import com.github.stefvanschie.inventoryframework.gui.GuiItem;
 import com.github.stefvanschie.inventoryframework.pane.Pane;
 import com.github.stefvanschie.inventoryframework.pane.util.Slot;
+import lombok.experimental.UtilityClass;
 import me.croabeast.common.gui.ChestBuilder;
 import me.croabeast.common.gui.ItemCreator;
 import org.apache.commons.lang.StringUtils;
@@ -16,7 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-final class MenuVisuals {
+@UtilityClass
+class MenuVisuals {
 
     static final int MAIN_ITEMS_PER_ROW = 5;
     static final int MAIN_ITEMS_PER_PAGE = MAIN_ITEMS_PER_ROW * 4;
@@ -27,9 +29,6 @@ final class MenuVisuals {
     private static final String CROSS = "\u2718";
     private static final String ACTION = "\u00BB";
     private static final String BACK = "\u2190";
-
-    private MenuVisuals() {
-    }
 
     static int pageCount(int itemCount, int itemsPerPage) {
         return Math.max(1, (Math.max(0, itemCount) + itemsPerPage - 1) / itemsPerPage);
@@ -44,10 +43,7 @@ final class MenuVisuals {
     @Nullable
     static Slot mainSlot(int index) {
         int row = index / MAIN_ITEMS_PER_ROW;
-        if (row >= 4) return null;
-
-        int column = index % MAIN_ITEMS_PER_ROW;
-        return Slot.fromXY(2 + column, 1 + row);
+        return row >= 4 ? null : Slot.fromXY(2 + (index % MAIN_ITEMS_PER_ROW), 1 + row);
     }
 
     static void addFrame(@NotNull ChestBuilder menu,
@@ -243,12 +239,9 @@ final class MenuVisuals {
 
     @NotNull
     static String preview(@Nullable String value) {
-        if (StringUtils.isBlank(value)) return "<empty>";
-
-        String normalized = value.replace('\n', ' ').replace('\r', ' ');
-        if (normalized.length() <= 40) return normalized;
-
-        return normalized.substring(0, 37) + "...";
+        boolean blank = StringUtils.isBlank(value);
+        String normalized = blank ? "" : value.replace('\n', ' ').replace('\r', ' ');
+        return blank ? "<empty>" : normalized.length() <= 40 ? normalized : normalized.substring(0, 37) + "...";
     }
 
     @NotNull
