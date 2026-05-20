@@ -13,7 +13,6 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import me.croabeast.command.Synchronizer;
 import me.croabeast.common.gui.ChestBuilder;
-import me.croabeast.common.gui.ItemCreator;
 import me.croabeast.scheduler.GlobalScheduler;
 import me.croabeast.scheduler.GlobalTask;
 import com.bitaspire.sir.module.ModuleManager;
@@ -515,41 +514,56 @@ final class CommandManagerImpl implements CommandManager {
 
     @NotNull
     public ChestBuilder getMenu() {
-        List<MenuToggleable.Button> buttons = providers.values().stream()
+        List<StandaloneProvider> providerList = providers.values().stream()
                 .map(entry -> entry.provider)
                 .filter(StandaloneProvider.class::isInstance)
                 .map(StandaloneProvider.class::cast)
-                .map(StandaloneProvider::getButton)
-                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-        int itemsPerRow = 5;
-        int rowsOfItems = (buttons.size() + itemsPerRow - 1) / itemsPerRow;
-        int rows = Math.min(6, Math.max(3, rowsOfItems + 2));
+        int rows = MenuVisuals.mainRowsFor(providerList.size());
+        int totalPages = MenuVisuals.pageCount(providerList.size(), MenuVisuals.MAIN_ITEMS_PER_PAGE);
 
         String title = "&8" + SmallCaps.toSmallCaps("Loaded SIR Commands:");
         ChestBuilder menu = ChestBuilder.of(api.getPlugin(), rows, title);
 
-        menu.addSingleItem(
-                0, 1, 1,
-                ItemCreator.of(Material.BARRIER)
-                        .modifyLore("&8More commands will be added soon.")
-                        .modifyName("&c&lCOMING SOON...")
-                        .setActionToEmpty()
-                        .create(api.getPlugin()),
-                pane -> pane.setPriority(Pane.Priority.LOW)
+        MenuVisuals.addFrame(
+                menu,
+                api.getPlugin(),
+                rows,
+                totalPages,
+                Material.COMMAND_BLOCK,
+                "SIR Commands",
+                "&7Loaded providers: &f" + providerList.size(),
+                "&7Left-click a provider to toggle it.",
+                "&7Right-click opens override options in SIR+."
         );
+        MenuVisuals.addPageControls(menu, api.getPlugin(), rows, totalPages);
 
-        for (int index = 0; index < buttons.size(); index++) {
-            int row = index / itemsPerRow;
-            if (row >= 4) break;
+        if (providerList.isEmpty()) {
+            menu.addSingleItem(
+                    0, 4, 1,
+                    MenuVisuals.emptyItem(api.getPlugin(), "No Commands", "No command provider jars are loaded right now."),
+                    pane -> pane.setPriority(Pane.Priority.LOW)
+            );
+            return menu;
+        }
 
-            int column = index % itemsPerRow;
-            int x = 3 + column;
-            int y = 1 + row;
+        for (int index = 0; index < providerList.size(); index++) {
+            int page = index / MenuVisuals.MAIN_ITEMS_PER_PAGE;
+            Slot slot = MenuVisuals.mainSlot(index % MenuVisuals.MAIN_ITEMS_PER_PAGE);
+            if (slot == null) continue;
 
-            MenuToggleable.Button button = buttons.get(index);
-            menu.addPane(0, Slot.fromXY(x, y), button);
+            StandaloneProvider provider = providerList.get(index);
+            MenuToggleable.Button button = provider.getButton();
+            if (button == null) continue;
+            button.setEnabledItem(MenuVisuals.toggleItem(
+                    api.getPlugin(), provider.getInformation(), true, "Command provider", "toggle provider", "open overrides (SIR+)"
+            ));
+            button.setDisabledItem(MenuVisuals.toggleItem(
+                    api.getPlugin(), provider.getInformation(), false, "Command provider", "toggle provider", "open overrides (SIR+)"
+            ));
+
+            menu.addPane(page, slot, button);
         }
 
         return menu;

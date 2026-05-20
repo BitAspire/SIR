@@ -1,0 +1,302 @@
+package com.bitaspire.sir;
+
+import com.github.stefvanschie.inventoryframework.gui.GuiItem;
+import com.github.stefvanschie.inventoryframework.pane.Pane;
+import com.github.stefvanschie.inventoryframework.pane.util.Slot;
+import me.croabeast.common.gui.ChestBuilder;
+import me.croabeast.common.gui.ItemCreator;
+import org.apache.commons.lang.StringUtils;
+import org.bukkit.Material;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+
+final class MenuVisuals {
+
+    static final int MAIN_ITEMS_PER_ROW = 5;
+    static final int MAIN_ITEMS_PER_PAGE = MAIN_ITEMS_PER_ROW * 4;
+    static final int CENTER_ITEMS_PER_PAGE = 7 * 4;
+    private static final String POINTER = "\u27BC";
+    private static final String INFO = "\u25C6";
+    private static final String CHECK = "\u2714";
+    private static final String CROSS = "\u2718";
+    private static final String ACTION = "\u00BB";
+    private static final String BACK = "\u2190";
+
+    private MenuVisuals() {
+    }
+
+    static int pageCount(int itemCount, int itemsPerPage) {
+        return Math.max(1, (Math.max(0, itemCount) + itemsPerPage - 1) / itemsPerPage);
+    }
+
+    static int mainRowsFor(int itemCount) {
+        int visibleItems = Math.max(1, Math.min(MAIN_ITEMS_PER_PAGE, itemCount));
+        int rowsOfItems = (visibleItems + MAIN_ITEMS_PER_ROW - 1) / MAIN_ITEMS_PER_ROW;
+        return Math.max(3, Math.min(6, rowsOfItems + 2));
+    }
+
+    @Nullable
+    static Slot mainSlot(int index) {
+        int row = index / MAIN_ITEMS_PER_ROW;
+        if (row >= 4) return null;
+
+        int column = index % MAIN_ITEMS_PER_ROW;
+        return Slot.fromXY(2 + column, 1 + row);
+    }
+
+    static void addFrame(@NotNull ChestBuilder menu,
+                         @NotNull Plugin plugin,
+                         int rows,
+                         int pages,
+                         @NotNull Material summaryMaterial,
+                         @NotNull String title,
+                         @NotNull String... summaryLore) {
+        for (int page = 0; page < pages; page++) {
+            for (int y = 0; y < rows; y++) {
+                for (int x = 0; x < 9; x++) {
+                    menu.addSingleItem(
+                            page, x, y,
+                            filler(plugin),
+                            pane -> pane.setPriority(Pane.Priority.LOWEST)
+                    );
+                }
+            }
+
+            menu.addSingleItem(
+                    page, 4, 0,
+                    item(plugin, summaryMaterial, headerName(title), summaryLore, event -> event.setCancelled(true)),
+                    pane -> pane.setPriority(Pane.Priority.LOW)
+            );
+            menu.addSingleItem(
+                    page, 8, 0,
+                    close(plugin),
+                    pane -> pane.setPriority(Pane.Priority.LOW)
+            );
+        }
+    }
+
+    static void addPageControls(@NotNull ChestBuilder menu,
+                                @NotNull Plugin plugin,
+                                int rows,
+                                int pages) {
+        if (pages <= 1) return;
+
+        int bottomRow = rows - 1;
+        for (int page = 0; page < pages; page++) {
+            int displayPage = page + 1;
+            menu.addSingleItem(
+                    page, 4, bottomRow,
+                    item(plugin, Material.PAPER, "&e&l" + small("Page") + " &f" + displayPage + "/" + pages,
+                            new String[]{"&8" + POINTER + " &7Use navigation buttons to browse."}, event -> event.setCancelled(true)),
+                    pane -> pane.setPriority(Pane.Priority.LOW)
+            );
+
+            if (page > 0) {
+                int target = page - 1;
+                menu.addSingleItem(
+                        page, 2, bottomRow,
+                        navigation(plugin, "&e&l" + BACK + " " + small("Previous"), "&7Go to page &f" + (target + 1) + "&7.", event -> {
+                            event.setCancelled(true);
+                            menu.setDisplayedPage(target);
+                            menu.showGui(event.getWhoClicked());
+                        }),
+                        pane -> pane.setPriority(Pane.Priority.LOW)
+                );
+            }
+
+            if (page < pages - 1) {
+                int target = page + 1;
+                menu.addSingleItem(
+                        page, 6, bottomRow,
+                        navigation(plugin, "&e&l" + small("Next") + " \u2192", "&7Go to page &f" + (target + 1) + "&7.", event -> {
+                            event.setCancelled(true);
+                            menu.setDisplayedPage(target);
+                            menu.showGui(event.getWhoClicked());
+                        }),
+                        pane -> pane.setPriority(Pane.Priority.LOW)
+                );
+            }
+        }
+    }
+
+    @NotNull
+    static GuiItem emptyItem(@NotNull Plugin plugin, @NotNull String title, @NotNull String detail) {
+        return item(plugin, Material.BARRIER, "&c&l" + CROSS + " " + small(title),
+                new String[]{"&8" + POINTER + " &7" + detail}, event -> event.setCancelled(true));
+    }
+
+    @NotNull
+    static GuiItem toggleItem(@NotNull Plugin plugin,
+                              @NotNull Information information,
+                              boolean enabled,
+                              @NotNull String type,
+                              @NotNull String primaryAction,
+                              @Nullable String secondaryAction) {
+        List<String> lore = new ArrayList<>();
+
+        for (String line : information.getDescription()) {
+            if (StringUtils.isBlank(line)) continue;
+            lore.add("&8" + POINTER + " &7" + small(line));
+        }
+
+        if (!lore.isEmpty()) lore.add("");
+        lore.add("&8" + INFO + " &7" + small("Status") + "&8: " + status(enabled));
+        lore.add("&8" + ACTION + " &e" + small("Left-click") + " &8- &7" + small(primaryAction));
+        if (StringUtils.isNotBlank(secondaryAction)) {
+            lore.add("&8" + ACTION + " &e" + small("Right-click") + " &8- &7" + small(secondaryAction));
+        }
+
+        return item(
+                plugin,
+                enabled ? Material.LIME_STAINED_GLASS_PANE : Material.RED_STAINED_GLASS_PANE,
+                typedName(information.getTitle(), type),
+                lore.toArray(new String[0]),
+                event -> event.setCancelled(true)
+        );
+    }
+
+    @NotNull
+    static GuiItem booleanItem(@NotNull Plugin plugin, @NotNull String key, boolean enabled) {
+        return stateItem(plugin, key, enabled, "Boolean", "toggle option");
+    }
+
+    @NotNull
+    static GuiItem stateItem(@NotNull Plugin plugin,
+                             @NotNull String key,
+                             boolean enabled,
+                             @NotNull String type,
+                             @NotNull String action) {
+        return item(
+                plugin,
+                enabled ? Material.LIME_STAINED_GLASS_PANE : Material.RED_STAINED_GLASS_PANE,
+                typedName(key, type),
+                new String[]{
+                        "&8" + INFO + " &7" + small("Current") + "&8: " + status(enabled),
+                        "",
+                        "&8" + ACTION + " &e" + small("Left-click") + " &8- &7" + small(action)
+                },
+                event -> event.setCancelled(true)
+        );
+    }
+
+    @NotNull
+    static GuiItem configItem(@NotNull Plugin plugin,
+                              @NotNull Material material,
+                              @NotNull String key,
+                              @NotNull String type,
+                              @NotNull List<String> details,
+                              @NotNull String action,
+                              @NotNull Consumer<InventoryClickEvent> handler) {
+        List<String> lore = new ArrayList<>();
+        for (String detail : details) {
+            if (StringUtils.isBlank(detail)) continue;
+            lore.add("&8" + POINTER + " " + detail);
+        }
+        lore.add("");
+        lore.add("&8" + ACTION + " &e" + small("Left-click") + " &8- &7" + small(action));
+        return item(plugin, material, typedName(key, type), lore.toArray(new String[0]), handler);
+    }
+
+    @NotNull
+    static GuiItem navigation(@NotNull Plugin plugin,
+                              @NotNull String name,
+                              @NotNull String lore,
+                              @NotNull Consumer<InventoryClickEvent> handler) {
+        return item(plugin, Material.YELLOW_STAINED_GLASS_PANE, name, new String[]{"&8" + POINTER + " " + lore}, handler);
+    }
+
+    @NotNull
+    static GuiItem navigation(@NotNull Plugin plugin,
+                              @NotNull Material material,
+                              @NotNull String name,
+                              @NotNull String lore,
+                              @NotNull Consumer<InventoryClickEvent> handler) {
+        return item(plugin, material, name, new String[]{"&8" + POINTER + " " + lore}, handler);
+    }
+
+    @NotNull
+    static GuiItem back(@NotNull Plugin plugin,
+                        @NotNull String target,
+                        @NotNull String lore,
+                        @NotNull Consumer<InventoryClickEvent> handler) {
+        return item(plugin, Material.YELLOW_STAINED_GLASS_PANE,
+                "&e&l" + BACK + " " + small("Back") + " &8| &7" + small(target),
+                new String[]{"&8" + POINTER + " " + lore},
+                handler);
+    }
+
+    @NotNull
+    static GuiItem close(@NotNull Plugin plugin) {
+        return item(plugin, Material.RED_STAINED_GLASS_PANE,
+                "&c&l" + CROSS + " " + small("Close"),
+                new String[]{"&8" + POINTER + " &7Close this menu."}, event -> {
+            event.setCancelled(true);
+            event.getWhoClicked().closeInventory();
+        });
+    }
+
+    @NotNull
+    static String preview(@Nullable String value) {
+        if (StringUtils.isBlank(value)) return "<empty>";
+
+        String normalized = value.replace('\n', ' ').replace('\r', ' ');
+        if (normalized.length() <= 40) return normalized;
+
+        return normalized.substring(0, 37) + "...";
+    }
+
+    @NotNull
+    private static GuiItem filler(@NotNull Plugin plugin) {
+        return item(plugin, Material.GRAY_STAINED_GLASS_PANE, " ", new String[0], event -> event.setCancelled(true));
+    }
+
+    @NotNull
+    private static GuiItem item(@NotNull Plugin plugin,
+                                @NotNull Material material,
+                                @NotNull String name,
+                                @NotNull String[] lore,
+                                @NotNull Consumer<InventoryClickEvent> handler) {
+        List<String> formattedLore = new ArrayList<>();
+        for (String line : lore) {
+            formattedLore.add(format(line));
+        }
+
+        return ItemCreator.of(material)
+                .modifyName(format(name))
+                .modifyLore(formattedLore)
+                .setAction(handler)
+                .create(plugin);
+    }
+
+    @NotNull
+    private static String small(@Nullable String text) {
+        return MenuToggleable.smallCapsMenuText(text);
+    }
+
+    @NotNull
+    private static String status(boolean enabled) {
+        return (enabled ? "&a" + CHECK + " " : "&c" + CROSS + " ")
+                + small(enabled ? "Enabled" : "Disabled");
+    }
+
+    @NotNull
+    private static String typedName(@Nullable String title, @NotNull String type) {
+        return "&f" + small(title) + " &8| &7" + small(type);
+    }
+
+    @NotNull
+    private static String headerName(@NotNull String title) {
+        return "&f&l" + small(title);
+    }
+
+    @NotNull
+    private static String format(@Nullable String text) {
+        return MenuToggleable.formatMenuText(text);
+    }
+}
