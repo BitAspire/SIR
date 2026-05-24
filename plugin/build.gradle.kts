@@ -19,7 +19,7 @@ dependencies {
         exclude(group = "org.bstats")
     }
 
-    takionShaded("me.croabeast.takion:shaded:1.6.0:all")
+    takionShaded("me.croabeast.takion:shaded:1.6.1:all")
 }
 
 val apiMainOutput = apiProject.extensions.getByType<SourceSetContainer>()["main"].output
