@@ -1,8 +1,15 @@
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
+# Player-facing messages for the announcement command.
 lang:
-  # Help message for the announce command.
   # Displayed for /announce help or invalid usage.
   help: '<P> &7Usage: &b/announce &7[help|preview] [<announcement_id>]'
 
-  # Error when an announcement ID is missing or invalid.
-  # The valid IDs are listed in announces.yml.
-  select: '<P> &cPlease select a valid announcement from &fannounces.yml&c.'
+  # Valid IDs are listed under announcements in announcements.yml.
+  select: '<P> &cPlease select a valid announcement from &fannouncements.yml&c.'

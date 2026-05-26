@@ -1,48 +1,47 @@
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
+# Announcement lines support MiniMessage through Takion/PrismaticAPI, SIR tags,
+# legacy color codes, hex colors, channel prefixes, and documented placeholders.
 announcements:
-  # Announcement Entry 1
-  # Basic centered chat message with sound
   1:
-    # Sound played when announcement shows
-    # Uses Minecraft sound names
-    sound: # optional
+    # Optional sound played when this announcement is sent.
+    sound:
       enabled: true
       type: ENTITY_PLAYER_LEVELUP
       volume: 1.0
       pitch: 1.0
 
-    # Message lines
     lines:
       - '&7'
-      - '<C>&aThis is a S.I.R announcement'
-      - '<C>&7Disable announcements in&e modules.yml'
+      - '<C>&aThis is a SIR announcement.'
+      - '<C>&7Edit or disable announcements in this file.'
       - '&7'
 
-  # Announcement Entry 2
-  # Mixed format announcement (action-bar, title) with command
   2:
     lines:
-      # Action bar message (above hotbar)
-      - '[ACTION-BAR] &7Look, an action-bar S.I.R. announcement'
+      # Action bar messages appear above the hotbar.
+      - '[ACTION-BAR] &7This is an action-bar announcement.'
+      # Title format: [TITLE] main_title<n>subtitle.
+      - '[TITLE] {#321ABA}SIR Announcement<n>&#869021Server update available.'
 
-      # Title and subtitle with hex colors
-      # Format: [TITLE] main_title<n>subtitle
-      - '[TITLE] {#321ABA}A S.I.R. title<n>&#869021A S.I.R. subtitle'
-
-    # Commands executed with announcement
-    # Executes as console by default
+    # Commands execute from console when the announcement is sent.
     commands:
-      - 'say hi server this is a command'
+      - 'say This is an example announcement command.'
 
-  # Announcement Entry 3
-  # Another centered chat message with different sound
   3:
-    sound: # optional
+    sound:
       enabled: true
       type: ENTITY_PLAYER_BURP
       volume: 1.0
       pitch: 1.0
     lines:
       - '&7'
-      - '<C>&eThis is another S.I.R. announcement'
-      - '<C>&7Disable announcements in&e modules.yml'
+      - '<C>&eThis is another SIR announcement.'
+      - '<C>&7Adjust interval and random order in config.yml.'
       - '&7'

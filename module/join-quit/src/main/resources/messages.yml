@@ -1,55 +1,107 @@
-first-join:
-  example:
-    permission: custom.permission # or DEFAULT, optional
-    priority: 0 # or any number, optional
-    sound: # optional
-      enabled: false
-      type: ENTITY_PLAYER_LEVELUP
-      volume: 1.0
-      pitch: 1.0
-    spawn: # optional
-      enabled: false
-      world: custom_world
-      coordinates: 0,90,0
-      rotation: 0,0
-    invulnerable: 3 # optional
-    public: # can be a list or a single string
-      - '&8[&6+&8] &7Welcome &e{player} &7to the server for the first time!'
-    private: # optional, can be a list or a single string
-      - "&7If you need help, contact our staff and they will help you!"
-    commands: # optional, can be a list or a single string
-      - "msg {player} have a lot of fun here :D"
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
 
-  section1:
+# Join and quit text supports MiniMessage through Takion/PrismaticAPI, SIR tags,
+# legacy color codes, hex colors, channels such as title/action-bar, and placeholders.
+# Entries used only the first time a player joins the server.
+first-join:
+  # Full example entry showing every supported first-join option.
+  example:
+    # Optional permission for this entry. Use DEFAULT to allow all players.
+    permission: custom.permission
+    # Higher values take priority when multiple entries can apply.
+    priority: 0
+    # Optional sound played to the joining player.
+    sound:
+      # If false, no sound is played for this entry.
+      enabled: false
+      # Bukkit sound name to play.
+      type: ENTITY_PLAYER_LEVELUP
+      # Sound volume. 1.0 is normal volume.
+      volume: 1.0
+      # Sound pitch. 1.0 is normal pitch.
+      pitch: 1.0
+    # Optional first-join spawn override.
+    spawn:
+      # If true, the player is teleported to this location on first join.
+      enabled: false
+      # World name for the spawn location.
+      world: world
+      # Spawn location as x,y,z.
+      coordinates: 0,90,0
+      # Spawn rotation as yaw,pitch.
+      rotation: 0,0
+    # Seconds of invulnerability after the player joins.
     invulnerable: 3
+    # Public messages can be a single string or a list.
+    public:
+      - '&8[&6+&8] &7Welcome &e{player} &7to the server for the first time!'
+    # Private messages are sent only to the joining player.
+    private:
+      - '&7If you need help, contact the staff team.'
+    # Commands run from console after the first join event.
+    commands:
+      - 'msg {player} Welcome to the server.'
+
+  # Compact first-join example using the same options as the full example above.
+  section1:
+    # Seconds of invulnerability after the player joins.
+    invulnerable: 3
+    # Sound played to the joining player.
     sound:
       enabled: true
       type: ENTITY_PLAYER_LEVELUP
       volume: 1.0
       pitch: 1.0
+    # Public first-join message. A single string or list is accepted.
     public: '&8[&6+&8] &7Welcome &e{player} &7to the server for the first time!'
-    private: "&7If you need help, contact our staff and they will help you!"
+    # Private first-join message sent only to the joining player.
+    private: '&7If you need help, contact the staff team.'
 
+# Entries used every time a player joins after the first join check.
 join:
+  # Default join entry for all players.
   default:
+    # Seconds of invulnerability after the player joins.
     invulnerable: 3
+    # Public join message. Available placeholders include {player} and {world}.
     public: '&8[&a+&8] &7Welcome &e{player} &7to the server!'
 
-  vip:
-    permission: join.vip
+  # Member-specific join entry.
+  member:
+    # Permission required for this join entry.
+    permission: join.member
+    # Seconds of invulnerability for matching players.
     invulnerable: 5
-    public: '&8[&a+&8] &7Welcome &b&lVIP &e{player} &7to the server!'
-    private: '<R:1>Thanks for playing here :D</R>'
+    # Public join message shown to the server.
+    public: '&8[&a+&8] &7Welcome &e{player} &7to the server!'
+    # Private join message sent only to the joining player.
+    private: '<R:1>Thanks for joining our server.</R>'
 
-  pro:
-    permission: join.pro
-    priority: 2  # Higher priority (overrides lower)
-    public: '&8[&a+&8] &7Welcome &d&lPRO &e{player} &7to the server!'
-    private: '[TITLE] <G:2C08BA>Hello PRO {PLAYER}</G:028A97><n><G:2C08BA>from world {WORLD}.</G:028A97>'
+  # Staff-specific join entry with higher priority.
+  staff:
+    # Permission required for this join entry.
+    permission: join.staff
+    # Higher priority overrides lower priority entries.
+    priority: 2
+    # Public join message shown to the server.
+    public: '&8[&a+&8] &7Welcome &e{player} &7to the server!'
+    # Private join title sent only to the joining player.
+    private: '[TITLE] <G:2C08BA>Welcome {player}</G:028A97><n><G:2C08BA>World: {world}</G:028A97>'
 
+# Entries used when a player leaves the server.
 quit:
+  # Default quit entry for all players.
   default:
+    # Public quit message. Set to '' or [] if this entry should not broadcast.
     public: '&8[&c-&8] &e{player} &7has left the server.'
 
-  vip:
-    public: '&8[&c-&8] &b&lVIP &e{player} &7has left the server.'
+  # Member-specific quit entry.
+  member:
+    # Public quit message for matching players.
+    public: '&8[&c-&8] &e{player} &7has left the server.'

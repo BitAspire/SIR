@@ -1,48 +1,87 @@
-emojis:
-  # Basic Emoji
-  1:
-    key: ':admin:'           # Text to replace
-    checks:
-      is-regex: false        # Not using regex pattern
-      is-word: false         # Check anywhere in message
-      case-sensitive: false  # Case-insensitive
-    value: '&5owo'           # Replacement text
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
 
-  # Simple Heart Emoji
+# Emoji replacement rules. Replacement values support MiniMessage through
+# Takion/PrismaticAPI, SIR tags, legacy color codes, hex colors, and placeholders.
+emojis:
+  1:
+    # Text to replace in chat.
+    key: ':admin:'
+    # Matching options for this replacement.
+    checks:
+      # If true, key is treated as a regular expression.
+      is-regex: false
+      # If true, only full-word matches are replaced.
+      is-word: false
+      # If true, uppercase and lowercase must match exactly.
+      case-sensitive: false
+    # Replacement text inserted into chat using the supported SIR text formatting stack.
+    value: '&dAdmin'
+
   2:
+    # Minimal replacement example using default checks.
     key: ':heart:'
+    # Replacement text inserted when :heart: is found.
     value: '&c<3'
 
-  # Advanced Emoji Examples
+  # Example that restricts a replacement to a permission and group.
   staff-badge:
+    # Text or pattern to replace in chat.
     key: ':staff:'
-    permission: emoji.staff   # Required permission
-    priority: 100             # Higher priority (processes first)
-    group: STAFF              # Limited to STAFF group
+    # Permission required to use this replacement.
+    permission: emoji.staff
+    # Higher priority entries run before lower priority entries.
+    priority: 100
+    # Optional permission group required for this replacement.
+    group: STAFF
+    # Matching options for this replacement.
     checks:
+      # If true, key is treated as a regular expression.
       is-regex: false
-      is-word: true           # Only match whole words
-      case-sensitive: true    # Must match exact case
-    value: '&c⚡'
+      # If true, only full-word matches are replaced.
+      is-word: true
+      # If true, uppercase and lowercase must match exactly.
+      case-sensitive: true
+    # Replacement text inserted into chat.
+    value: '&c[Staff]'
 
+  # Example of a normal text replacement with word matching.
   custom-face:
-    key: ':happy:'
-    permission: emoji.vip     # VIP permission
-    priority: 50              # Medium priority
-    group: VIP                # VIP group only
-    checks:
-      is-regex: true          # Uses regex pattern
-      is-word: false
-      case-sensitive: false
-    value: '&e◕‿◕'
-
-  rainbow:
-    key: ':rainbow:'
-    permission: emoji.premium  # Premium feature
-    priority: 75               # High priority
-    group: PREMIUM             # Premium users only
+    # Text or pattern to replace in chat.
+    key: ':smile:'
+    # Permission required to use this replacement.
+    permission: emoji.member
+    # Priority used when multiple replacements could match.
+    priority: 50
+    # Optional permission group required for this replacement.
+    group: MEMBER
+    # Matching options for this replacement.
     checks:
       is-regex: false
       is-word: true
       case-sensitive: false
-    value: '&c❤&6♥&e♥&a♥&b♥&9♥&5♥'
+    # Replacement text inserted into chat.
+    value: '&e:)'
+
+  # Example using SIR gradient/rainbow formatting tags.
+  rainbow:
+    # Text or pattern to replace in chat.
+    key: ':rainbow:'
+    # Permission required to use this replacement.
+    permission: emoji.rainbow
+    # Priority used when multiple replacements could match.
+    priority: 75
+    # DEFAULT allows normal players unless another permission provider restricts it.
+    group: DEFAULT
+    # Matching options for this replacement.
+    checks:
+      is-regex: false
+      is-word: true
+      case-sensitive: false
+    # Replacement text using SIR rainbow formatting.
+    value: '<R:1>Rainbow</R>'

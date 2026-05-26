@@ -1,9 +1,23 @@
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
+# Tags are evaluated by permission, group, and priority. Higher priority wins.
 tags:
   custom-tag:
-    tag: "[I'M GOD]"         # Display text
-    permission: "tag.god"    # Required permission
-    priority: 20             # Tag priority (higher = more important)
-    group: vip               # Required player group
-    description:             # Hover text/description
-      - "This tag can only be obtained having VIP"
-      - "Buy one in walmart.com"
+    # Text inserted into chat when this tag is selected.
+    tag: "[Member]"
+    # Permission required to use this tag.
+    permission: "tag.member"
+    # Priority used when multiple tags can apply.
+    priority: 20
+    # Optional player group requirement.
+    group: member
+    # Hover/description lines shown where tag descriptions are supported.
+    description:
+      - "This tag is available to players with the configured permission."
+      - "Use this description to explain how the tag is obtained."

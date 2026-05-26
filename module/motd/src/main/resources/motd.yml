@@ -1,10 +1,21 @@
-motd:
-  # First MOTD Style
-  first:
-    1: '<R:1>Check out my server!</R>'     # Rainbow color effect
-    2: '&7IP:&e play.my-server.com'        # Gray and yellow colors
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
 
-  # Custom Named MOTD Style
+# MOTD entries. Each child key is a named style that can be selected or randomized.
+# MOTD text supports MiniMessage through Takion/PrismaticAPI, SIR tags,
+# legacy color codes, hex colors, and placeholders where available.
+motd:
+  first:
+    # First line of the server list MOTD.
+    1: '<R:1>Welcome to our server!</R>'
+    # Second line of the server list MOTD.
+    2: '&7IP:&e play.example.com'
+
   custom-name:
-    1: '               &7A Minecraft Server'      # Centered text
-    2: '              &4Here is another line'     # Centered red text
+    1: '               &7A community Minecraft server'
+    2: '                 &aEnjoy your stay'

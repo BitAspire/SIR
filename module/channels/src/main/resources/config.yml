@@ -1,11 +1,27 @@
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
+# If true, SIR falls back to Bukkit's default chat format behavior.
 default-bukkit-format: false
 
-user-muted: "<P> &cYou are muted, you can not send messages."
+# Message shown when a muted player tries to send a channel message.
+user-muted: "<P> &cYou are muted, you cannot send messages."
 
+# Lightweight console/file logging for channel messages.
 simple-logger:
+  # Enable this logger when you want a simple channel chat trace.
   enabled: false
+  # Log line format. Available placeholders include {player} and {message}.
   format: ' &7{player}: {message}'
 
+# Controls how empty chat messages are handled.
 allow-empty:
+  # If false, empty messages are blocked before channel delivery.
   enabled: false
-  message: '<P> &cYou can not send an empty message.'
+  # Message sent when an empty message is blocked.
+  message: '<P> &cYou cannot send an empty message.'

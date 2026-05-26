@@ -1,3 +1,11 @@
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
 # Option to enable or disable the links' module.
 enabled: false
 
@@ -23,7 +31,7 @@ replace-options:
     - '#'
 
 # Warning message to be sent to the player when an unauthorized link is detected.
-warnings: "<p> &7Please avoid using links in chat."
+warnings: "<P> &7Please avoid using links in chat."
 
 # Actions to be taken when a player exceeds the maximum allowed violations for posting links.
 actions:
@@ -36,7 +44,7 @@ actions:
 
   # Messages to be sent to the player when the command(s) are executed.
   messages:
-    - "<p> &cYou've been blocked to chat for links."
+    - "<P> &cYou've been blocked to chat for links."
 
 # Permission that allows players to bypass the links module.
 bypass: sir.moderation.bypass.links

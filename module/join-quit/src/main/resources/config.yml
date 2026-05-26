@@ -1,10 +1,24 @@
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
+# Disables vanilla join and quit broadcasts so SIR can handle them consistently.
 disable-vanilla-messages:
   join: true
   quit: true
 
+# Delays, in ticks, used to control join and quit processing order.
 cooldown:
+  # Delay before join messages and join actions are processed.
   join: 0
+  # Minimum delay between join/quit event handling when both fire close together.
   between: 0
+  # Delay before quit messages and quit actions are processed.
   quit: 0
 
+# If true, first-join spawn handling runs before login hooks finish.
 spawn-before-login: true

@@ -1,18 +1,31 @@
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
 cooldowns:
   # Default Cooldown Settings
   default:
     # Permission and Priority
-    permission: DEFAULT           # No special permission needed
-    priority: 0                   # Lowest priority level
+    # No special permission needed.
+    permission: DEFAULT
+    # Lowest priority level.
+    priority: 0
 
     # Spam Check System
     spam:
-      enabled: false              # Spam detection toggle
-      count: 5                    # Maximum messages allowed
-      time-limit: 10              # Time window in seconds
+      # Spam detection toggle.
+      enabled: false
+      # Maximum messages allowed.
+      count: 5
+      # Time window in seconds.
+      time-limit: 10
       commands:
         - "kick {player}"
 
     time: 5
     messages:
-      - '<P> &cYou can not send another message in {time} seconds.'
+      - '<P> &cYou cannot send another message in {time} seconds.'

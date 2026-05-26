@@ -1,11 +1,27 @@
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
+# Template used by external SIR modules.
+# Copy this structure when packaging a custom module jar.
+# Java entry point loaded by SIR for this module or provider.
 main: com.example.plugin.modules.ModuleName
+# Internal identifier used by SIR. Keep it stable once released.
 name: ModuleName
-title: "&7Module Title"
+# Display name shown to administrators and settings menus.
+title: "&7Example Module"
+# Short description shown in module or command listings.
 description:
-  - "&7This is a description of the module."
+  - "&7Example module descriptor used by the SIR module loader."
+# Required SIR components that must load before this one.
 depend:
   - Core
   - Chat
+# Optional hooks loaded when the dependency is available.
 soft-depend:
   - Placeholders
   - FancyMenu

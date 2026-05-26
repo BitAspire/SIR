@@ -1,3 +1,11 @@
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
 # Option to enable or disable the caps lock module.
 enabled: true
 
@@ -5,7 +13,7 @@ enabled: true
 control: BLOCK
 
 # Warning message to be sent to the player when excessive caps are detected.
-warnings: "<p> &7Please avoid using multiple caps."
+warnings: "<P> &7Please avoid using multiple caps."
 
 # The maximum number of characters that can be in caps in a message.
 maximum-caps: 10
@@ -21,7 +29,7 @@ actions:
 
   # Messages to be sent to the player when the command(s) are executed.
   messages:
-    - "<p> &cYou've been blocked to chat for caps."
+    - "<P> &cYou've been blocked to chat for caps."
 
 # Permission that allows players to bypass the caps lock module.
 bypass: sir.moderation.bypass.caps

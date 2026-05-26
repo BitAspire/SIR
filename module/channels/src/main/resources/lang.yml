@@ -1,3 +1,11 @@
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
 lang:
   # Usage hint for /chat-view.
   help: "<P> &7Usage: &b/chat-view &3<local-channel>"

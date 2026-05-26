@@ -1,50 +1,88 @@
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
+# Configuration schema version used by the channel migrator.
 version: 2
 
-# Channels v2
-# - If `inherits` is not declared, the channel inherits from `default-channel`.
-# - If `access.default` is false and there are no prefixes/commands, the channel is not reachable directly.
-# - Every filter inside `audience` is cumulative.
-# - If `logging.enabled` is false, SIR uses the legacy chat logger behavior.
+# Channels v2 notes:
+# - If inherits is not declared, the channel inherits from default-channel.
+# - If access.default is false and there are no prefixes or commands, players cannot select the channel directly.
+# - Every audience filter is cumulative.
+# - If logging.enabled is false, SIR uses the legacy chat logger behavior.
 # - Legacy or hybrid files are auto-migrated to channels v2 on load.
+# - Channel text supports MiniMessage through Takion/PrismaticAPI, SIR tags,
+#   legacy color codes, hex colors, and documented placeholders.
 
+# Base channel used when a channel does not declare inherits.
 default-channel:
+  # If false, this channel is ignored by the channel resolver.
   enabled: true
+  # Access controls how players select or enter this channel.
   access:
+    # If true, players use this channel when no prefix or command selects another one.
     default: true
+  # Audience controls who receive messages from this channel.
   audience:
+    # Maximum distance, in blocks, between sender and receivers.
     radius: 120
+    # If true, the sender also receives their own formatted message.
     include-sender: true
+  # Style controls the final chat output for this channel.
   style:
+    # Label available as {tag} inside format.
     tag: '&8[&aLocal&8]'
+    # Color permissions available inside this channel.
     colors:
+      # Allows standard Minecraft color codes.
       normal: false
+      # Allows formatting codes such as bold, italic, and underline.
       special: false
+      # Allows RGB or hex colors when supported by the server.
       rgb: false
+      # Color used when the message does not include an allowed color.
       default: '&f'
+    # Final chat line. Common placeholders: {tag}, {player}, {color}, and {message}.
     format: '{tag} &7{player}&8: {color}{message}'
+  # Logging controls extra channel-specific chat logging.
   logging:
+    # If false, SIR uses the legacy/global chat logger behavior.
     enabled: false
 
+# Additional named channels. Each child key is the channel ID used by commands and user settings.
 channels:
+  # Global channel selected by !, /g, or /global.
   global:
+    # Higher priority channels win when multiple channels match the same message.
     priority: 100
     access:
+      # Prefixes typed before a message to select this channel.
       prefixes: [ "!" ]
+      # Commands that send directly through this channel.
       commands: [ "/g", "/global" ]
+      # If true, the selected prefix is removed from the final message.
       strip-prefix: true
     style:
       tag: '&8[&6Global&8]'
+      # Hover text shown when the chat component supports interactive messages.
       hover:
         - '&7Message sent to the whole server.'
       format: '{tag} &7{player}&8: {color}{message}'
 
+  # Staff-only channel example.
   staff:
+    # Permission required to send messages through this channel.
     permission: 'sir.channel.staff.use'
     priority: 200
     access:
       prefixes: [ "#" ]
       commands: [ "/sc", "/staffchat" ]
     audience:
+      # Permission required to receive messages from this channel.
       permission: 'sir.channel.staff.see'
       include-sender: true
     style:
@@ -59,26 +97,30 @@ channels:
       format: '{tag} &f{player}&8: {color}{message}'
     logging:
       enabled: true
+      # Format used by the channel-specific logger.
       format: '&7[Staff] {player}: {message}'
 
-  vip-local:
-    permission: 'sir.channel.vip.use'
+  # Local member channel example with distance and permission filters.
+  member-local:
+    permission: 'sir.channel.member.use'
     access:
       prefixes: [ "@" ]
-      commands: [ "/viplocal" ]
+      commands: [ "/memberlocal" ]
     audience:
       radius: 50
-      permission: 'sir.channel.vip.see'
+      permission: 'sir.channel.member.see'
       include-sender: true
     style:
-      tag: '&8[&bVIP Local&8]'
-      prefix: '&6VIP'
+      tag: '&8[&bMember Local&8]'
+      prefix: '&6Member'
       colors:
         normal: true
         default: '&f'
       format: '{tag} {prefix} &7{player}&8: {color}{message}'
 
+  # Trade channel example that inherits defaults from global.
   trade:
+    # Copies missing options from another channel before this entry is applied.
     inherits: 'global'
     access:
       prefixes: [ "$" ]

@@ -1,50 +1,62 @@
-# You can have multiple mentions
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
+# Mention text supports MiniMessage through Takion/PrismaticAPI, SIR tags,
+# legacy color codes, hex colors, title/action-bar channels, and placeholders.
 mentions:
   default:
-    # Change DEFAULT to a custom permission if you don't want all players to use mentions
+    # Use DEFAULT to allow all players, or set a permission node for restricted mentions.
     permission: DEFAULT
 
-    # The prefix to use in chat. Example: @CroaBeast
-    # THIS CAN NOT BE NULL OR EMPTY.
+    # Prefix typed before the receiver name. This value cannot be empty.
     prefix: '@'
 
-    # A click line that will apply only for the mention.
-    # Can be null or empty.
-    click: 'RUN:/msg {sender} hi buddy'
+    # Optional click action applied to the mention output.
+    click: 'RUN:/msg {sender} Hello.'
 
-    # A hover list that will apply only for the mention.
-    # Can be null or empty.
+    # Optional hover text applied to the mention output.
     hover:
       - '&7Sender: &e{sender}'
       - '<R:1>Click to send a message</R>'
 
+    # Optional sounds played when this mention is triggered.
     sound:
-      # Sound that will be played to the sender.
-      # Can be null or empty.
+      # Sound played to the player who sent the mention.
       sender:
+        # If false, no sound is played to the sender.
         enabled: false
+        # Bukkit sound name used for the sender notification.
         type: ENTITY_PLAYER_LEVELUP
+        # Sender sound volume. 1.0 is normal volume.
         volume: 1.0
+        # Sender sound pitch. 1.0 is normal pitch.
         pitch: 1.0
 
-      # Sound that will be played to the receiver.
-      # Can be null or empty.
+      # Sound played to the player who was mentioned.
       receiver:
+        # If false, no sound is played to the receiver.
         enabled: true
+        # Bukkit sound name used for the receiver notification.
         type: ENTITY_PLAYER_LEVELUP
+        # Receiver sound volume. 1.0 is normal volume.
         volume: 1.0
+        # Receiver sound pitch. 1.0 is normal pitch.
         pitch: 1.0
 
+    # Optional private messages sent after a mention is detected.
     messages:
-      # Messages that will be sent to the sender.
-      # Can be null or empty.
+      # Messages sent to the sender. Use [] to disable sender messages.
       sender: []
-
-      # Messages that will be sent to the receiver.
-      # Can be null or empty.
+      # Messages sent to the mentioned player. Supports SIR channels such as title and action-bar.
       receiver:
-        - '[title:3] &bHi, {receiver}!<n>&7{sender} mentions you'
-        - '[action-bar] &eReply to your friend!'
+        - '[title:3] &bHi, {receiver}!<n>&7{sender} mentioned you.'
+        - '[action-bar] &eReply when you are ready.'
 
-    # The output value that will be shown in the chat.
+    # Final text inserted into the chat message for the mention.
+    # Available placeholders include {prefix}, {sender}, and {receiver}.
     value: '&b{prefix}{receiver}'

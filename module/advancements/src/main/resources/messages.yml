@@ -1,3 +1,15 @@
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
+# Messages sent by advancement frame type.
+# Text supports MiniMessage through Takion/PrismaticAPI, SIR tags, legacy color
+# codes, hex colors, and the placeholders listed below.
+# Available placeholders include {player}, {adv}, {description}, {type}, {low-type}, and {cap-type}.
 messages:
   task:
     - ' &e{player}&7 has got the {low-type} <hover:"&7{description}">&a{adv}</text>'
@@ -8,6 +20,8 @@ messages:
   custom:
     - ' &e{player} &7has made the {low-type} <hover:"&7{description}">&b{adv}</text>'
 
+# Commands executed by advancement frame type. Commands run from console.
+# Use [] to disable command execution for a frame type.
 commands:
   task:
     - 'minecraft:experience add {player} 100 points'

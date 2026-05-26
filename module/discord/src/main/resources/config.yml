@@ -1,44 +1,76 @@
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
+# Default Discord server ID used when a channel entry only provides CHANNEL_ID.
 default-server: SERVER_ID
 
+# Discord channel routes for each SIR event type.
 channel-ids:
+  # Sent when a player joins for the first time.
   first-join:
-    - CHANNEL_ID                      # Primary channel
-    - OTHER_SERVER_ID:CHANNEL_ID      # Cross-server channel
+    # Primary Discord channel for this event.
+    - CHANNEL_ID
+    # Cross-server channel format: SERVER_ID:CHANNEL_ID.
+    - OTHER_SERVER_ID:CHANNEL_ID
 
+  # Sent when a returning player joins.
   join:
     - CHANNEL_ID
     - OTHER_SERVER_ID:CHANNEL_ID
 
+  # Sent when a player leaves.
   quit:
     - CHANNEL_ID
     - OTHER_SERVER_ID:CHANNEL_ID
 
+  # Sent when the channels module forwards global chat.
   global-chat:
     - CHANNEL_ID
     - OTHER_SERVER_ID:CHANNEL_ID
 
+  # Sent when the advancements module forwards an advancement.
   advancements:
     - CHANNEL_ID
     - OTHER_SERVER_ID:CHANNEL_ID
 
+# Discord message templates sent for each event type.
 messages:
   first-join:
+    # Plain Discord message content. Leave empty when the embed carries the message.
     text: ''
-    player-webhook: false   # Uses the player's name and head skin as the webhook identity
+    # When true, Discord uses the player's name and skin for the webhook identity.
+    player-webhook: false
+    # Optional Discord embed payload.
     embed:
+      # If false, only text is sent for this event.
       enabled: true
+      # Discord embed side color. Named colors are resolved by the Discord module.
       color: YELLOW
+      # Author block shown above the embed title.
       author:
-        name: 'Made by CroaBeast'
-        url: 'https://www.spigotmc.org/resources/96378/'
-        iconURL: 'https://crafatar.com/avatars/{UUID}'
-      thumbnail: 'https://crafatar.com/avatars/{UUID}'
+        # Author display name.
+        name: 'SIR Notifications'
+        # Optional URL opened when the author name is clicked.
+        url: 'https://wiki.bitaspire.com/en/docs/sir'
+        # Optional author icon URL. {uuid} resolves to the player UUID.
+        iconURL: 'https://crafatar.com/avatars/{uuid}'
+      # Optional thumbnail image URL.
+      thumbnail: 'https://crafatar.com/avatars/{uuid}'
+      # Embed title. Use a string for title text only, or this object for text plus URL.
       title:
-        text: 'S.I.R. - Chat Plugin'
+        text: 'SIR Chat Plugin'
         url: ''
-      description: ':bell: `{player} has join the server for the first time`'
+      # Main embed body. Supports Discord markdown and SIR placeholders.
+      description: ':bell: `{player} joined the server for the first time.`'
+      # If true, Discord adds the current timestamp to the embed.
       timeStamp: true
 
+  # Returning-player join template. Uses the same keys documented above.
   join:
     text: ''
     player-webhook: false
@@ -46,16 +78,17 @@ messages:
       enabled: true
       color: GREEN
       author:
-        name: 'Made by CroaBeast'
-        url: 'https://www.spigotmc.org/resources/96378/'
-        iconURL: 'https://crafatar.com/avatars/{UUID}'
-      thumbnail: 'https://crafatar.com/avatars/{UUID}'
-      title: 'S.I.R. - Chat Plugin'
-      description: ':white_check_mark: `{player} has join the server`:bangbang:'
+        name: 'SIR Notifications'
+        url: 'https://wiki.bitaspire.com/en/docs/sir'
+        iconURL: 'https://crafatar.com/avatars/{uuid}'
+      thumbnail: 'https://crafatar.com/avatars/{uuid}'
+      title: 'SIR Chat Plugin'
+      description: ':white_check_mark: `{player} joined the server.`'
       timeStamp: true
 
+  # Quit template. Embed is disabled by default because text is enough for this event.
   quit:
-    text: ':x: `{player} has left the server` :broken_heart:'
+    text: ':x: `{player} left the server.`'
     player-webhook: false
     embed:
       enabled: false
@@ -69,10 +102,12 @@ messages:
       description: ''
       timeStamp: true
 
+  # Global chat relay template. {prefix}, {player}, {suffix}, and {message} come from chat.
   global-chat:
     text: '**{prefix}** {player} `{suffix}` :white_small_square: {message}'
     player-webhook: false
 
+  # Advancement relay template. Placeholders are provided by the advancements' module.
   advancements:
-    text: '**{player}** has complete the {frame-lower-case}: **{advancement}**'
+    text: '**{player}** completed the {frame-lower-case}: **{advancement}**'
     player-webhook: false

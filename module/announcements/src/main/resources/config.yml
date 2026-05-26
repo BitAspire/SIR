@@ -1,2 +1,14 @@
-interval: 2400  # Time between announcements in ticks
-random: false   # Controls message sequence
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
+# Time between announcements in ticks. 20 ticks equals 1 second.
+# Default 2400 ticks equals 2 minutes.
+interval: 2400
+# If true, announcements are selected randomly instead of sequentially.
+# If false, announcements follow their configured order.
+random: false

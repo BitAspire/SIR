@@ -1,7 +1,21 @@
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
+# Controls whether vanished players are blocked from normal chat.
 vanish-chat:
+  # Enable this if vanished players should need a special chat prefix.
   enabled: false
+  # Prefix used to bypass the vanished-chat block when regex is false.
   key: '?'
+  # If true, key is interpreted as a regular expression.
   regex: false
+  # If true, the key is removed from the final chat message.
   prefix: true
+  # Messages sent when a vanished player tries to chat without the required prefix.
   not-allowed-messages:
     - '<P> &cYou are not allowed to chat when you are vanished.'

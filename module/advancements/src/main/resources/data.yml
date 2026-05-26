@@ -1,1 +1,12 @@
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
+# Runtime storage for advancement data.
+# The default is an empty list so the module starts with no persisted entries.
+# SIR may update this file when the module needs to persist runtime state.
 data: []

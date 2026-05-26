@@ -1,3 +1,11 @@
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
 # This section controls the language used in the chat moderation module.
 lang-names:
   # This value is for the Swearing module.
@@ -19,7 +27,7 @@ log-violations:
 
   # The format of the log message for a violation.
   # {player} is replaced by the player's name, {type} by the violation type, and {message} by the message that caused the violation.
-  format: '<p> &7{player} incurs &e{type}&7 violation here: &f"{message}"'
+  format: '<P> &7{player} incurs &e{type}&7 violation here: &f"{message}"'
 
 # This section controls the notification of staff members about chat violations.
 notify-staff:

@@ -1,21 +1,32 @@
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
+# World filter for advancement broadcasts.
 worlds:
+  # If false, world filtering is skipped.
   enabled: true
+  # false = blocked list, true = allowed list.
   whitelist: false
   list:
-    - custom_world
+    - world
 
+# Game mode filter for advancement broadcasts.
 game-modes:
   enabled: true
   whitelist: false
   list:
     - SPECTATOR
 
+# Advancement key filter. Use namespaced keys such as minecraft:story/mine_stone.
 advancements:
   enabled: true
   whitelist: false
   list:
-    - fusionmc:bastion_advancement_fix
-    - global:fusion_mc
-    - vanillatweaks:classic_fishing_loot
-    - vanillatweaks:double_shulker_shells
-    - vanillatweaks:wandering_trades
+    - minecraft:story/mine_stone
+    - minecraft:nether/root
+    - minecraft:end/root
