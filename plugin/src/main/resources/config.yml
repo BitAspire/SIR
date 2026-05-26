@@ -1,7 +1,10 @@
-########################
-#   SIR by CroaBeast   #
-# Depressed since 2004 #
-########################
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
 
 # Controls the automatic update checking
 # When true, the plugin will check for updates to this config file
@@ -57,11 +60,16 @@ options:
   # Recommended to keep false for better performance and consistency
   default-bukkit-plugin-methods: false
 
+  # Controls whether bundled module and command jars are installed on startup.
   load-default-jars:
+    # Install bundled modules when missing.
     modules: true
+    # Install bundled command providers when missing.
     commands: true
 
 # Message Formatting Values
+# Text values processed by SIR support MiniMessage through Takion/PrismaticAPI,
+# SIR formatting tags, legacy color codes, hex colors, and documented placeholders.
 values:
   # Prefix Key Configuration
   # Defines the trigger for the main plugin prefix
@@ -72,7 +80,7 @@ values:
   # Main Plugin Prefix
   # The prefix added when lang-prefix-key is detected
   # Default: ' &e&lSIR &8>&7'
-  # Supports color codes and formatting
+  # Supports MiniMessage, SIR formatting tags, legacy color codes, and hex colors.
   lang-prefix: ' &e&lSIR &8>&7'
 
   # Center Text Marker

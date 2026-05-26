@@ -1,13 +1,29 @@
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
+# Main plugin class loaded by Bukkit or Paper.
 main: com.bitaspire.sir.SIRPlugin
 
+# Public plugin name shown in plugin lists.
 name: SIR
+# Version is injected by the Gradle build.
 version: '${version}'
+# Short prefix used by server logs.
 prefix: SIR
+# Plugin author metadata shown by Bukkit.
 authors: [ CroaBeast ]
+# Minimum Bukkit API version targeted by the plugin metadata.
 api-version: 1.13
 
+# Marks the plugin as compatible with Folia-style schedulers.
 folia-supported: true
 
+# Optional integrations. SIR loads without these plugins, but enables hooks when present.
 softdepend:
   # Utility plugins
   - ViaVersion
@@ -29,16 +45,21 @@ softdepend:
   - EssentialsDiscord
 
 commands:
+  # Main administration command.
   sir:
+    # Permission required to use /sir.
     permission: sir.admin
+    # Bukkit default permission holder.
     default: op
 
 permissions:
+  # Base administrator permission.
   sir.admin:
     default: op
     children:
       sir.admin.* : true
 
+  # Wildcard administrator permission for all /sir subcommands.
   sir.admin.*:
     default: op
     children:
