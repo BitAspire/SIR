@@ -1,8 +1,16 @@
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
 lang:
   # Help menu for the chat color command.
   help:
     - '&7'
-    - ' &6>> &eChat Color — Help'
+    - ' &6>> &eChat Color - Help'
     - '  &7- &b/chat-color <color>&7: Set your chat text color.'
     - '  &7- &b/chat-color <format>&7: Add a text format (bold, italic, etc.).'
     - '  &7- &b/chat-color reset&7: Reset color and formats to default.'

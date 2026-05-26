@@ -1,9 +1,17 @@
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
 lang:
   # Help menu for the clear chat command.
   # Displayed when running /clear-chat help or with invalid arguments.
   help:
     - '&7'
-    - ' &6>> &eClear Chat — Help'
+    - ' &6>> &eClear Chat - Help'
     - '  &7- &b/clear-chat help&7: Displays this help menu.'
     - '  &7- &b/clear-chat @a&7: Clears the chat for all online players.'
     - '  &7- &b/clear-chat <player>&7: Clears the chat for a specific player.'

@@ -1,4 +1,13 @@
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
 lang:
+  # Help text shown for /nick and invalid nick command usage.
   help:
     - '&7'
     - ' &6>> &eNick - Help'
@@ -8,16 +17,19 @@ lang:
     - '  &7- &b/nick <player> --reset&7: Resets another player nick.'
     - '&7'
 
+  # Error and validation messages.
   not-player: '<P> &cPlayer not found: &f{target}&c.'
   player-only: '<P> &cOnly players can change their own nick.'
   invalid-nick: '<P> &cYou must provide a nick.'
 
+  # Confirmation messages after a nick is changed or reset.
   success:
     self-set: '<P> &7Your nick is now &f{nick}&7.'
     self-reset: '<P> &7Your nick has been reset.'
     other-set: '<P> &7Changed &e{target}&7 nick to &f{nick}&7.'
     other-reset: '<P> &7Reset &e{target}&7 nick.'
 
+  # Private notifications sent to players when an admin changes their nick.
   notify:
     set: '<P> &e{admin}&7 changed your nick to &f{nick}&7.'
     reset: '<P> &e{admin}&7 reset your nick.'

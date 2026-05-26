@@ -1,10 +1,17 @@
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
 lang:
+  # Help menus shown by /print.
   help:
-    # Main command help menu for /print.
-    # Displayed when running /print without arguments.
     main:
       - '&7'
-      - ' &6>> &ePrint — Help'
+      - ' &6>> &ePrint - Help'
       - '  &7- &b/print&7: Displays this help menu.'
       - '  &7- &b/print targets&7: Explains target selectors.'
       - '  &7- &b/print action-bar&7: Action bar usage.'
@@ -12,34 +19,24 @@ lang:
       - '  &7- &b/print title&7: Title message usage.'
       - '&7'
 
-    # Target selector reference and examples.
     targets:
       - '&7'
-      - ' &6>> &ePrint — Targets'
+      - ' &6>> &ePrint - Targets'
       - '  &7- &b<player>&7: Select a specific player.'
       - '  &7- &b@a&7: Select all online players.'
-      - '  &7- &bworld:myWorld&7: Select players in the specified world.'
-      - '  &7- &bperm:my.perm&7: Select players with a permission.'
-      - '  &7- &bgroup:myGroup&7: Select players in a permission group (Vault required).'
+      - '  &7- &bworld:world&7: Select players in the specified world.'
+      - '  &7- &bperm:example.permission&7: Select players with a permission.'
+      - '  &7- &bgroup:member&7: Select players in a permission group (Vault required).'
       - '&7'
 
-    # Usage instructions for the action bar subcommand.
     action-bar: '<P> Usage: &b/print action-bar <target> <message>'
-
-    # Usage instructions for the chat subcommand.
     chat: '<P> Usage: &b/print chat <target> <type> <message>'
-
-    # Usage instructions for the title subcommand.
     title: '<P> Usage: &b/print title <target> <times> <message>'
 
-  # Error when the message content is empty.
   empty-message: '<P> &cYou cannot send an empty message.'
 
-  # Feedback messages for target selection and delivery.
+  # Feedback after target resolution and message delivery.
   reminder:
-    # Shown when no valid targets are found or when the selector is invalid.
     empty: '<P> &cNo valid targets were found for that selector.'
-
-    # Confirmation after sending the message successfully.
-    # {TARGET} = resolved target list.
-    success: '<P> &7Message sent successfully to {TARGET}.'
+    # {target} = resolved target list.
+    success: '<P> &7Message sent successfully to {target}.'

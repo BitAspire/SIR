@@ -1,9 +1,17 @@
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
 lang:
   help:
     # Main help menu for /chat-settings.
     main:
       - '&7'
-      - ' &6>> &eChat Settings — Help'
+      - ' &6>> &eChat Settings - Help'
       - '  &7- &b/chat-settings&7: Opens the settings menu (1.14+).'
       - '  &7- &b/chat-settings modules <module> <state>&7: Toggle module chat output.'
       - '  &7- &b/chat-settings commands <command> <state>&7: Toggle command chat output.'
@@ -27,52 +35,71 @@ lang:
     not-found: '<P> &cNo {type} named &f{name}&c was found.'
 
     state:
+      # Text used when a toggle is enabled.
       enabled: '&aenabled'
+      # Text used when a toggle is disabled.
       disabled: '&cdisabled'
 
+  # Inventory GUI text for /chat-settings on supported versions.
   menu:
+    # Main category selector.
     main:
+      # Inventory title for the root settings menu.
       title: '&8Chat Settings:'
+      # Button that opens module toggles.
       modules:
-        name: '&7• &fModules:'
+        name: '&7- &fModules:'
         lore:
           - '&7Chat settings for {category}.'
           - '&7Available: &f{count}'
-        empty-name: '&7• &fModules:'
+        # Button text when no modules can be toggled.
+        empty-name: '&7- &fModules:'
         empty-lore:
           - '&7Chat settings for {category}.'
           - '&cNo entries available to toggle.'
+      # Button that opens command toggles.
       commands:
-        name: '&7• &fCommands:'
+        name: '&7- &fCommands:'
         lore:
           - '&7Chat settings for {category}.'
           - '&7Available: &f{count}'
-        empty-name: '&7• &fCommands:'
+        # Button text when no commands can be toggled.
+        empty-name: '&7- &fCommands:'
         empty-lore:
           - '&7Chat settings for {category}.'
           - '&cNo entries available to toggle.'
+      # Close button for the root menu.
       close:
         name: '&cClose'
         lore:
           - '&7Close this menu.'
+    # Menu shown after selecting a category.
     category:
+      # Inventory title. {category} is Modules or Commands.
       title: '&8Chat Settings - {category}:'
+      # Button that returns to the root menu.
       back:
         name: '&eBack'
         lore:
           - '&7Return to the main menu.'
+    # Toggle item text for each module or command entry.
     toggle:
-      name: '&7• &f{title}: {status}'
+      # Item name. {title} is the entry display name and {status} is ON/OFF.
+      name: '&7- &f{title}: {status}'
+      # Compact status text shown in item names.
       status:
-        enabled: '&a&l✔'
-        disabled: '&c&l❌'
+        enabled: '&a&lON'
+        disabled: '&c&lOFF'
+      # Readable state text shown in item lore.
       state:
         enabled: '&aEnabled'
         disabled: '&cDisabled'
+      # Fallback description when the module or command has no description.
       description:
         empty: 'No description available.'
+      # Lore shown under every toggle item.
       lore:
         - '{description}'
         - ''
-        - '&f➤ &7Left-click: toggle'
+        - '&f> &7Left-click: toggle'
         - '&7Current: {state}'

@@ -1,3 +1,11 @@
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
 lang:
   # Main help menu configuration for all SIR commands
   # Shows when using /sir help or when no arguments are provided
@@ -31,5 +39,5 @@ lang:
     start: '<P> &7Starting migration from &f{source}&7...'
     no-data: '<P> &cNo  &f{source} userdata folder found at &f{path}&c.'
     unknown: '<P> &cUnknown migration source: &f{source}&c.'
-    done: '<P> &aMigration complete: &f{users}&7 users, &f{ignoreUsers}&7 ignore lists, &f{ignored}&7 ignores, &f{mutedUsers}&7 mutes, &f{nickUsers}&7 nicks, &f{configs}&7 configs, &f{moduleStates}&7 module states, &f{commandStates}&7 command states, &f{skipped}&7 skipped, &f{expired}&7 expired, &f{invalid}&7 invalid, &f{backup}&7 backup.'
+    done: '<P> &aMigration complete: &f{users}&7 users, &f{ignore-users}&7 ignore lists, &f{ignored}&7 ignores, &f{muted-users}&7 mutes, &f{nick-users}&7 nicks, &f{configs}&7 configs, &f{module-states}&7 module states, &f{command-states}&7 command states, &f{skipped}&7 skipped, &f{expired}&7 expired, &f{invalid}&7 invalid, &f{backup}&7 backup.'
     error: '<P> &cMigration failed: &f{error}'

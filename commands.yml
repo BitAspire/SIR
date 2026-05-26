@@ -1,35 +1,39 @@
-# Example commands configuration file for SIR
-# This file defines custom commands for the SIR plugin.
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
 
-# The main class for the command provider
+# Template used by external SIR command providers.
+# Copy this structure when packaging a custom command jar.
 main: com.example.plugin.command.CommandProviderImpl
 name: CommandProviderImpl
-title: "&7My Command Provider"
+title: "&7Example Command Provider"
 description:
-  - "&7This is a description of the provider."
+  - "&7Registers example commands through the SIR command provider system."
 
 commands:
-  command: # actual command name, name it as you will
-    permission: sir.command
+  command:
+    # Command permission and registration behavior.
+    permission: sir.command.example
     override-existing: true
-    aliases: [ cmd, c, custom ]
+    aliases: [ examplecmd, ex, sample ]
 
     sub-commands:
-      reload: sir.command.my-reload  # Permission for reloading commands
-      help: '' # if empty, will use "{main permission node}.{sub-command name}" as permission
+      # Explicit permission for the reload subcommand.
+      reload: sir.command.example.reload
+      # Empty values fall back to "{main permission node}.{sub-command name}".
+      help: ''
 
-    description: 'A custom command for demonstration purposes.'
+    description: 'Example command registered by a SIR command provider.'
     usage: '/command <sub-command> [args]'
     permission-message: '&cYou do not have permission to use this command.'
 
-    # Checks if this command depends on another SIR command.
     depends:
-      # If true:
-      # - The command won't be registered if parent command is not registered/disabled/does not exist.
-      # - The command will use the parent command's enabled and override-existing values.
-      # If false:
-      # - The command will be registered independently of the parent command (if it exists/declared).
-      # - The command will use its own enabled and override-existing values.
+      # When enabled, the command only registers if the parent command is available.
+      # The command also inherits the parent enabled and override-existing values.
       enabled: false
-      # The parent command for this command
+      # Parent command name. Leave empty when this command is standalone.
       parent: ''

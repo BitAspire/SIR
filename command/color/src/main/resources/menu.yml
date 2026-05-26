@@ -1,32 +1,59 @@
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
+# Menu section used when players enter one or more hex colors.
 hex:
+  # Inventory title for the hex color picker.
   title: "Type one or more hex colors"
+  # Buttons shown inside the hex color picker.
   buttons:
+    # Informational item that explains accepted hex formats.
     info:
+      # Display name shown on the inventory item.
       name: "&eBasic Information"
+      # Lore shown under the item name.
       lore:
         - "&7This is a gradient color."
         - "&7You can use hex colors."
         - "&7Example: #ff0000 or #ff0000;#00ff00;#0000ff"
+      # Bukkit material used for the item.
       item: GREEN_CONCRETE
+    # Button used to confirm the selected hex colors.
     accept:
       name: "&aAccept colors"
       lore:
         - "&7Accepts the selected hex colors."
       item: LIME_CONCRETE
 
+# Preview item shown for the currently selected color or format.
 selected:
   lore:
+    # If true, this lore is appended to the selected color lore.
     additional: true
+    # Lines appended or displayed on the selected item.
     list:
       - "&8[<sc>Selected</sc>]"
+  # Bukkit material used for the selected preview item.
   item: GLASS_PANE
 
+# Color and format buttons. Each child key is the internal color or format ID.
+# Every entry can define permission, name, lore, and item using the same structure.
 colors:
+  # Standard Minecraft colors use the same entry layout.
   dark_red:
+    # Permission required to select this color or format.
     permission: sir.chat.color.dark-red
+    # Display name shown in the color menu.
     name: "&4Dark Red"
+    # Description shown under the display name.
     lore:
       - "&7This color is dark red."
+    # Bukkit material used for the menu item.
     item: RED_CONCRETE
   red:
     permission: sir.chat.color.red
@@ -118,6 +145,7 @@ colors:
     lore:
       - "&7This color is black."
     item: GRAY_CONCRETE
+  # Text format entries use the same layout as colors, but apply a format instead of a color.
   bold:
     permission: sir.chat.color.bold
     name: "&lBold"
@@ -148,6 +176,7 @@ colors:
     lore:
       - "&7This text is magic."
     item: DRAGON_BREATH
+  # Special dynamic formats can open extra prompts or apply generated colors.
   hex:
     permission: sir.chat.color.hex
     name: "&gHex Colors"
@@ -161,6 +190,7 @@ colors:
       - "&7This text is rainbow."
     item: EMERALD
   reset:
+    # Reset has no permission so every player who can open the menu can use it.
     name: "&fReset formats"
     lore:
       - "&7Resets any format selected."
