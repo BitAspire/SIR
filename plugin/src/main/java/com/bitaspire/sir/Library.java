@@ -7,13 +7,61 @@ import me.croabeast.takion.TakionLib;
 import me.croabeast.takion.channel.Channel;
 import me.croabeast.takion.logger.TakionLogger;
 import me.croabeast.takion.message.MessageSender;
+import me.croabeast.takion.placeholder.PlaceholderManager;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.TreeMap;
 import java.util.regex.Pattern;
 
 final class Library extends TakionLib {
+
+    private static final String[][] PLACEHOLDER_ALIASES = {
+            {"{PLAYER}", "{player}"},
+            {"{TARGET}", "{target}"},
+            {"{UUID}", "{uuid}"},
+            {"{WORLD}", "{world}"},
+            {"{MESSAGE}", "{message}"},
+            {"{SENDER}", "{sender}"},
+            {"{RECEIVER}", "{receiver}"},
+            {"{TYPE}", "{type}"},
+            {"{TIME}", "{time}"},
+            {"{PERM}", "{perm}"},
+            {"{PERMISSION}", "{perm}"},
+            {"{ADMIN}", "{admin}"},
+            {"{REASON}", "{reason}"},
+            {"{NICK}", "{nick}"},
+            {"{CHANNEL}", "{channel}"},
+            {"{STATE}", "{state}"},
+            {"{NAME}", "{name}"},
+            {"{VERSION}", "{version}"},
+            {"{playerDisplayName}", "{display-name}"},
+            {"{displayName}", "{display-name}"},
+            {"{DISPLAYNAME}", "{display-name}"},
+            {"{DISPLAY_NAME}", "{display-name}"},
+            {"{playerGameMode}", "{game-mode}"},
+            {"{gameMode}", "{game-mode}"},
+            {"{GAMEMODE}", "{game-mode}"},
+            {"{GAME_MODE}", "{game-mode}"},
+            {"{playerUUID}", "{uuid}"},
+            {"{playerWorld}", "{world}"},
+            {"{playerX}", "{x}"},
+            {"{playerY}", "{y}"},
+            {"{playerZ}", "{z}"},
+            {"{playerYaw}", "{yaw}"},
+            {"{playerPitch}", "{pitch}"},
+            {"{X}", "{x}"},
+            {"{Y}", "{y}"},
+            {"{Z}", "{z}"},
+            {"{YAW}", "{yaw}"},
+            {"{PITCH}", "{pitch}"},
+            {"{ignoreUsers}", "{ignore-users}"},
+            {"{mutedUsers}", "{muted-users}"},
+            {"{nickUsers}", "{nick-users}"},
+            {"{moduleStates}", "{module-states}"},
+            {"{commandStates}", "{command-states}"}
+    };
 
     private ConfigurableFile bossbars, webhooks;
     private final SIRPlugin instance;
@@ -23,22 +71,61 @@ final class Library extends TakionLib {
         super(instance);
         this.instance = instance;
 
-        getPlaceholderManager().edit("{playerDisplayName}", "{displayName}");
-        getPlaceholderManager().edit("{playerUUID}", "{uuid}");
-        getPlaceholderManager().edit("{playerWorld}", "{world}");
-        getPlaceholderManager().edit("{playerGameMode}", "{gameMode}");
-        getPlaceholderManager().edit("{playerX}", "{x}");
-        getPlaceholderManager().edit("{playerY}", "{y}");
-        getPlaceholderManager().edit("{playerZ}", "{z}");
-        getPlaceholderManager().edit("{playerYaw}", "{yaw}");
-        getPlaceholderManager().edit("{playerPitch}", "{pitch}");
-
-        getPlaceholderManager().load("{prefix}", instance.getChat()::getPrefix);
-        getPlaceholderManager().load("{suffix}", instance.getChat()::getSuffix);
+        registerPlayerPlaceholders();
 
         Channel channel = getChannelManager().identify("action_bar");
         channel.addPrefix("actionbar");
         channel.addPrefix("action-bar");
+    }
+
+    private void registerPlayerPlaceholders() {
+        PlaceholderManager manager = getPlaceholderManager();
+
+        manager.edit("{playerDisplayName}", "{display-name}");
+        manager.edit("{playerUUID}", "{uuid}");
+        manager.edit("{playerWorld}", "{world}");
+        manager.edit("{playerGameMode}", "{game-mode}");
+        manager.edit("{playerX}", "{x}");
+        manager.edit("{playerY}", "{y}");
+        manager.edit("{playerZ}", "{z}");
+        manager.edit("{playerYaw}", "{yaw}");
+        manager.edit("{playerPitch}", "{pitch}");
+
+        manager.load("{playerDisplayName}", Player::getDisplayName);
+        manager.load("{displayName}", Player::getDisplayName);
+        manager.load("{DISPLAYNAME}", Player::getDisplayName);
+        manager.load("{DISPLAY_NAME}", Player::getDisplayName);
+        manager.load("{playerUUID}", player -> player.getUniqueId().toString());
+        manager.load("{UUID}", player -> player.getUniqueId().toString());
+        manager.load("{playerWorld}", player -> player.getWorld().getName());
+        manager.load("{WORLD}", player -> player.getWorld().getName());
+        manager.load("{playerGameMode}", player -> player.getGameMode().name());
+        manager.load("{gameMode}", player -> player.getGameMode().name());
+        manager.load("{GAMEMODE}", player -> player.getGameMode().name());
+        manager.load("{GAME_MODE}", player -> player.getGameMode().name());
+        manager.load("{playerX}", player -> player.getLocation().getX());
+        manager.load("{playerY}", player -> player.getLocation().getY());
+        manager.load("{playerZ}", player -> player.getLocation().getZ());
+        manager.load("{playerYaw}", player -> player.getLocation().getYaw());
+        manager.load("{playerPitch}", player -> player.getLocation().getPitch());
+        manager.load("{X}", player -> player.getLocation().getX());
+        manager.load("{Y}", player -> player.getLocation().getY());
+        manager.load("{Z}", player -> player.getLocation().getZ());
+        manager.load("{YAW}", player -> player.getLocation().getYaw());
+        manager.load("{PITCH}", player -> player.getLocation().getPitch());
+
+        manager.load("{prefix}", instance.getChat()::getPrefix);
+        manager.load("{suffix}", instance.getChat()::getSuffix);
+    }
+
+    private String normalizePlaceholderAliases(String message) {
+        if (message == null || message.indexOf('{') < 0) return message;
+
+        String normalized = message;
+        for (String[] alias : PLACEHOLDER_ALIASES)
+            normalized = normalized.replace(alias[0], alias[1]);
+
+        return normalized;
     }
 
     void reload() {
@@ -63,6 +150,8 @@ final class Library extends TakionLib {
         super.setLoadedSender(new MessageSender(this) {
             {
                 ModuleManager manager = instance.getModuleManager();
+
+                addFunctions(Library.this::normalizePlaceholderAliases);
 
                 UserFormatter<?> emojis = manager.getFormatter("Emojis");
                 if (emojis != null) addFunctions(emojis::format);

@@ -188,16 +188,16 @@ final class MainCommand implements TabExecutor {
 
             return displayer
                     .addPlaceholder("{users}", result.getUsers())
-                    .addPlaceholder("{ignoreUsers}", result.getIgnoreUsers())
+                    .addPlaceholder("{ignore-users}", result.getIgnoreUsers())
                     .addPlaceholder("{ignored}", result.getIgnoredEntries())
-                    .addPlaceholder("{mutedUsers}", result.getMutedUsers())
-                    .addPlaceholder("{nickUsers}", result.getNickUsers())
+                    .addPlaceholder("{muted-users}", result.getMutedUsers())
+                    .addPlaceholder("{nick-users}", result.getNickUsers())
                     .addPlaceholder("{skipped}", result.getSkipped())
                     .addPlaceholder("{expired}", result.getExpiredMutes())
                     .addPlaceholder("{invalid}", result.getInvalidUsers())
                     .addPlaceholder("{configs}", result.getConfigs())
-                    .addPlaceholder("{moduleStates}", result.getModuleStates())
-                    .addPlaceholder("{commandStates}", result.getCommandStates())
+                    .addPlaceholder("{module-states}", result.getModuleStates())
+                    .addPlaceholder("{command-states}", result.getCommandStates())
                     .addPlaceholder("{backup}", backupPath)
                     .send("migrate.done");
         } catch (Exception exception) {
