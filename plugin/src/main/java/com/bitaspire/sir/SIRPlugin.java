@@ -111,7 +111,7 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
                 "&0 * &6____ &0* &6___ &0* &6____",
                 "&0* &6(___&0 * * &6|&0* * &6|___)",
                 "&0* &6____) . _|_ . | &0* &6\\ . &f" + getDescription().getVersion(),
-                "      &f&oDeveloped by " + getDescription().getAuthors().get(0),
+                "      &f&o" + getDescription().getAuthors().get(0) + " | BitAspire by ZeroToil",
                 "===================================",
                 "&e[Server]",
                 "- Fork & Version: " + VNC.SERVER_FORK,
@@ -231,7 +231,7 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
                 "&0 * &6____ &0* &6___ &0* &6____",
                 "&0* &6(___&0 * * &6|&0* * &6|___)",
                 "&0* &6____) . _|_ . | &0* &6\\ . &f" + getDescription().getVersion(),
-                "      &f&oDeveloped by " + getDescription().getAuthors().get(0),
+                "      &f&o" + getDescription().getAuthors().get(0) + " | BitAspire by ZeroToil",
                 "==================================="
         );
 

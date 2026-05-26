@@ -234,9 +234,10 @@ final class MainCommand implements TabExecutor {
                 return mainSender.setTargets(player).setLogger(false).send(
                         "",
                         " &eSIR &7- &f" + main.getDescription().getVersion() + "&7:",
-                        "   &8• &7Server Software: &f" + VNC.SERVER_FORK,
-                        "   &8• &7Developer: &fCroaBeast",
-                        "   &8• &7Java Version: &f" + SystemUtils.JAVA_VERSION,
+                        "   &8- &7Server Software: &f" + VNC.SERVER_FORK,
+                        "   &8- &7Author: &fCroaBeast",
+                        "   &8- &7Brand: &fBitAspire by ZeroToil",
+                        "   &8- &7Java Version: &f" + SystemUtils.JAVA_VERSION,
                         ""
                 );
 
