@@ -66,6 +66,21 @@ options:
     modules: true
     # Install bundled command providers when missing.
     commands: true
+    # Always overwrite bundled jars on startup, even if they already exist.
+    # Enable this to automatically apply updates to modules and commands.
+    always-update: true
+
+  # Startup log output.
+  # summary: shows only the compact startup report in console.
+  # verbose: keeps detailed manager loading messages in console too.
+  startup-logs:
+    console: summary
+    # Save module, command, integration, and full startup details under logs/.
+    save-details: true
+    # Keep a copy of the most recent startup diagnostics in logs/latest/.
+    latest-folder: true
+    # Number of timestamped startup sessions to keep. Set 0 to keep all.
+    max-sessions: 25
 
 # Message Formatting Values
 # Text values processed by SIR support MiniMessage through Takion/PrismaticAPI,

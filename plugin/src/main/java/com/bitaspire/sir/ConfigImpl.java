@@ -1,5 +1,6 @@
 package com.bitaspire.sir;
 
+import com.bitaspire.sir.file.Config;
 import lombok.Getter;
 import me.croabeast.file.ConfigurableFile;
 import org.apache.commons.lang.StringUtils;
@@ -24,7 +25,13 @@ final class ConfigImpl implements Config {
 
     private boolean moduleJars = true,
             addonJars = true,
-            commandJars = true;
+            commandJars = true,
+            alwaysUpdateJars = true;
+
+    private String startupLogConsole = "summary";
+    private boolean startupLogDetails = true,
+            startupLogLatestFolder = true;
+    private int startupLogMaxSessions = 25;
 
     ConfigImpl(SIRPlugin main) {
         try {
@@ -43,6 +50,12 @@ final class ConfigImpl implements Config {
             moduleJars = file.get("options.load-default-jars.modules", true);
             addonJars = file.get("options.load-default-jars.addons", true);
             commandJars = file.get("options.load-default-jars.commands", true);
+            alwaysUpdateJars = file.get("options.load-default-jars.always-update", true);
+
+            startupLogConsole = file.get("options.startup-logs.console", startupLogConsole);
+            startupLogDetails = file.get("options.startup-logs.save-details", true);
+            startupLogLatestFolder = file.get("options.startup-logs.latest-folder", true);
+            startupLogMaxSessions = file.getConfiguration().getInt("options.startup-logs.max-sessions", 25);
 
             prefixKey = file.get("values.lang-prefix-key", prefixKey);
             prefix = file.get("values.lang-prefix", prefix);
@@ -62,5 +75,10 @@ final class ConfigImpl implements Config {
             case "commands": return commandJars;
             default: return true;
         }
+    }
+
+    @Override
+    public boolean isAlwaysUpdateJars() {
+        return alwaysUpdateJars;
     }
 }

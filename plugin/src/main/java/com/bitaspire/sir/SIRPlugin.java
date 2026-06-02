@@ -1,7 +1,9 @@
 package com.bitaspire.sir;
 
+import com.bitaspire.sir.file.Config;
 import lombok.Getter;
 import lombok.SneakyThrows;
+import lombok.AccessLevel;
 import me.croabeast.common.MetricsLoader;
 import me.croabeast.common.util.Exceptions;
 import me.croabeast.file.ConfigurableFile;
@@ -16,6 +18,7 @@ import me.croabeast.takion.TakionLib;
 import me.croabeast.vnc.VNC;
 import me.croabeast.vault.chat.ChatProvider;
 import me.croabeast.vault.economy.EconomyProvider;
+import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
@@ -23,6 +26,10 @@ import org.bukkit.event.server.PluginEnableEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 @Getter
 public final class SIRPlugin extends JavaPlugin implements SIRApi {
@@ -33,9 +40,11 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
     private Library library;
     private Config configuration;
 
-    private ModuleManager moduleManager;
+    private ModuleManagerImpl moduleManager;
     private UserManagerImpl userManager;
-    private CommandManager commandManager;
+    private CommandManagerImpl commandManager;
+    @Getter(AccessLevel.NONE)
+    private StartupDiagnostics startupDiagnostics;
 
     private ConfigurableFile commandLang;
 
@@ -49,8 +58,9 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
         economy = EconomyProvider.detect();
 
         configuration = new ConfigImpl(this);
-        moduleManager = new ModuleManagerImpl(this);
-        commandManager = new CommandManagerImpl(this);
+        startupDiagnostics = StartupDiagnostics.create(this);
+        moduleManager = new ModuleManagerImpl(this, startupDiagnostics);
+        commandManager = new CommandManagerImpl(this, startupDiagnostics);
 
         (new Listener() {
             @EventHandler
@@ -105,107 +115,17 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
 
         library.reload();
 
-        DelayLogger logger = new DelayLogger();
-        logger.add(true,
-                "===================================",
-                "&0 * &6____ &0* &6___ &0* &6____",
-                "&0* &6(___&0 * * &6|&0* * &6|___)",
-                "&0* &6____) . _|_ . | &0* &6\\ . &f" + getDescription().getVersion(),
-                "      &f&o" + getDescription().getAuthors().get(0) + " | BitAspire by ZeroToil",
-                "===================================",
-                "&e[Server]",
-                "- Fork & Version: " + VNC.SERVER_FORK,
-                "- Java Version: " + VNC.JAVA_VERSION
+        StartupReport report = createStartupReport(timer.current());
+        new DelayLogger()
+                .add(true, report.consoleLines.toArray(new String[0]))
+                .sendLines();
+        startupDiagnostics.write(
+                report.summaryLines,
+                report.moduleLines,
+                report.commandLines,
+                report.integrationLines,
+                report.jsonLines
         );
-
-        logger.add(true, "&e[Modules]");
-        int totalModules = moduleManager.getModules().size();
-        int enabledModules = (int) moduleManager.getModules().stream()
-                .filter(SIRModule::isEnabled)
-                .count();
-        int registeredModules = (int) moduleManager.getModules().stream()
-                .filter(SIRModule::isRegistered)
-                .count();
-        logger.add(true,
-                "- Loaded: " + totalModules + "/" + totalModules,
-                "- Enabled: " + enabledModules + "/" + totalModules,
-                "- Registered: " + registeredModules + "/" + totalModules
-        );
-        if (totalModules == 0) {
-            logger.add("- No modules found. Skipping...", true);
-        } else {
-            moduleManager.getModules().forEach(module -> logger.add(true,
-                    "- " + module.getName() + ": " +
-                            (module.isEnabled() ? "&aenabled" : "&cdisabled") +
-                            " &7/ " +
-                            (module.isRegistered() ? "&aregistered" : "&cunregistered")
-            ));
-        }
-
-        logger.add(true, "&e[Commands]");
-        int moduleProviders = (int) moduleManager.getModules().stream()
-                .filter(module -> module instanceof CommandProvider).count();
-
-        int standaloneProviders = commandManager.getProviderNames().size();
-        int totalProviders = moduleProviders + standaloneProviders;
-
-        int totalCommands = commandManager.getCommands().size();
-        int enabledCommands = (int) commandManager.getCommands().stream()
-                .filter(SIRCommand::isEnabled).count();
-
-        logger.add(true, "&e[Command Providers]");
-        logger.add(true,
-                "- Module Providers: " + moduleProviders,
-                "- Standalone Providers: " + standaloneProviders
-        );
-        logger.add(true, "&e[Providers: Modules]");
-        if (moduleProviders == 0) {
-            logger.add("- No module providers found. Skipping...", true);
-        } else {
-            moduleManager.getModules().stream()
-                    .filter(module -> module instanceof CommandProvider)
-                    .forEach(module -> {
-                        CommandProvider provider = (CommandProvider) module;
-                        logger.add(true,
-                                "- " + module.getName() + ": " + provider.getCommands().size() + " commands"
-                        );
-                    });
-        }
-
-        logger.add(true, "&e[Providers: Standalone]");
-        if (standaloneProviders == 0) {
-            logger.add("- No standalone providers found. Skipping...", true);
-        } else {
-            commandManager.getProviderNames().forEach(name -> logger.add(true,
-                    "- " + name + ": " + commandManager.getProviderCommands(name).size() + " commands"
-            ));
-        }
-
-        logger.add(true,
-                "- Total Providers: " + totalProviders,
-                "- Total Commands: " + totalCommands
-        );
-
-        logger.add(true, "&e[Command Status]");
-        logger.add(true,
-                "- Registered: " + totalCommands,
-                "- Enabled: " + enabledCommands
-        );
-        if (totalCommands == 0) {
-            logger.add("- No commands registered. Skipping...", true);
-        } else {
-            commandManager.getCommands().forEach(c -> logger.add(true,
-                    "- " + c.getName() + ": " +
-                            (c.isEnabled() ? "&aenabled" : "&cdisabled")
-            ));
-        }
-
-        logger.add(true,
-                "&e[Status]",
-                "SIR initialized completely.",
-                "Loading time: " + timer.current() + " ms.",
-                "==================================="
-        ).sendLines();
 
         System.setProperty("bstats.relocatecheck", "false");
         MetricsLoader.initialize(this, 25264)
@@ -221,19 +141,303 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
                 );
     }
 
+    private StartupReport createStartupReport(long loadingTime) {
+        StartupReport report = new StartupReport();
+
+        report.consoleLines.addAll(headerLines());
+        report.summaryLines.addAll(headerLines());
+
+        appendRuntime(report);
+        appendModules(report);
+        appendCommands(report);
+        appendIntegrations(report);
+        appendStatus(report, loadingTime);
+        appendJson(report, loadingTime);
+
+        return report;
+    }
+
+    private void appendRuntime(StartupReport report) {
+        addConsole(report, section("Runtime"));
+        addConsole(report, row(MAIN + "[+]", "Server", LABEL, Bukkit.getName() + " " + VNC.SERVER_RAW_VERSION, VALUE));
+        addConsole(report, row(MAIN + "[+]", "Java", LABEL, String.valueOf(VNC.JAVA_VERSION), VALUE));
+    }
+
+    private void appendModules(StartupReport report) {
+        int total = moduleManager.getModules().size();
+        int enabled = (int) moduleManager.getModules().stream().filter(SIRModule::isEnabled).count();
+        int disabled = total - enabled;
+        int skipped = moduleManager.getStartupSkippedCount();
+        int failed = moduleManager.getStartupFailedCount();
+        int registered = (int) moduleManager.getModules().stream().filter(SIRModule::isRegistered).count();
+        List<String> updatedJars = moduleManager.getStartupUpdatedJars();
+
+        addConsole(report, divider());
+        addConsole(report, section("Modules"));
+        addConsole(report, row(MAIN + "[+]", "Enabled",  LABEL, count(enabled,  "module"), VALUE));
+        addConsole(report, row(MUTED + "[-]", "Disabled", LABEL, count(disabled, "module"), MUTED));
+        addConsole(report, row(MUTED + "[-]", "Skipped",  WARN,  count(skipped,  "module"), MUTED));
+        addConsole(report, failed == 0
+                ? row(MAIN  + "[+]", "Failed", LABEL, count(0,      "module"), VALUE)
+                : row(ERROR + "[!]", "Failed", ERROR, count(failed,  "module"), ERROR));
+        if (!updatedJars.isEmpty())
+            addConsole(report, row(INFO + "[i]", "Updated", LABEL, count(updatedJars.size(), "jar"), INFO));
+
+        report.moduleLines.add("Loaded: " + total);
+        report.moduleLines.add("Enabled: " + enabled);
+        report.moduleLines.add("Disabled: " + disabled);
+        report.moduleLines.add("Registered: " + registered);
+        report.moduleLines.add("Skipped: " + skipped);
+        report.moduleLines.add("Failed: " + failed);
+
+        if (!updatedJars.isEmpty()) {
+            report.moduleLines.add("");
+            report.moduleLines.add("Updated Jars");
+            updatedJars.forEach(report.moduleLines::add);
+        }
+
+        if (!moduleManager.getModules().isEmpty()) {
+            report.moduleLines.add("");
+            report.moduleLines.add("Loaded Modules");
+            moduleManager.getModules().forEach(module -> report.moduleLines.add(
+                    module.getName() + ": " +
+                            (module.isEnabled() ? "enabled" : "disabled") +
+                            " / " +
+                            (module.isRegistered() ? "registered" : "unregistered")
+            ));
+        }
+    }
+
+    private void appendCommands(StartupReport report) {
+        int moduleProviders = (int) moduleManager.getModules().stream()
+                .filter(module -> module instanceof CommandProvider)
+                .count();
+        int standaloneProviders = commandManager.getProviderNames().size();
+        int totalProviders = moduleProviders + standaloneProviders;
+        int totalCommands = commandManager.getCommands().size();
+        int enabledCommands = (int) commandManager.getCommands().stream()
+                .filter(SIRCommand::isEnabled)
+                .count();
+        int skipped = commandManager.getStartupSkippedCount();
+        int failed = commandManager.getStartupFailedCount();
+        List<String> updatedJars = commandManager.getStartupUpdatedJars();
+
+        addConsole(report, divider());
+        addConsole(report, section("Commands"));
+        addConsole(report, row(MAIN  + "[+]", "Registered", LABEL, count(totalCommands,  "command"),  VALUE));
+        addConsole(report, row(MAIN  + "[+]", "Providers",  LABEL, count(totalProviders, "provider"), VALUE));
+        addConsole(report, row(MUTED + "[-]", "Skipped",    WARN,  count(skipped,        "provider"), MUTED));
+        addConsole(report, failed == 0
+                ? row(MAIN  + "[+]", "Failed", LABEL, count(0,     "provider"), VALUE)
+                : row(ERROR + "[!]", "Failed", ERROR, count(failed, "provider"), ERROR));
+        if (!updatedJars.isEmpty())
+            addConsole(report, row(INFO + "[i]", "Updated", LABEL, count(updatedJars.size(), "jar"), INFO));
+
+        report.commandLines.add("Module Providers: " + moduleProviders);
+        report.commandLines.add("Standalone Providers: " + standaloneProviders);
+        report.commandLines.add("Total Providers: " + totalProviders);
+        report.commandLines.add("Registered Commands: " + totalCommands);
+        report.commandLines.add("Enabled Commands: " + enabledCommands);
+        report.commandLines.add("Skipped Providers: " + skipped);
+        report.commandLines.add("Failed Providers: " + failed);
+
+        if (!updatedJars.isEmpty()) {
+            report.commandLines.add("");
+            report.commandLines.add("Updated Jars");
+            updatedJars.forEach(report.commandLines::add);
+        }
+
+        if (moduleProviders > 0) {
+            report.commandLines.add("");
+            report.commandLines.add("Providers: Modules");
+            moduleManager.getModules().stream()
+                    .filter(module -> module instanceof CommandProvider)
+                    .forEach(module -> {
+                        CommandProvider provider = (CommandProvider) module;
+                        report.commandLines.add(module.getName() + ": " + count(provider.getCommands().size(), "command"));
+                    });
+        }
+
+        if (!commandManager.getProviderNames().isEmpty()) {
+            report.commandLines.add("");
+            report.commandLines.add("Providers: Standalone");
+            commandManager.getProviderNames().forEach(name -> report.commandLines.add(
+                    name + ": " + count(commandManager.getProviderCommands(name).size(), "command")
+            ));
+        }
+
+        if (!commandManager.getCommands().isEmpty()) {
+            report.commandLines.add("");
+            report.commandLines.add("Commands");
+            commandManager.getCommands().forEach(command -> report.commandLines.add(
+                    command.getName() + ": " + (command.isEnabled() ? "enabled" : "disabled")
+            ));
+        }
+    }
+
+    private void appendIntegrations(StartupReport report) {
+        boolean papi = Exceptions.isPluginEnabled("PlaceholderAPI");
+        boolean interactive = Exceptions.isPluginEnabled("InteractiveChat");
+        boolean chatHook = chat.getPlugin() != null;
+        boolean economyHook = economy.getPlugin() != null;
+        int active = countEnabled(papi, interactive, chatHook, economyHook);
+        int missing = 4 - active;
+
+        addConsole(report, divider());
+        addConsole(report, section("Integrations"));
+        addConsole(report, row(MAIN  + "[+]", "Active",  LABEL, count(active,  "hook"),          VALUE));
+        addConsole(report, row(MUTED + "[-]", "Missing", LABEL, count(missing, "optional hook"), MUTED));
+
+        addIntegration(report, "PlaceholderAPI: " + status(papi));
+        addIntegration(report, "InteractiveChat: " + status(interactive));
+        addIntegration(report, "Chat provider: " + pluginName(chat.getPlugin()));
+        addIntegration(report, "Economy provider: " + pluginName(economy.getPlugin()));
+    }
+
+    private void appendStatus(StartupReport report, long loadingTime) {
+        addConsole(report, divider());
+        addConsole(report, section("Status"));
+        addConsole(report, row(MAIN  + "[+]", "Startup",      LABEL, "complete",                       VALUE));
+        addConsole(report, row(LABEL + "[i]", "Loading time", LABEL, formatDuration(loadingTime),      INFO));
+
+        if (startupDiagnostics != null && startupDiagnostics.hasDetails())
+            addConsole(report, row(LABEL + "[i]", "Details", LABEL, startupDiagnostics.getDetailPath(), INFO));
+
+        addConsole(report, divider());
+    }
+
+    private void appendJson(StartupReport report, long loadingTime) {
+        int totalModules = moduleManager.getModules().size();
+        int enabledModules = (int) moduleManager.getModules().stream().filter(SIRModule::isEnabled).count();
+
+        int skippedModules = moduleManager.getStartupSkippedCount();
+        int failedModules = moduleManager.getStartupFailedCount();
+
+        int totalProviders = (int) moduleManager.getModules().stream()
+                .filter(module -> module instanceof CommandProvider)
+                .count() + commandManager.getProviderNames().size();
+        int totalCommands = commandManager.getCommands().size();
+
+        int skippedProviders = commandManager.getStartupSkippedCount();
+        int failedProviders = commandManager.getStartupFailedCount();
+
+        report.jsonLines.add("{");
+        report.jsonLines.add("  \"plugin\": \"SIR\",");
+        report.jsonLines.add("  \"version\": \"" + json(getDescription().getVersion()) + "\",");
+        report.jsonLines.add("  \"server\": \"" + json(Bukkit.getName() + " " + VNC.SERVER_CLASSIC_VERSION) + "\",");
+        report.jsonLines.add("  \"java\": \"" + json(String.valueOf(VNC.JAVA_VERSION)) + "\",");
+        report.jsonLines.add("  \"startupMs\": " + loadingTime + ",");
+        report.jsonLines.add("  \"modules\": {");
+        report.jsonLines.add("    \"loaded\": " + totalModules + ",");
+        report.jsonLines.add("    \"enabled\": " + enabledModules + ",");
+        report.jsonLines.add("    \"disabled\": " + (totalModules - enabledModules) + ",");
+        report.jsonLines.add("    \"skipped\": " + skippedModules + ",");
+        report.jsonLines.add("    \"failed\": " + failedModules);
+        report.jsonLines.add("  },");
+        report.jsonLines.add("  \"commands\": {");
+        report.jsonLines.add("    \"providers\": " + totalProviders + ",");
+        report.jsonLines.add("    \"registered\": " + totalCommands + ",");
+        report.jsonLines.add("    \"skipped\": " + skippedProviders + ",");
+        report.jsonLines.add("    \"failed\": " + failedProviders);
+        report.jsonLines.add("  }");
+        report.jsonLines.add("}");
+    }
+
+    private List<String> headerLines() {
+        List<String> lines = new ArrayList<>();
+        lines.add(MAIN + "===================================");
+        lines.add(MAIN + " * ____ * ___ * ____");
+        lines.add(MAIN + "* (___ * * |* * |___) +");
+        lines.add(MAIN + "* ____) . _|_ . | * \\ . &f" + getDescription().getVersion());
+        lines.add(LABEL + "      Developed by " + getDescription().getAuthors().get(0));
+        lines.add(MAIN + "===================================");
+        return lines;
+    }
+
+    private void addConsole(StartupReport report, String line) {
+        report.consoleLines.add(line);
+        report.summaryLines.add(line);
+    }
+
+    private void addIntegration(StartupReport report, String line) {
+        report.integrationLines.add(line);
+        if (startupDiagnostics != null) startupDiagnostics.integration(line);
+    }
+
+    private String section(String name) {
+        return MAIN + name;
+    }
+
+    private String divider() {
+        return MUTED + "-----------------------------------";
+    }
+
+    private String row(String marker, String label, String labelCode, String value, String valueCode) {
+        return marker + " " + labelCode + dotted(label) + " " + valueCode + value;
+    }
+
+    private String dotted(String label) {
+        StringBuilder builder = new StringBuilder(label);
+        if (builder.length() < 16) builder.append(' ');
+        while (builder.length() < 16) builder.append('.');
+        return builder.toString();
+    }
+
+    private String color(String legacyCode, String text) {
+        return legacyCode + text;
+    }
+
+    private String count(int amount, String singular) {
+        return amount + " " + singular + (amount == 1 ? "" : "s");
+    }
+
+    private int countEnabled(boolean... values) {
+        int amount = 0;
+        for (boolean value : values) if (value) amount++;
+        return amount;
+    }
+
+    private String status(boolean enabled) {
+        return enabled ? "enabled" : "missing";
+    }
+
+    private String pluginName(Plugin plugin) {
+        return plugin == null ? "none" : plugin.getName();
+    }
+
+    private String formatDuration(long millis) {
+        return millis < 1000L ? millis + "ms" : String.format(Locale.US, "%.2fs", millis / 1000D);
+    }
+
+    private String json(String value) {
+        return value == null ? "" : value.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+
+    private static final String MAIN  = "&a"; // bright green  - [+], headers, banner
+    private static final String VALUE = "&f"; // white         - positive values
+    private static final String LABEL = "&7"; // gray          - general labels and text
+    private static final String MUTED = "&8"; // dark gray     - [-], dividers, disabled
+    private static final String WARN  = "&e"; // yellow        - skipped
+    private static final String INFO  = "&9"; // aqua          - [i] values (time, path)
+    private static final String ERROR = "&c"; // red           - [!] failed > 0
+
+    private static final class StartupReport {
+        private final List<String> consoleLines = new ArrayList<>();
+        private final List<String> summaryLines = new ArrayList<>();
+        private final List<String> moduleLines = new ArrayList<>();
+        private final List<String> commandLines = new ArrayList<>();
+        private final List<String> integrationLines = new ArrayList<>();
+        private final List<String> jsonLines = new ArrayList<>();
+    }
+
     @Override
     public void onDisable() {
         Timer timer = Timer.create();
 
         DelayLogger logger = new DelayLogger();
-        logger.add(true,
-                "===================================",
-                "&0 * &6____ &0* &6___ &0* &6____",
-                "&0* &6(___&0 * * &6|&0* * &6|___)",
-                "&0* &6____) . _|_ . | &0* &6\\ . &f" + getDescription().getVersion(),
-                "      &f&o" + getDescription().getAuthors().get(0) + " | BitAspire by ZeroToil",
-                "==================================="
-        );
+        logger.add(true, headerLines().toArray(new String[0]));
+
+        setManagerQuietConsole();
 
         if (userManager != null)
             userManager.shutdown();
@@ -249,13 +453,19 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
             moduleManager.unloadAll();
 
         logger.add(true,
-                "SIR disabled completely in " + timer.current() + " ms.",
-                "==================================="
+                row(MAIN  + "[+]", "Shutdown",      LABEL, "complete",                      VALUE),
+                row(INFO  + "[i]", "Shutdown time", LABEL, formatDuration(timer.current()), INFO),
+                divider()
         ).sendLines();
 
         HandlerList.unregisterAll(this);
 
         Api.api = null;
+    }
+
+    void setManagerQuietConsole() {
+        commandManager.setQuietConsole(true);
+        moduleManager.setQuietConsole(true);
     }
 
     @NotNull
@@ -266,6 +476,16 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
     @NotNull
     public Plugin getPlugin() {
         return this;
+    }
+
+    @NotNull
+    public ModuleManager getModuleManager() {
+        return moduleManager;
+    }
+
+    @NotNull
+    public CommandManager getCommandManager() {
+        return commandManager;
     }
 
     @NotNull

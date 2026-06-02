@@ -7,13 +7,14 @@ import me.croabeast.common.Loadable;
 import me.croabeast.scheduler.GlobalTask;
 import com.bitaspire.sir.DelayLogger;
 import com.bitaspire.sir.Timer;
-import com.bitaspire.sir.ExtensionFile;
+import com.bitaspire.sir.file.ExtensionFile;
 import me.croabeast.vnc.VNC;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.advancement.Advancement;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.*;
 
@@ -83,14 +84,6 @@ final class DataHandler implements Loadable {
             if (data == null) return;
 
             Timer timer = Timer.create();
-            DelayLogger logger = new DelayLogger()
-                    .add(true,
-                            "===========================",
-                            "SIR Advancement Loader",
-                            "===========================",
-                            "&e[Advancements]"
-                    );
-
             final List<String> keys = data.getKeys("data");
             int count = 0;
 
@@ -119,14 +112,20 @@ final class DataHandler implements Loadable {
 
             if (count > 0) data.save();
 
-            logger.add(true,
-                    "- Tasks: " + tasks, "- Goals: " + goals,
-                    "- Challenges: " + challenges, "- Custom: " + custom,
-                    "&e[Status]",
-                    "- Loaded " + information.size() + " advancements.",
-                    "- Completed in " + timer.current() + " ms.",
-                    "==========================="
-            ).sendLines();
+            if (isVerboseStartupLog())
+                new DelayLogger()
+                        .add(true,
+                                "===========================",
+                                "SIR Advancement Loader",
+                                "===========================",
+                                "&e[Advancements]",
+                                "- Tasks: " + tasks, "- Goals: " + goals,
+                                "- Challenges: " + challenges, "- Custom: " + custom,
+                                "&e[Status]",
+                                "- Loaded " + information.size() + " advancements.",
+                                "- Completed in " + timer.current() + " ms.",
+                                "==========================="
+                        ).sendLines();
 
             if (supportsGameRules())
                 GameRuleSupport.disableAnnouncements(main, processedWorlds);
@@ -147,6 +146,13 @@ final class DataHandler implements Loadable {
 
     private static boolean supportsGameRules() {
         return !VNC.isBefore("1.12") && hasClass("org.bukkit.GameRule");
+    }
+
+    private boolean isVerboseStartupLog() {
+        if (!(main.getApi().getPlugin() instanceof JavaPlugin)) return false;
+
+        JavaPlugin plugin = (JavaPlugin) main.getApi().getPlugin();
+        return "verbose".equalsIgnoreCase(plugin.getConfig().getString("options.startup-logs.console", "summary"));
     }
 
     private static boolean hasClass(String name) {
