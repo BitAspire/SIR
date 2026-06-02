@@ -21,9 +21,9 @@ import me.croabeast.common.applier.StringApplier;
 import me.croabeast.common.util.ReplaceUtils;
 import me.croabeast.file.Configurable;
 import me.croabeast.prismatic.PrismaticAPI;
-import me.croabeast.takion.chat.ChatComponent;
-import me.croabeast.takion.chat.MultiComponent;
-import me.croabeast.takion.format.Format;
+import me.croabeast.prismatic.chat.ChatComponent;
+import me.croabeast.prismatic.chat.MultiComponent;
+import me.croabeast.prismatic.chat.ChatFormat;
 import me.croabeast.takion.format.StringFormat;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.World;
@@ -309,7 +309,7 @@ final class Factory {
                     return f.accept(s);
                 });
 
-            Format<ChatComponent<?>> f = MultiComponent.DEFAULT_FORMAT;
+            ChatFormat<ChatComponent<?>> f = MultiComponent.DEFAULT_FORMAT;
             if (isDefault() && !f.isFormatted(applier.toString()))
                 return applier
                         .apply(s -> api.getLibrary().colorize(target, parser, s))

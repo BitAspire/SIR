@@ -8,7 +8,7 @@ import com.bitaspire.sir.UserFormatter;
 import com.bitaspire.sir.channel.ChatChannel;
 import com.bitaspire.sir.module.SIRModule;
 import com.bitaspire.sir.user.SIRUser;
-import me.croabeast.takion.chat.MultiComponent;
+import me.croabeast.prismatic.chat.MultiComponent;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -95,7 +95,7 @@ public final class Mentions extends SIRModule implements UserFormatter<ChatChann
                 String click = op.apply(mention.getClick());
                 String result = op.apply(mention.getValue());
 
-                result = MultiComponent.fromString(getApi().getLibrary(), result)
+                result = MultiComponent.fromString(getApi().getLibrary().getChatProcessor(), result)
                         .setHover(hover)
                         .setClick(click)
                         .toFormattedString();

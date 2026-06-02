@@ -1,6 +1,6 @@
 package com.bitaspire.sir.module.moderation;
 
-import me.croabeast.takion.chat.ChatComponent;
+import me.croabeast.prismatic.chat.ChatComponent;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 
@@ -45,7 +45,7 @@ final class Links extends Module {
         if (foundAny) {
             validateAndExecuteActions(
                     player, message,
-                    file.get("actions.maximum-violations", 3)
+                    file.getConfiguration().getInt("actions.maximum-violations", 3)
             );
 
             if (file.get("control", "BLOCK").matches("(?i)block"))

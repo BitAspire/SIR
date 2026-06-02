@@ -11,7 +11,7 @@ import com.bitaspire.sir.module.ModuleManager;
 import com.bitaspire.sir.user.SIRUser;
 import me.croabeast.takion.TakionLib;
 import me.croabeast.takion.channel.Channel;
-import me.croabeast.takion.chat.MultiComponent;
+import me.croabeast.prismatic.chat.MultiComponent;
 import me.croabeast.takion.message.MessageSender;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.entity.Player;
@@ -189,7 +189,7 @@ final class Listener extends com.bitaspire.sir.Listener {
             String temp = channel.formatString(p, player, message, true);
             temp = chat.formatString(p, player, temp);
 
-            MultiComponent component = MultiComponent.fromString(lib, temp);
+            MultiComponent component = MultiComponent.fromString(lib.getChatProcessor(), temp);
             if (hover != null && !hover.isEmpty()) component.setHoverToAll(hover);
             if (click != null)
                 component.setClickToAll(click.getAction(), input);
