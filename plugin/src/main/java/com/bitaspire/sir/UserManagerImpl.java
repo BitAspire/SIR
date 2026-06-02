@@ -232,12 +232,17 @@ final class UserManagerImpl implements UserManager, Registrable {
     @Override
     public boolean hasPermission(CommandSender sender, String permission) {
         if (sender == null) return false;
-        if (StringUtils.isBlank(permission)) return true;
+        if (isDefaultPermission(permission)) return true;
 
         if (sender.isOp() && !plugin.getConfiguration().isOverrideOp())
             return true;
 
         return sender.hasPermission(permission);
+    }
+
+    private static boolean isDefaultPermission(String permission) {
+        if (StringUtils.isBlank(permission)) return true;
+        return "DEFAULT".equalsIgnoreCase(permission.trim());
     }
 
     abstract static class BaseData {

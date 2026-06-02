@@ -24,7 +24,7 @@ public interface PermissibleUnit extends ConfigurableUnit {
      * @return True if the sender has the permission, false otherwise.
      */
     default boolean hasPermission(CommandSender sender) {
-        return SIRApi.instance().getUserManager().hasPermission(sender, getPermission());
+        return isDefaultPermission() || SIRApi.instance().getUserManager().hasPermission(sender, getPermission());
     }
 
     /**
@@ -34,7 +34,7 @@ public interface PermissibleUnit extends ConfigurableUnit {
      * @return True if the sender has the permission, false otherwise.
      */
     default boolean hasPermission(SIRUser user) {
-        return SIRApi.instance().getUserManager().hasPermission(user, getPermission());
+        return isDefaultPermission() || SIRApi.instance().getUserManager().hasPermission(user, getPermission());
     }
 
     /**
@@ -56,7 +56,7 @@ public interface PermissibleUnit extends ConfigurableUnit {
      * @return {@code true} if the user is in the group, {@code false} otherwise.
      */
     default boolean isInGroup(SIRUser user) {
-        return isInGroup(user.isOnline() ? user.getPlayer() : null);
+        return user != null && isInGroup(user.isOnline() ? user.getPlayer() : null);
     }
 
     /**

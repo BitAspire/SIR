@@ -109,6 +109,6 @@ public interface UserManager {
      * @return {@code true} if the user has the permission.
      */
     default boolean hasPermission(SIRUser user, String permission) {
-        return hasPermission(user.getPlayer(), permission);
+        return user != null && hasPermission(user.getPlayer(), permission);
     }
 }
