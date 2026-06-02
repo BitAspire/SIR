@@ -20,15 +20,42 @@ import java.util.function.Consumer;
 @UtilityClass
 class MenuVisuals {
 
-    static final int MAIN_ITEMS_PER_ROW = 5;
+    static final int MAIN_ITEMS_PER_ROW = 7;
     static final int MAIN_ITEMS_PER_PAGE = MAIN_ITEMS_PER_ROW * 4;
     static final int CENTER_ITEMS_PER_PAGE = 7 * 4;
-    private static final String POINTER = "\u27BC";
-    private static final String INFO = "\u25C6";
-    private static final String CHECK = "\u2714";
-    private static final String CROSS = "\u2718";
-    private static final String ACTION = "\u00BB";
-    private static final String BACK = "\u2190";
+
+    // Symbols
+    private static final String POINTER = "➼";  // ➼  for module description lines
+    private static final String SEP     = "〢";  // 〢 for config item details
+    private static final String INFO    = "◆";  // ◆
+    private static final String CHECK   = "✔";  // ✔
+    private static final String CROSS   = "✘";  // ✘
+    private static final String ACTION  = "»";  // »
+    private static final String BACK    = "←";  // ←
+
+    // Type badge icons
+    private static final String MODULE_ICON  = "✦";  // ✦
+    private static final String COMMAND_ICON = "⌘";  // ⌘
+    private static final String ADDON_ICON   = "✚";  // ✚
+
+    // Type badge colors (hex, via PrismaticAPI)
+    private static final String MODULE_COLOR  = "&#7ECEFF";
+    private static final String COMMAND_COLOR = "&#FFD166";
+    private static final String ADDON_COLOR   = "&#C4A0FF";
+
+    // Per-name color palette (picked by name hash)
+    private static final String[] NAME_PALETTE = {
+            "&#5BF5B0",  // mint
+            "&#5BB8F5",  // sky blue
+            "&#F5A35B",  // amber
+            "&#D45BF5",  // purple
+            "&#F5E55B",  // yellow
+            "&#5BF5D4",  // teal
+            "&#F55B9E",  // pink
+            "&#A0F55B",  // lime
+            "&#5B7BF5",  // periwinkle
+            "&#F5705B",  // salmon
+    };
 
     static int pageCount(int itemCount, int itemsPerPage) {
         return Math.max(1, (Math.max(0, itemCount) + itemsPerPage - 1) / itemsPerPage);
@@ -43,7 +70,7 @@ class MenuVisuals {
     @Nullable
     static Slot mainSlot(int index) {
         int row = index / MAIN_ITEMS_PER_ROW;
-        return row >= 4 ? null : Slot.fromXY(2 + (index % MAIN_ITEMS_PER_ROW), 1 + row);
+        return row >= 4 ? null : Slot.fromXY(1 + (index % MAIN_ITEMS_PER_ROW), 1 + row);
     }
 
     static void addFrame(@NotNull ChestBuilder menu,
@@ -110,7 +137,7 @@ class MenuVisuals {
                 int target = page + 1;
                 menu.addSingleItem(
                         page, 6, bottomRow,
-                        navigation(plugin, "&e&l" + small("Next") + " \u2192", "&7Go to page &f" + (target + 1) + "&7.", event -> {
+                        navigation(plugin, "&e&l" + small("Next") + " →", "&7Go to page &f" + (target + 1) + "&7.", event -> {
                             event.setCancelled(true);
                             menu.setDisplayedPage(target);
                             menu.showGui(event.getWhoClicked());
@@ -151,7 +178,7 @@ class MenuVisuals {
         return item(
                 plugin,
                 enabled ? Material.LIME_STAINED_GLASS_PANE : Material.RED_STAINED_GLASS_PANE,
-                typedName(information.getTitle(), type),
+                toggledName(information.getTitle(), type),
                 lore.toArray(new String[0]),
                 event -> event.setCancelled(true)
         );
@@ -159,23 +186,22 @@ class MenuVisuals {
 
     @NotNull
     static GuiItem booleanItem(@NotNull Plugin plugin, @NotNull String key, boolean enabled) {
-        return stateItem(plugin, key, enabled, "Boolean", "toggle option");
+        return stateItem(plugin, key, enabled);
     }
 
     @NotNull
     static GuiItem stateItem(@NotNull Plugin plugin,
                              @NotNull String key,
-                             boolean enabled,
-                             @NotNull String type,
-                             @NotNull String action) {
+                             boolean enabled) {
         return item(
                 plugin,
                 enabled ? Material.LIME_STAINED_GLASS_PANE : Material.RED_STAINED_GLASS_PANE,
-                typedName(key, type),
+                typedName(key, "Boolean"),
                 new String[]{
+                        "&8" + SEP + " &7Toggle this option on or off.",
                         "&8" + INFO + " &7" + small("Current") + "&8: " + status(enabled),
                         "",
-                        "&8" + ACTION + " &e" + small("Left-click") + " &8- &7" + small(action)
+                        "&8" + ACTION + " &e" + small("Left-click") + " &8- &7" + small("toggle option")
                 },
                 event -> event.setCancelled(true)
         );
@@ -186,13 +212,15 @@ class MenuVisuals {
                               @NotNull Material material,
                               @NotNull String key,
                               @NotNull String type,
+                              @NotNull String description,
                               @NotNull List<String> details,
                               @NotNull String action,
                               @NotNull Consumer<InventoryClickEvent> handler) {
         List<String> lore = new ArrayList<>();
+        lore.add("&8" + SEP + " &7" + description);
         for (String detail : details) {
             if (StringUtils.isBlank(detail)) continue;
-            lore.add("&8" + POINTER + " " + detail);
+            lore.add("&8" + SEP + " " + detail);
         }
         lore.add("");
         lore.add("&8" + ACTION + " &e" + small("Left-click") + " &8- &7" + small(action));
@@ -244,6 +272,8 @@ class MenuVisuals {
         return blank ? "<empty>" : normalized.length() <= 40 ? normalized : normalized.substring(0, 37) + "...";
     }
 
+    // --- Private helpers ---
+
     @NotNull
     private static GuiItem filler(@NotNull Plugin plugin) {
         return item(plugin, Material.GRAY_STAINED_GLASS_PANE, " ", new String[0], event -> event.setCancelled(true));
@@ -278,9 +308,46 @@ class MenuVisuals {
                 + small(enabled ? "Enabled" : "Disabled");
     }
 
+    /** For config-menu items (section/value/boolean): white name | gray type. */
     @NotNull
     private static String typedName(@Nullable String title, @NotNull String type) {
         return "&f" + small(title) + " &8| &7" + small(type);
+    }
+
+    /**
+     * For module/command toggle buttons:
+     * - title gets a deterministic color from the name palette
+     * - type gets an icon + badge color (Module vs Command Provider)
+     */
+    @NotNull
+    private static String toggledName(@Nullable String title, @NotNull String type) {
+        String raw = stripAllFormatting(title);
+        String nameColor = nameColor(raw);
+        String badge = typeBadge(type);
+        return nameColor + small(raw) + " &8| " + badge;
+    }
+
+    @NotNull
+    private static String nameColor(@Nullable String name) {
+        if (name == null || name.isEmpty()) return "&f";
+        int index = Math.abs(name.hashCode()) % NAME_PALETTE.length;
+        return NAME_PALETTE[index];
+    }
+
+    @NotNull
+    private static String stripAllFormatting(@Nullable String text) {
+        if (text == null) return "";
+        return text
+                .replaceAll("(?i)&[0-9a-fk-or]", "")  // &7, &a, etc.
+                .replaceAll("<[^>]*>", "");             // <r:1>, </r>, <#RRGGBB>, etc.
+    }
+
+    @NotNull
+    private static String typeBadge(@NotNull String type) {
+        String lower = type.toLowerCase();
+        if (lower.contains("command")) return COMMAND_COLOR + COMMAND_ICON + " " + small(type);
+        if (lower.contains("addon"))   return ADDON_COLOR   + ADDON_ICON   + " " + small(type);
+        return MODULE_COLOR + MODULE_ICON + " " + small(type);
     }
 
     @NotNull

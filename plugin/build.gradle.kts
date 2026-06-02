@@ -6,11 +6,13 @@ repositories {
 }
 
 val apiProject = project(":api")
+val runtimeProject = project(":runtime")
 val takionShaded: Configuration by configurations.creating
 val takionVersion: String by project
 
 dependencies {
     implementation(apiProject)
+    implementation(runtimeProject)
 
     compileOnly("net.essentialsx:EssentialsX:2.21.0") {
         exclude("*", "*")
@@ -24,6 +26,7 @@ dependencies {
 }
 
 val apiMainOutput = apiProject.extensions.getByType<SourceSetContainer>()["main"].output
+val runtimeMainOutput = runtimeProject.extensions.getByType<SourceSetContainer>()["main"].output
 
 val moduleJarTasks = rootProject.subprojects
     .filter { it.path.startsWith(":module:") && it.path != ":module:all" }
@@ -44,6 +47,8 @@ tasks.named<ShadowJar>("shadowJar") {
 
     dependsOn(apiProject.tasks.named("classes"))
     from(apiMainOutput)
+    dependsOn(runtimeProject.tasks.named("classes"))
+    from(runtimeMainOutput)
 
     configurations = listOf(takionShaded)
 
