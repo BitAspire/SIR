@@ -193,7 +193,7 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
         if (!updatedJars.isEmpty()) {
             report.moduleLines.add("");
             report.moduleLines.add("Updated Jars");
-            updatedJars.forEach(report.moduleLines::add);
+            report.moduleLines.addAll(updatedJars);
         }
 
         if (!moduleManager.getModules().isEmpty()) {
@@ -244,7 +244,7 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
         if (!updatedJars.isEmpty()) {
             report.commandLines.add("");
             report.commandLines.add("Updated Jars");
-            updatedJars.forEach(report.commandLines::add);
+            report.commandLines.addAll(updatedJars);
         }
 
         if (moduleProviders > 0) {
@@ -347,7 +347,7 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
         List<String> lines = new ArrayList<>();
         lines.add(MAIN + "===================================");
         lines.add(MAIN + " * ____ * ___ * ____");
-        lines.add(MAIN + "* (___ * * |* * |___) +");
+        lines.add(MAIN + "* (___ * * |* * |___)");
         lines.add(MAIN + "* ____) . _|_ . | * \\ . &f" + getDescription().getVersion());
         lines.add(LABEL + "      Developed by " + getDescription().getAuthors().get(0));
         lines.add(MAIN + "===================================");
