@@ -1,6 +1,6 @@
 package com.bitaspire.sir.module.channel.channel;
 
-import com.bitaspire.sir.ExtensionFile;
+import com.bitaspire.sir.file.ExtensionFile;
 import com.bitaspire.sir.module.channel.Channels;
 import me.croabeast.takion.logger.LogLevel;
 import org.apache.commons.lang.StringUtils;

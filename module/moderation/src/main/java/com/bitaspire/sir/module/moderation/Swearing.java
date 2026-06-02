@@ -42,6 +42,6 @@ final class Swearing extends Module {
             }
         }
 
-        return foundAny && validateAndExecuteActions(player, message, file.get("actions.maximum-violations", 3));
+        return foundAny && validateAndExecuteActions(player, message, file.getConfiguration().getInt("actions.maximum-violations", 3));
     }
 }

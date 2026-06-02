@@ -2,7 +2,7 @@ package com.bitaspire.sir.module.motd;
 
 import lombok.Getter;
 import lombok.SneakyThrows;
-import com.bitaspire.sir.ExtensionFile;
+import com.bitaspire.sir.file.ExtensionFile;
 
 @Getter
 final class Config {
@@ -22,7 +22,7 @@ final class Config {
         alwaysLoadDefaultIcon = file.get("always-load-default-icon", true);
 
         maxPlayersType = file.get("max-players.type", maxPlayersType);
-        maxPlayersCount = file.get("max-players.count", maxPlayersCount);
+        maxPlayersCount = file.getConfiguration().getInt("max-players.count", maxPlayersCount);
 
         serverIconUsage = file.get("server-icon.usage", serverIconUsage);
         serverIconImage = file.get("server-icon.image", serverIconImage);

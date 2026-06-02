@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
 import me.croabeast.common.util.ArrayUtils;
-import com.bitaspire.sir.ExtensionFile;
+import com.bitaspire.sir.file.ExtensionFile;
 
 import java.util.List;
 

@@ -2,7 +2,7 @@ package com.bitaspire.sir.module.announcement;
 
 import lombok.Getter;
 import lombok.SneakyThrows;
-import com.bitaspire.sir.ExtensionFile;
+import com.bitaspire.sir.file.ExtensionFile;
 
 @Getter
 final class Config {
@@ -13,7 +13,7 @@ final class Config {
     @SneakyThrows
     Config(Announcements main) {
         ExtensionFile file = new ExtensionFile(main, "config", true);
-        interval = file.get("interval", interval);
+        interval = file.getConfiguration().getInt("interval", interval);
         random = file.get("random", false);
     }
 }

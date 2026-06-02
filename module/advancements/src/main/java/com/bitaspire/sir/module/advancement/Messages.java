@@ -5,7 +5,7 @@ import me.croabeast.advancement.AdvancementInfo;
 import me.croabeast.common.applier.StringApplier;
 import me.croabeast.common.util.ReplaceUtils;
 import com.bitaspire.sir.SIRApi;
-import com.bitaspire.sir.ExtensionFile;
+import com.bitaspire.sir.file.ExtensionFile;
 import com.bitaspire.sir.user.SIRUser;
 import me.croabeast.takion.TakionLib;
 import me.croabeast.takion.format.PlainFormat;

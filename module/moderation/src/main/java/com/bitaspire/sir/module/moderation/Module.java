@@ -7,7 +7,7 @@ import me.croabeast.common.CustomListener;
 import me.croabeast.common.Registrable;
 import me.croabeast.file.Configurable;
 import me.croabeast.file.ConfigurableFile;
-import com.bitaspire.sir.ExtensionFile;
+import com.bitaspire.sir.file.ExtensionFile;
 import com.bitaspire.sir.SIRApi;
 import me.croabeast.takion.message.MessageSender;
 import org.bukkit.Bukkit;

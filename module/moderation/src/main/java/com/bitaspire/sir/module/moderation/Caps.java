@@ -36,7 +36,7 @@ final class Caps extends Module {
 
         int capsCount = longestConsecutiveUppercase(message);
 
-        int max = file.get("maximum-caps", 10);
+        int max = file.getConfiguration().getInt("maximum-caps", 10);
         if (capsCount <= max) return false;
 
         validateAndExecuteActions(player, message, max);

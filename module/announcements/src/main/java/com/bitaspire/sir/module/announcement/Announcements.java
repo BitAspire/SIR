@@ -3,7 +3,7 @@ package com.bitaspire.sir.module.announcement;
 import lombok.Getter;
 import me.croabeast.scheduler.GlobalTask;
 import com.bitaspire.sir.ChatToggleable;
-import com.bitaspire.sir.ExtensionFile;
+import com.bitaspire.sir.file.ExtensionFile;
 import com.bitaspire.sir.command.CommandProvider;
 import com.bitaspire.sir.command.SIRCommand;
 import com.bitaspire.sir.module.SIRModule;
@@ -61,6 +61,7 @@ public class Announcements extends SIRModule implements CommandProvider, ChatTog
         data = new Data(this);
 
         try {
+            commands.clear();
             commands.add(new Command(this, new ExtensionFile(this, "lang", true)));
         } catch (Exception e) {
             getLogger().log(LogLevel.ERROR, "Command 'announce' cannot be loaded due to lang.yml was missing");

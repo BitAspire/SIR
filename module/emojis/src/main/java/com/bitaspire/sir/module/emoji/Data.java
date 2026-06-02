@@ -1,7 +1,7 @@
 package com.bitaspire.sir.module.emoji;
 
 import lombok.SneakyThrows;
-import com.bitaspire.sir.ExtensionFile;
+import com.bitaspire.sir.file.ExtensionFile;
 import com.bitaspire.sir.PermissibleUnit;
 
 import java.util.LinkedHashMap;

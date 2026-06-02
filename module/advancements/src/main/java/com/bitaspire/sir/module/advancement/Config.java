@@ -2,7 +2,7 @@ package com.bitaspire.sir.module.advancement;
 
 import lombok.SneakyThrows;
 import me.croabeast.file.Configurable;
-import com.bitaspire.sir.ExtensionFile;
+import com.bitaspire.sir.file.ExtensionFile;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.HashMap;

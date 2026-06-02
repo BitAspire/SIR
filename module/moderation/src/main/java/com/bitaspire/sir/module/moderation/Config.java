@@ -2,7 +2,7 @@ package com.bitaspire.sir.module.moderation;
 
 import lombok.Getter;
 import lombok.SneakyThrows;
-import com.bitaspire.sir.ExtensionFile;
+import com.bitaspire.sir.file.ExtensionFile;
 
 import java.util.Locale;
 

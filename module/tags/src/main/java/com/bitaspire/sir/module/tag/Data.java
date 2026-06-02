@@ -2,7 +2,7 @@ package com.bitaspire.sir.module.tag;
 
 import lombok.Getter;
 import lombok.SneakyThrows;
-import com.bitaspire.sir.ExtensionFile;
+import com.bitaspire.sir.file.ExtensionFile;
 import com.bitaspire.sir.PermissibleUnit;
 import com.bitaspire.sir.user.SIRUser;
 import org.jetbrains.annotations.NotNull;

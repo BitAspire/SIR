@@ -12,7 +12,7 @@ import me.croabeast.common.applier.StringApplier;
 import me.croabeast.file.Configurable;
 import me.croabeast.prismatic.PrismaticAPI;
 import com.bitaspire.sir.SIRApi;
-import com.bitaspire.sir.ExtensionFile;
+import com.bitaspire.sir.file.ExtensionFile;
 import me.croabeast.takion.format.PlainFormat;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Color;

@@ -2,7 +2,7 @@ package com.bitaspire.sir.module.join;
 
 import lombok.Getter;
 import lombok.SneakyThrows;
-import com.bitaspire.sir.ExtensionFile;
+import com.bitaspire.sir.file.ExtensionFile;
 
 @Getter
 final class Config {
@@ -19,9 +19,9 @@ final class Config {
         joinDisabled = file.get("disable-vanilla-messages.join", false);
         quitDisabled = file.get("disable-vanilla-messages.quit", false);
 
-        joinCooldown = file.get("cooldown.join", joinCooldown);
-        betweenCooldown = file.get("cooldown.between", betweenCooldown);
-        quitCooldown = file.get("cooldown.quit", quitCooldown);
+        joinCooldown = file.getConfiguration().getInt("cooldown.join", joinCooldown);
+        betweenCooldown = file.getConfiguration().getInt("cooldown.between", betweenCooldown);
+        quitCooldown = file.getConfiguration().getInt("cooldown.quit", quitCooldown);
 
         spawnBeforeLogin = file.get("spawn-before-login", true);
     }

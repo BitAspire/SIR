@@ -1,7 +1,7 @@
 package com.bitaspire.sir.module.channel;
 
 import lombok.Getter;
-import com.bitaspire.sir.ExtensionFile;
+import com.bitaspire.sir.file.ExtensionFile;
 import com.bitaspire.sir.command.CommandProvider;
 import com.bitaspire.sir.command.SIRCommand;
 import com.bitaspire.sir.module.SIRModule;
@@ -25,6 +25,7 @@ public final class Channels extends SIRModule implements CommandProvider {
         data = new Data(this);
 
         try {
+            commands.clear();
             commands.add(new Command(this, new ExtensionFile(this, "lang", true)));
         } catch (Exception e) {
             getLogger().log(LogLevel.ERROR, "Command 'chat-view' cannot be loaded due to lang.yml was missing");
