@@ -7,9 +7,23 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.Method;
 import java.util.Locale;
 
+/**
+ * Utility methods for parsing Bukkit {@link Sound} values across server versions.
+ *
+ * <p> Supports both legacy enum-based sounds (pre-1.21) and the registry-based API
+ * (1.21+) by attempting enum lookup first and falling back to reflection-based
+ * registry lookup.
+ */
 @UtilityClass
 public class SoundUtils {
 
+    /**
+     * Parses a sound from a raw string, supporting both legacy enum names and
+     * namespaced key formats (e.g., {@code BLOCK_NOTE_BLOCK_PLING} or {@code minecraft:block.note_block.pling}).
+     *
+     * @param rawSound the raw sound string, or {@code null}.
+     * @return the corresponding {@link Sound}, or {@code null} if not recognized.
+     */
     @Nullable
     public Sound parseSound(@Nullable String rawSound) {
         if (rawSound == null || rawSound.trim().isEmpty())

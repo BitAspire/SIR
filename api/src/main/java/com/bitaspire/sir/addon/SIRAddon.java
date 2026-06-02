@@ -1,46 +1,44 @@
 package com.bitaspire.sir.addon;
 
 import com.github.stefvanschie.inventoryframework.pane.util.Slot;
-import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.experimental.Accessors;
 import me.croabeast.common.util.ArrayUtils;
 import com.bitaspire.sir.Information;
-import com.bitaspire.sir.MenuToggleable;
 import com.bitaspire.sir.SIRApi;
 import com.bitaspire.sir.SIRExtension;
+import com.bitaspire.sir.MenuToggleable;
 import com.bitaspire.sir.command.CommandProvider;
 import com.bitaspire.sir.command.SIRCommand;
 import me.croabeast.takion.logger.TakionLogger;
-import org.jetbrains.annotations.ApiStatus;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Base class for all SIR addons loaded from external jars (SIR+ only).
+ *
+ * <p> Subclasses are discovered and instantiated by the {@link AddonManager}. An addon
+ * is initialized with its {@link AddonInformation} and optionally exposes a GUI toggle
+ * button to enable/disable it at runtime. Addons that also implement
+ * {@link com.bitaspire.sir.command.CommandProvider} have their commands reflected in the
+ * button description automatically.
+ */
 @Accessors(makeFinal = true)
 @Getter
-public abstract class SIRAddon implements SIRExtension, MenuToggleable {
+public abstract class SIRAddon extends SIRExtension<AddonInformation> implements MenuToggleable {
 
-    private SIRApi api;
     private AddonInformation information;
-
-    private Button button;
-    private boolean enabledState;
-
     private File dataFolder;
-    private ClassLoader classLoader;
 
-    @ApiStatus.Internal
-    public final void init(@NotNull SIRApi api, @NotNull URLClassLoader loader, @NotNull AddonInformation information) {
-        this.api = api;
+    @Override
+    protected final void onInit(SIRApi api, ClassLoader loader, AddonInformation information) {
         this.information = information;
         this.enabledState = api.getAddonManager().isEnabled(information.getName());
 
@@ -52,15 +50,12 @@ public abstract class SIRAddon implements SIRExtension, MenuToggleable {
             button.setOnClick(b -> event -> {
                 if (!event.isLeftClick()) return;
 
-                b.toggle();
-                enabledState = b.isEnabled();
-                api.getLibrary().getLogger().log("Addon '" + getName() + "' loaded: " + b.isEnabled());
-                b.toggleRegistering();
-                api.getAddonManager().setEnabled(getName(), b.isEnabled());
+                boolean enabled = !b.isEnabled();
+                api.getAddonManager().updateEnabled(this, enabled);
+                if (isEnabled() == enabled)
+                    api.getLibrary().getLogger().log("Addon '" + getName() + "' loaded: " + enabled);
             });
         }
-
-        this.classLoader = loader;
 
         dataFolder = new File(api.getPlugin().getDataFolder(), "addons" + File.separator + getName());
         if (!dataFolder.exists()) dataFolder.mkdirs();
@@ -119,23 +114,6 @@ public abstract class SIRAddon implements SIRExtension, MenuToggleable {
             dataFolder.mkdirs();
 
         return Objects.requireNonNull(dataFolder);
-    }
-
-    private boolean registered = false;
-
-    @ApiStatus.Internal
-    public final void setRegistered(boolean registered) {
-        this.registered = registered;
-    }
-
-    @Override
-    public final boolean isEnabled() {
-        return button != null ? button.isEnabled() : enabledState;
-    }
-
-    @ApiStatus.Internal
-    public final void setEnabledState(boolean enabled) {
-        this.enabledState = enabled;
     }
 
     @NotNull

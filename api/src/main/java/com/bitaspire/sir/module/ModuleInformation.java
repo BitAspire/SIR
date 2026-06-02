@@ -16,16 +16,38 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Metadata descriptor for a {@link SIRModule}, parsed from its bundled {@code module.yml}.
+ *
+ * <p> Holds the module's identity (main class, name, title, description) and its
+ * declared plugin dependencies.
+ */
 @Getter
 public final class ModuleInformation implements Information {
 
+    /** Fully-qualified main class name of the module. */
     @NotNull
-    private final String main, name, title;
+    private final String main;
 
+    /** Internal identifier name derived from the configuration or the main class. */
+    @NotNull
+    private final String name;
+
+    /** Human-readable display title shown in the GUI. */
+    @NotNull
+    private final String title;
+
+    /** Description lines shown in the GUI item lore. */
     private final String[] description;
+
+    /** GUI slot position assigned during module loading. */
     private final Slot slot;
 
-    private final List<String> depend, softDepend;
+    /** Hard plugin dependencies - the module will not load if any are missing. */
+    private final List<String> depend;
+
+    /** Optional plugin dependencies - the module loads without them but may have reduced functionality. */
+    private final List<String> softDepend;
 
     @ApiStatus.Internal
     public ModuleInformation(FileConfiguration configuration) {

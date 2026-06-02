@@ -18,14 +18,31 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
+/**
+ * Metadata descriptor for a {@link StandaloneProvider}, parsed from its bundled {@code commands.yml}.
+ *
+ * <p> Holds the provider's identity (main class, name, title, description) and the
+ * raw configuration sections for each declared command.
+ */
 @Getter
 public final class ProviderInformation implements Information {
 
+    /** Mapping of lowercase command keys to their raw configuration sections. */
     private final Map<String, ConfigurationSection> commands;
 
-    private final String main, name, title;
+    /** Fully-qualified main class name of the provider. */
+    private final String main;
+
+    /** Internal identifier name derived from the configuration or the main class. */
+    private final String name;
+
+    /** Human-readable display title shown in the GUI. */
+    private final String title;
+
+    /** Description lines shown in the GUI item lore. */
     private final String[] description;
 
+    /** GUI slot position; set by the manager after all providers are loaded. */
     @Setter(AccessLevel.PACKAGE)
     private Slot slot = Slot.fromXY(0, 0);
 

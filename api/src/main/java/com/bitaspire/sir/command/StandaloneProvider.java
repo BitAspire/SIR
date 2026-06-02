@@ -1,32 +1,33 @@
 package com.bitaspire.sir.command;
 
-import lombok.Getter;
 import com.bitaspire.sir.SIRApi;
+import lombok.Getter;
+import com.bitaspire.sir.SIRExtension;
 import com.bitaspire.sir.MenuToggleable;
-import org.jetbrains.annotations.ApiStatus;
+import lombok.experimental.Accessors;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 
+/**
+ * A {@link CommandProvider} loaded from an external jar and managed by the {@link CommandManager}.
+ *
+ * <p> Subclasses declare their commands and are initialized with {@link ProviderInformation}
+ * parsed from the bundled {@code commands.yml}. The GUI toggle button (if supported) allows
+ * server administrators to enable/disable the provider and configure command overrides at runtime.
+ */
+@Accessors(makeFinal = true)
 @Getter
-public abstract class StandaloneProvider implements CommandProvider {
+public abstract class StandaloneProvider extends SIRExtension<ProviderInformation> implements CommandProvider {
 
-    protected boolean registered = true;
+    { registered = true; }
 
-    private SIRApi api;
     private ProviderInformation information;
-
-    private MenuToggleable.Button button;
-    private boolean enabledState;
-
     private File dataFolder;
-    private ClassLoader classLoader;
 
-    @ApiStatus.Internal
-    public final void init(@NotNull SIRApi api, @NotNull ClassLoader loader, @NotNull ProviderInformation information) {
-        this.api = api;
+    @Override
+    protected final void onInit(SIRApi api, ClassLoader loader, ProviderInformation information) {
         this.information = information;
-        this.classLoader = loader;
         this.enabledState = api.getCommandManager().isProviderEnabled(information.getName());
 
         if (MenuToggleable.supportsButtons()) {
@@ -42,30 +43,11 @@ public abstract class StandaloneProvider implements CommandProvider {
 
                 if (!event.isLeftClick()) return;
 
-                b.toggle();
-                enabledState = b.isEnabled();
-                api.getLibrary().getLogger().log("Provider '" + getName() + "' loaded: " + b.isEnabled());
-                b.toggleRegistering();
-                api.getCommandManager().setProviderEnabled(information.getName(), b.isEnabled());
+                api.getCommandManager().updateProviderEnabled(information.getName(), !b.isEnabled(), true);
             });
         }
 
         dataFolder = new File(api.getPlugin().getDataFolder(), "commands" + File.separator + getName());
-    }
-
-    @Override
-    public final boolean isEnabled() {
-        return button != null ? button.isEnabled() : enabledState;
-    }
-
-    @ApiStatus.Internal
-    public final void setEnabledState(boolean enabled) {
-        this.enabledState = enabled;
-    }
-
-    @ApiStatus.Internal
-    public final void setRegistered(boolean registered) {
-        this.registered = registered;
     }
 
     @NotNull

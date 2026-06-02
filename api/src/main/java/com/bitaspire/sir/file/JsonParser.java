@@ -1,4 +1,4 @@
-package com.bitaspire.sir;
+package com.bitaspire.sir.file;
 
 import com.google.gson.*;
 import lombok.experimental.UtilityClass;
@@ -10,6 +10,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Utility for converting JSON strings into {@link me.croabeast.file.Configurable} instances.
+ *
+ * <p> Parses a JSON string and maps its structure into a {@link org.bukkit.configuration.file.YamlConfiguration},
+ * making the data accessible via the standard {@code Configurable} API.
+ */
 @UtilityClass
 public class JsonParser {
 
@@ -54,6 +60,14 @@ public class JsonParser {
         return list;
     }
 
+    /**
+     * Parses a JSON string and wraps it in a {@link Configurable}.
+     *
+     * <p> Only JSON objects at the root level are converted; arrays and primitives are ignored.
+     *
+     * @param json the raw JSON string.
+     * @return a {@code Configurable} backed by the parsed data.
+     */
     public Configurable fromJsonString(String json) {
         JsonElement element = GSON.fromJson(json, JsonElement.class);
         YamlConfiguration yaml = new YamlConfiguration();

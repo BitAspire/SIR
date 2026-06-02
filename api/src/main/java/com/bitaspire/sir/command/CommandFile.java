@@ -12,20 +12,44 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * Parsed configuration data for a single {@link SIRCommand}.
+ *
+ * <p> Loaded from a provider's {@code commands.yml} section and applied to the command
+ * at registration time via {@link SIRCommand#applyFile(CommandFile)}.
+ */
 @Getter
 public final class CommandFile {
 
-    private final String name, permission;
+    /** The command name (no leading slash). */
+    private final String name;
+
+    /** The Bukkit permission node required to execute the command. */
+    private final String permission;
+
+    /** Whether this command overrides an existing Bukkit/plugin command of the same name. */
     private final boolean override;
 
+    /** Command aliases declared in the configuration. */
     private final List<String> aliases;
+
+    /** Mapping of sub-command names to their individual permission nodes. */
     private final Map<String, String> subCommands;
 
-    private final String description, usage;
+    /** Short description shown in the command help. */
+    private final String description;
+
+    /** Usage hint shown on incorrect invocation. */
+    private final String usage;
+
+    /** Message sent when a player lacks permission. */
     private final String permissionMessage;
 
+    /** Raw flag indicating whether a parent dependency is declared. */
     @Getter(AccessLevel.NONE)
     final boolean hasParent;
+
+    /** The name of the parent command this command depends on, if any. */
     final String parentName;
 
     @ApiStatus.Internal
@@ -64,6 +88,11 @@ public final class CommandFile {
         this.override = resolvedOverride;
     }
 
+    /**
+     * Returns whether this command has a valid parent dependency declared.
+     *
+     * @return {@code true} if a non-blank parent name is set and the dependency flag is enabled.
+     */
     public boolean hasParent() {
         return hasParent && StringUtils.isNotBlank(parentName);
     }

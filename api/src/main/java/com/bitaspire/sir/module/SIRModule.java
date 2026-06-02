@@ -1,46 +1,43 @@
 package com.bitaspire.sir.module;
 
+import com.bitaspire.sir.SIRApi;
 import com.github.stefvanschie.inventoryframework.pane.util.Slot;
-import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.experimental.Accessors;
 import me.croabeast.common.util.ArrayUtils;
 import com.bitaspire.sir.Information;
-import com.bitaspire.sir.SIRApi;
 import com.bitaspire.sir.SIRExtension;
 import com.bitaspire.sir.MenuToggleable;
 import com.bitaspire.sir.command.CommandProvider;
 import com.bitaspire.sir.command.SIRCommand;
 import me.croabeast.takion.logger.TakionLogger;
-import org.jetbrains.annotations.ApiStatus;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Base class for all SIR modules loaded from external jars.
+ *
+ * <p> Subclasses are discovered and instantiated by the {@link ModuleManager}. A module
+ * is initialized with its {@link ModuleInformation} and optionally exposes a GUI toggle
+ * button to enable/disable it at runtime. Modules that also implement {@link com.bitaspire.sir.command.CommandProvider}
+ * have their commands reflected in the button description automatically.
+ */
 @Accessors(makeFinal = true)
 @Getter
-public abstract class SIRModule implements SIRExtension, MenuToggleable {
+public abstract class SIRModule extends SIRExtension<ModuleInformation> implements MenuToggleable {
 
-    private SIRApi api;
     private ModuleInformation information;
-
-    private Button button;
-    private boolean enabledState;
-
     private File dataFolder;
-    private ClassLoader classLoader;
 
-    @ApiStatus.Internal
-    public final void init(@NotNull SIRApi api, @NotNull URLClassLoader loader, @NotNull ModuleInformation information) {
-        this.api = api;
+    @Override
+    protected final void onInit(SIRApi api, ClassLoader loader, ModuleInformation information) {
         this.information = information;
         this.enabledState = api.getModuleManager().isEnabled(information.getName());
 
@@ -57,15 +54,12 @@ public abstract class SIRModule implements SIRExtension, MenuToggleable {
 
                 if (!event.isLeftClick()) return;
 
-                b.toggle();
-                enabledState = b.isEnabled();
-                api.getLibrary().getLogger().log("Module '" + getName() + "' loaded: " + b.isEnabled());
-                b.toggleRegistering();
-                api.getModuleManager().setEnabled(getName(), b.isEnabled());
+                boolean enabled = !b.isEnabled();
+                api.getModuleManager().updateEnabled(this, enabled);
+                if (isEnabled() == enabled)
+                    api.getLibrary().getLogger().log("Module '" + getName() + "' loaded: " + enabled);
             });
         }
-
-        this.classLoader = loader;
 
         dataFolder = new File(api.getPlugin().getDataFolder(), "modules" + File.separator + getName());
         if (!dataFolder.exists()) dataFolder.mkdirs();
@@ -116,6 +110,7 @@ public abstract class SIRModule implements SIRExtension, MenuToggleable {
     }
 
     @NotNull
+    @Override
     public final File getDataFolder() {
         if (dataFolder == null && api != null)
             dataFolder = new File(api.getPlugin().getDataFolder(), "modules" + File.separator + getName());
@@ -126,24 +121,8 @@ public abstract class SIRModule implements SIRExtension, MenuToggleable {
         return Objects.requireNonNull(dataFolder);
     }
 
-    private boolean registered = false;
-
-    @ApiStatus.Internal
-    public final void setRegistered(boolean registered) {
-        this.registered = registered;
-    }
-
-    @Override
-    public final boolean isEnabled() {
-        return button != null ? button.isEnabled() : enabledState;
-    }
-
-    @ApiStatus.Internal
-    public final void setEnabledState(boolean enabled) {
-        this.enabledState = enabled;
-    }
-
     @NotNull
+    @Override
     public final String getName() {
         return information.getName();
     }

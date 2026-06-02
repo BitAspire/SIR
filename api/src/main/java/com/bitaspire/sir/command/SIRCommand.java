@@ -22,16 +22,35 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.function.Supplier;
 
+/**
+ * Base class for all SIR commands.
+ *
+ * <p> Extends {@code BukkitCommand} with SIR-specific permission checking, language file
+ * integration, and sub-command support. Configuration (name, permission, aliases, etc.) is
+ * applied at load time via {@link #applyFile(CommandFile)}.
+ *
+ * <p> Subclasses must implement {@link #getCompletionBuilder()} to provide tab-completion.
+ */
 public abstract class SIRCommand extends BukkitCommand {
 
+    /** The language file used to resolve message keys for this command. */
     @Getter
     private final ConfigurableFile lang;
 
+    /** Convenience reference to the active {@link SIRApi} instance. */
     protected final SIRApi api;
+
+    /** Convenience reference to the TakionLib instance for messaging/logging. */
     protected final TakionLib lib;
 
     private CommandFile file;
 
+    /**
+     * Constructs a new command with the given name and language file.
+     *
+     * @param name the command name (no leading slash).
+     * @param lang the language file for message resolution.
+     */
     public SIRCommand(String name, ConfigurableFile lang) {
         super(SIRApi.instance().getPlugin(), name);
 
@@ -65,20 +84,40 @@ public abstract class SIRCommand extends BukkitCommand {
         super.setPermissionMessage(file.getPermissionMessage());
     }
 
+    /**
+     * Returns {@code true}; SIR commands are always considered enabled by default.
+     *
+     * @return {@code true}.
+     */
     @Override
     public boolean isEnabled() {
         return true;
     }
 
+    /**
+     * Returns whether this command is configured to override an existing Bukkit command.
+     *
+     * @return {@code true} if the override flag is set in the command file.
+     */
     @Override
     public boolean isOverriding() {
         return file != null && file.isOverride();
     }
 
+    /**
+     * Returns whether this command has a parent dependency declared in its configuration.
+     *
+     * @return {@code true} if a valid parent name is set.
+     */
     public boolean hasParent() {
         return file != null && file.hasParent();
     }
 
+    /**
+     * Returns the parent {@link SIRCommand} this command depends on, if declared.
+     *
+     * @return the parent command, or {@code null} if none or not found.
+     */
     @Nullable
     public SIRCommand getParent() {
         return api.getCommandManager().getCommand(file == null ? null : file.getParentName());
@@ -99,12 +138,27 @@ public abstract class SIRCommand extends BukkitCommand {
                 .send("no-permission", "<P> &cYou do not have permission: &f{perm}&c."));
     }
 
+    /**
+     * Sends a "player not found" message to the sender and returns {@code false}.
+     *
+     * @param sender the command sender to notify.
+     * @param name the player name that could not be found.
+     * @return always {@code false}.
+     */
     protected boolean checkPlayer(CommandSender sender, String name) {
         return Utils.create(this, sender).setLogger(false)
                 .addPlaceholder("{target}", name)
                 .send("not-player", "<P> &cPlayer not found: &f{target}&c.");
     }
 
+    /**
+     * Checks whether the sender has permission to execute the given sub-command.
+     *
+     * @param sender the command sender.
+     * @param name the sub-command name as declared in the command configuration.
+     * @param log if {@code true}, sends a "no permission" message when denied.
+     * @return {@code true} if permitted.
+     */
     protected boolean isSubCommandPermitted(CommandSender sender, String name, boolean log) {
         if (file == null) return isPermitted(sender, log);
 
@@ -125,6 +179,13 @@ public abstract class SIRCommand extends BukkitCommand {
     @Override
     public abstract TabBuilder getCompletionBuilder();
 
+    /**
+     * Returns a {@link Supplier} that produces tab-completion suggestions for the given sender and arguments.
+     *
+     * @param sender the command sender requesting completions.
+     * @param arguments the current argument array.
+     * @return a supplier of completion strings; returns an empty list if no builder is defined.
+     */
     @NotNull
     public Supplier<Collection<String>> generateCompletions(CommandSender sender, String[] arguments) {
         TabBuilder builder = getCompletionBuilder();
