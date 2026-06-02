@@ -4,6 +4,7 @@ import com.bitaspire.sir.PluginDependant;
 import com.bitaspire.sir.UserFormatter;
 import com.bitaspire.sir.module.SIRModule;
 import com.bitaspire.sir.user.SIRUser;
+import me.croabeast.takion.logger.LogLevel;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -33,10 +34,17 @@ public final class Tags extends SIRModule implements UserFormatter<Object>, Plug
 
         try {
             hook = new TagExpansion(this);
-            return ((com.bitaspire.sir.PAPIExpansion) hook).register();
-        } catch (NoClassDefFoundError e) {
-            return true;
+            if (!((com.bitaspire.sir.PAPIExpansion) hook).register()) {
+                hook = null;
+                getLogger().log(LogLevel.WARN,
+                        "PlaceholderAPI expansion 'sir_tag' could not be registered; continuing without PAPI placeholders.");
+            }
+        } catch (LinkageError | RuntimeException e) {
+            hook = null;
+            getLogger().log(LogLevel.WARN,
+                    "PlaceholderAPI expansion 'sir_tag' could not be registered: " + e.getMessage());
         }
+        return true;
     }
 
     @Override

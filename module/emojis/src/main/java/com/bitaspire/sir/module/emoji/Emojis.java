@@ -4,6 +4,7 @@ import com.bitaspire.sir.PluginDependant;
 import com.bitaspire.sir.UserFormatter;
 import com.bitaspire.sir.module.SIRModule;
 import com.bitaspire.sir.user.SIRUser;
+import me.croabeast.takion.logger.LogLevel;
 import org.jetbrains.annotations.NotNull;
 
 public final class Emojis extends SIRModule implements UserFormatter<Object>, PluginDependant {
@@ -28,10 +29,17 @@ public final class Emojis extends SIRModule implements UserFormatter<Object>, Pl
 
         try {
             hook = new EmojiExpansion(data);
-            return ((com.bitaspire.sir.PAPIExpansion) hook).register();
-        } catch (NoClassDefFoundError e) {
-            return true;
+            if (!((com.bitaspire.sir.PAPIExpansion) hook).register()) {
+                hook = null;
+                getLogger().log(LogLevel.WARN,
+                        "PlaceholderAPI expansion 'sir_emoji' could not be registered; continuing without PAPI placeholders.");
+            }
+        } catch (LinkageError | RuntimeException e) {
+            hook = null;
+            getLogger().log(LogLevel.WARN,
+                    "PlaceholderAPI expansion 'sir_emoji' could not be registered: " + e.getMessage());
         }
+        return true;
     }
 
     @Override
