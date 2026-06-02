@@ -37,7 +37,9 @@ jobs:
         id: version
         run: |
           VERSION=$(./gradlew -q properties | awk -F': ' '/^version:/ {print $2; exit}')
+          TAKION_VERSION=$(./gradlew -q properties | awk -F': ' '/^takionVersion:/ {print $2; exit}')
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "TAKION_VERSION=$TAKION_VERSION" >> "$GITHUB_ENV"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Upload SIR artifacts
@@ -49,6 +51,9 @@ jobs:
             api/build/libs/api-${{ env.VERSION }}.jar
             api/build/libs/api-${{ env.VERSION }}-sources.jar
             api/build/libs/api-${{ env.VERSION }}-javadoc.jar
+            runtime/build/libs/runtime-${{ env.VERSION }}.jar
+            runtime/build/libs/runtime-${{ env.VERSION }}-sources.jar
+            runtime/build/libs/runtime-${{ env.VERSION }}-javadoc.jar
             command/*/build/libs/*-${{ env.VERSION }}.jar
             command/*/build/libs/*-${{ env.VERSION }}-sources.jar
             command/*/build/libs/*-${{ env.VERSION }}-javadoc.jar
@@ -166,7 +171,7 @@ jobs:
               <dependency>
                 <groupId>me.croabeast.takion</groupId>
                 <artifactId>shaded</artifactId>
-                <version>1.6.1</version>
+                <version>$TAKION_VERSION</version>
                 <classifier>all</classifier>
               </dependency>
               <dependency>
@@ -178,6 +183,41 @@ jobs:
                 <groupId>com.github.stefvanschie.inventoryframework</groupId>
                 <artifactId>IF</artifactId>
                 <version>0.12.0</version>
+              </dependency>
+            </dependencies>
+          </project>
+          EOF
+
+            write_metadata "$GROUP_ID" "$GROUP_PATH" "$ARTIFACT_ID"
+          }
+
+          deploy_runtime () {
+            GROUP_ID="com.bitaspire.sir"
+            GROUP_PATH="com/bitaspire/sir"
+            ARTIFACT_ID="runtime"
+            SRC_DIR="runtime/build/libs"
+            DEST_DIR="maven-repo/$GROUP_PATH/$ARTIFACT_ID/$VERSION"
+            ART="$ARTIFACT_ID-$VERSION"
+
+            mkdir -p "$DEST_DIR"
+
+            cp "$SRC_DIR/$ART.jar" "$DEST_DIR/$ART.jar"
+            cp "$SRC_DIR/$ART-sources.jar" "$DEST_DIR/$ART-sources.jar"
+            cp "$SRC_DIR/$ART-javadoc.jar" "$DEST_DIR/$ART-javadoc.jar"
+
+            cat > "$DEST_DIR/$ART.pom" << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <project>
+            <modelVersion>4.0.0</modelVersion>
+            <groupId>$GROUP_ID</groupId>
+            <artifactId>$ARTIFACT_ID</artifactId>
+            <version>$VERSION</version>
+            <packaging>jar</packaging>
+            <dependencies>
+              <dependency>
+                <groupId>com.bitaspire.sir</groupId>
+                <artifactId>api</artifactId>
+                <version>$VERSION</version>
               </dependency>
             </dependencies>
           </project>
@@ -235,6 +275,7 @@ jobs:
           )
 
           deploy_api
+          deploy_runtime
 
           for MODULE in "${MODULES[@]}"; do
             deploy_jar_artifact \
