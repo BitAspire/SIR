@@ -7,6 +7,7 @@ repositories {
 
 val apiProject = project(":api")
 val takionShaded: Configuration by configurations.creating
+val takionVersion: String by project
 
 dependencies {
     implementation(apiProject)
@@ -19,7 +20,7 @@ dependencies {
         exclude(group = "org.bstats")
     }
 
-    takionShaded("me.croabeast.takion:shaded:1.6.1:all")
+    takionShaded("me.croabeast.takion:shaded:$takionVersion:all")
 }
 
 val apiMainOutput = apiProject.extensions.getByType<SourceSetContainer>()["main"].output

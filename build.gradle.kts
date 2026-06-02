@@ -68,7 +68,8 @@ subprojects {
         compileOnly("org.projectlombok:lombok:1.18.44")
         annotationProcessor("org.projectlombok:lombok:1.18.44")
 
-        compileOnly("me.croabeast.takion:shaded:1.6.1:all")
+        val takionVersion: String by project
+        compileOnly("me.croabeast.takion:shaded:$takionVersion:all")
         compileOnly("me.clip:placeholderapi:2.12.2")
     }
 }
