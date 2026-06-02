@@ -1,7 +1,7 @@
 package com.bitaspire.sir.command.clear;
 
 import me.croabeast.command.TabBuilder;
-import com.bitaspire.sir.ExtensionFile;
+import com.bitaspire.sir.file.ExtensionFile;
 import com.bitaspire.sir.command.SIRCommand;
 import me.croabeast.takion.message.MessageSender;
 import org.bukkit.Bukkit;

@@ -1,6 +1,6 @@
 package com.bitaspire.sir.command.nick;
 
-import com.bitaspire.sir.ExtensionFile;
+import com.bitaspire.sir.file.ExtensionFile;
 import com.bitaspire.sir.command.SIRCommand;
 import com.bitaspire.sir.command.StandaloneProvider;
 import lombok.Getter;
@@ -19,6 +19,7 @@ public final class NickProvider extends StandaloneProvider {
     @SneakyThrows
     public boolean register() {
         lang = new ExtensionFile(this, "lang", true);
+        commands.clear();
         commands.add(new Command(this));
         return true;
     }

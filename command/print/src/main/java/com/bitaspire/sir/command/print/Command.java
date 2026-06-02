@@ -2,7 +2,7 @@ package com.bitaspire.sir.command.print;
 
 import me.croabeast.command.TabBuilder;
 import me.croabeast.common.CollectionBuilder;
-import com.bitaspire.sir.ExtensionFile;
+import com.bitaspire.sir.file.ExtensionFile;
 import com.bitaspire.sir.command.SIRCommand;
 import com.bitaspire.sir.user.SIRUser;
 import org.bukkit.command.CommandSender;

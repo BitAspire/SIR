@@ -3,7 +3,7 @@ package com.bitaspire.sir.command.mute;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import me.croabeast.file.ConfigurableFile;
-import com.bitaspire.sir.ExtensionFile;
+import com.bitaspire.sir.file.ExtensionFile;
 import com.bitaspire.sir.command.SIRCommand;
 import com.bitaspire.sir.command.StandaloneProvider;
 
@@ -21,6 +21,7 @@ public final class MuteProvider extends StandaloneProvider {
     public boolean register() {
         lang = new ExtensionFile(this, "lang", true);
 
+        commands.clear();
         commands.add(new MuteCommand(this));
         commands.add(new TempCommand(this));
         commands.add(new UnmuteCommand(this));

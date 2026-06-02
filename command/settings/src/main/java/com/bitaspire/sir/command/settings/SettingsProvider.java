@@ -10,7 +10,7 @@ import me.croabeast.common.gui.ButtonBuilder;
 import me.croabeast.common.gui.ChestBuilder;
 import me.croabeast.common.gui.ItemCreator;
 import com.bitaspire.sir.ChatToggleable;
-import com.bitaspire.sir.ExtensionFile;
+import com.bitaspire.sir.file.ExtensionFile;
 import com.bitaspire.sir.MenuToggleable;
 import com.bitaspire.sir.PluginDependant;
 import com.bitaspire.sir.command.*;
@@ -52,6 +52,7 @@ public final class SettingsProvider extends StandaloneProvider implements Settin
         lang = new ExtensionFile(this, "lang", true);
         settings = new ExtensionFile(this, "settings", true);
 
+        commands.clear();
         commands.add(new Command(this));
 
         if (isPluginEnabled(PAPI)) {

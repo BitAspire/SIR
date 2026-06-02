@@ -26,6 +26,7 @@ public final class ColorProvider extends StandaloneProvider implements PluginDep
 
     @SneakyThrows
     public boolean register() {
+        commands.clear();
         commands.add(new Command(this));
 
         if (isPluginEnabled(PAPI))

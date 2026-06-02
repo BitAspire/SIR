@@ -2,7 +2,7 @@ package com.bitaspire.sir.command.settings;
 
 import me.croabeast.command.TabBuilder;
 import com.bitaspire.sir.ChatToggleable;
-import com.bitaspire.sir.ExtensionFile;
+import com.bitaspire.sir.file.ExtensionFile;
 import com.bitaspire.sir.command.SIRCommand;
 import com.bitaspire.sir.user.SIRUser;
 import me.croabeast.vnc.VNC;

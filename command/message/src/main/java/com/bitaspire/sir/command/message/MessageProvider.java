@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.SneakyThrows;
 import me.croabeast.file.ConfigurableFile;
 import com.bitaspire.sir.ChatToggleable;
-import com.bitaspire.sir.ExtensionFile;
+import com.bitaspire.sir.file.ExtensionFile;
 import com.bitaspire.sir.Listener;
 import com.bitaspire.sir.command.SIRCommand;
 import com.bitaspire.sir.command.StandaloneProvider;
@@ -29,6 +29,7 @@ public final class MessageProvider extends StandaloneProvider implements ChatTog
     public boolean register() {
         lang = new ExtensionFile(this, "lang", true);
 
+        commands.clear();
         commands.add(new Message(this));
         commands.add(new Reply(this));
 

@@ -15,6 +15,7 @@ public final class IgnoreProvider extends StandaloneProvider {
 
     @SneakyThrows
     public boolean register() {
+        commands.clear();
         commands.add(new Command(this));
         return true;
     }
