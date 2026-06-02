@@ -24,15 +24,19 @@ public abstract class PAPIExpansion extends PlaceholderExpansion {
     private final String identifier;
 
     /**
-     * Returns the required plugin for this expansion, which is always "SIR".
+     * Returns the plugin that owns this expansion.
      * <p> This method is used by PlaceholderAPI to check if the required plugin is installed.
      *
      * @implNote This method is annotated with `@NotNull` to indicate that it will never return null.
-     * @return The name of the required plugin, which is "SIR".
+     * @return The name of the active SIR-family plugin.
      */
     @NotNull
     public String getRequiredPlugin() {
-        return "SIR";
+        try {
+            return SIRApi.instance().getPlugin().getName();
+        } catch (RuntimeException ignored) {
+            return "SIR";
+        }
     }
 
     /**
