@@ -10,6 +10,7 @@ import com.bitaspire.sir.module.SIRModule;
 import me.croabeast.takion.message.MessageSender;
 import me.croabeast.vnc.VNC;
 import org.apache.commons.lang.SystemUtils;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
@@ -109,20 +110,23 @@ final class MainCommand implements TabExecutor {
                     "<P> &7Available: &f" + String.join(", ", moduleManager.getModuleNames())
             );
 
-        SIRModule module = moduleManager.getModule(args[1]);
-        if (module == null)
+        String moduleName = moduleManager.getModules().stream()
+                .map(SIRModule::getName)
+                .filter(name -> name.equalsIgnoreCase(args[1]))
+                .findFirst().orElse(null);
+        if (moduleName == null)
             return sender.send("<P> &cModule not found: &f" + args[1]);
 
-        boolean current = moduleManager.isEnabled(module.getName());
+        boolean current = moduleManager.isEnabled(moduleName);
         Boolean next = resolveState(args.length > 2 ? args[2] : null, current);
         if (next == null)
             return sender.send("<P> &cInvalid state. Use: enable, disable, toggle.");
 
-        moduleManager.updateEnabled(module.getName(), next);
+        moduleManager.updateEnabled(moduleName, next);
         moduleManager.saveStates();
 
         return sender.send(
-                "<P> &7Module &f" + module.getName() + " &7is now " + (next ? "&aenabled" : "&cdisabled") + "&7."
+                "<P> &7Module &f" + moduleName + " &7is now " + (next ? "&aenabled" : "&cdisabled") + "&7."
         );
     }
 
@@ -234,7 +238,7 @@ final class MainCommand implements TabExecutor {
                 return mainSender.setTargets(player).setLogger(false).send(
                         "",
                         " &eSIR &7- &f" + main.getDescription().getVersion() + "&7:",
-                        "   &8- &7Server Software: &f" + VNC.SERVER_FORK,
+                        "   &8- &7Server Software: &f" + Bukkit.getName() + " " + VNC.SERVER_CLASSIC_VERSION,
                         "   &8- &7Author: &fCroaBeast",
                         "   &8- &7Brand: &fBitAspire by ZeroToil",
                         "   &8- &7Java Version: &f" + SystemUtils.JAVA_VERSION,
