@@ -155,6 +155,7 @@ final class ModuleManagerImpl extends ExtensionManager<ModuleInformation, SIRMod
             }
 
             startupFailures.add(name);
+            log(LogLevel.WARN, "Module '" + name + "' failed to register: register() returned false.");
             unload(module.getName());
             return false;
         } catch (Exception e) {
