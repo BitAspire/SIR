@@ -63,8 +63,7 @@ final class ExtensionConfigEditor<E extends SIRExtension<?>> {
     }
 
     boolean hasConfig(E extension) {
-        if (new File(extension.getDataFolder(), "config.yml").exists()) return true;
-        return extension.getClassLoader().getResource("config.yml") != null;
+        return configFile(extension).isFile() || hasBundledConfig(extension);
     }
 
     void open(@NotNull E extension, @NotNull HumanEntity viewer) {
@@ -72,8 +71,8 @@ final class ExtensionConfigEditor<E extends SIRExtension<?>> {
     }
 
     private void open(@NotNull E extension, @NotNull HumanEntity viewer, @Nullable String rootPath) {
-        File configFile = new File(extension.getDataFolder(), "config.yml");
-        if (!configFile.exists()) {
+        File configFile = ensureConfigFile(extension);
+        if (configFile == null) {
             sendMessage(viewer, "This " + extensionType + " does not have a config.yml file.");
             return;
         }
@@ -309,6 +308,32 @@ final class ExtensionConfigEditor<E extends SIRExtension<?>> {
 
     private void reload(E extension) {
         reloader.accept(extension);
+    }
+
+    private File configFile(E extension) {
+        return new File(extension.getDataFolder(), "config.yml");
+    }
+
+    private boolean hasBundledConfig(E extension) {
+        return extension.getClassLoader().getResource("config.yml") != null;
+    }
+
+    @Nullable
+    private File ensureConfigFile(E extension) {
+        File configFile = configFile(extension);
+        if (configFile.isFile()) return configFile;
+        if (!hasBundledConfig(extension)) return null;
+
+        try {
+            extension.saveResource("config.yml", false);
+        } catch (IllegalArgumentException e) {
+            api.getLibrary().getLogger().log(LogLevel.ERROR,
+                    "Failed to save default config for " + extensionType + " '" + extension.getName() + "'.");
+            e.printStackTrace();
+            return null;
+        }
+
+        return configFile.isFile() ? configFile : null;
     }
 
     private void save(YamlConfiguration configuration, File configFile) {
