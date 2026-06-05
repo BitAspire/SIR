@@ -49,6 +49,8 @@ abstract class BaseManager<I extends Information> {
 
     int getStartupSkippedCount()         { return startupSkipped.size(); }
     int getStartupFailedCount()          { return startupFailures.size(); }
+    List<String> getStartupSkippedNames() { return new ArrayList<>(startupSkipped); }
+    List<String> getStartupFailedNames()  { return new ArrayList<>(startupFailures); }
 
     // -- Hook message (PluginDependant) --
 

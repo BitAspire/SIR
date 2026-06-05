@@ -189,6 +189,8 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
         report.moduleLines.add("Registered: " + registered);
         report.moduleLines.add("Skipped: " + skipped);
         report.moduleLines.add("Failed: " + failed);
+        addNamedSection(report.moduleLines, "Skipped Modules", moduleManager.getStartupSkippedNames());
+        addNamedSection(report.moduleLines, "Failed Modules", moduleManager.getStartupFailedNames());
 
         if (!updatedJars.isEmpty()) {
             report.moduleLines.add("");
@@ -240,6 +242,8 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
         report.commandLines.add("Enabled Commands: " + enabledCommands);
         report.commandLines.add("Skipped Providers: " + skipped);
         report.commandLines.add("Failed Providers: " + failed);
+        addNamedSection(report.commandLines, "Skipped Providers", commandManager.getStartupSkippedNames());
+        addNamedSection(report.commandLines, "Failed Providers", commandManager.getStartupFailedNames());
 
         if (!updatedJars.isEmpty()) {
             report.commandLines.add("");
@@ -362,6 +366,14 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
     private void addIntegration(StartupReport report, String line) {
         report.integrationLines.add(line);
         if (startupDiagnostics != null) startupDiagnostics.integration(line);
+    }
+
+    private void addNamedSection(List<String> lines, String title, List<String> values) {
+        if (values == null || values.isEmpty()) return;
+
+        lines.add("");
+        lines.add(title);
+        lines.addAll(values);
     }
 
     private String section(String name) {
