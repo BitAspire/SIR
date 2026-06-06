@@ -19,8 +19,7 @@ abstract class Command extends SIRCommand {
 
     String parseTime(long remaining) {
         ConfigurationSection section = getLang().getSection("lang.time");
-        TimeValues values = section == null ? null : TimeValues.fromSection(section);
-        return new TimeFormatter(main.getApi().getLibrary(), values, remaining).formatTime();
+        return new TimeFormatter(main.getApi().getLibrary(), section == null ? null : TimeValues.fromSection(section), remaining).formatTime();
     }
 
     @Override
