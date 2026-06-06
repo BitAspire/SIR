@@ -5,7 +5,7 @@ import com.bitaspire.sir.module.JoinQuitService;
 import com.bitaspire.sir.module.SIRModule;
 import com.bitaspire.sir.user.SIRUser;
 
-public final class JoinQuit extends SIRModule implements JoinQuitService, ChatToggleable {
+public class JoinQuit extends SIRModule implements JoinQuitService, ChatToggleable {
 
     Config config;
     Messages messages;

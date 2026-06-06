@@ -17,7 +17,7 @@ import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public final class Mentions extends SIRModule implements UserFormatter<ChatChannel>, ChatToggleable {
+public class Mentions extends SIRModule implements UserFormatter<ChatChannel>, ChatToggleable {
 
     Data data;
 

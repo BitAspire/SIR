@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public final class Tags extends SIRModule implements UserFormatter<Object>, PluginDependant {
+public class Tags extends SIRModule implements UserFormatter<Object>, PluginDependant {
 
     private static final String PAPI = "PlaceholderAPI";
 

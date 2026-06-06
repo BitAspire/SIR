@@ -7,7 +7,7 @@ import com.bitaspire.sir.user.SIRUser;
 import me.croabeast.takion.logger.LogLevel;
 import org.jetbrains.annotations.NotNull;
 
-public final class Emojis extends SIRModule implements UserFormatter<Object>, PluginDependant {
+public class Emojis extends SIRModule implements UserFormatter<Object>, PluginDependant {
 
     private static final String PAPI = "PlaceholderAPI";
 
