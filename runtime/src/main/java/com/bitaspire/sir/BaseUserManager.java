@@ -34,11 +34,12 @@ import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
-final class UserManagerImpl implements UserManager, Registrable {
+class BaseUserManager implements UserManager, Registrable {
 
     private final Map<UUID, BaseUser> userMap = new HashMap<>();
 
-    private final SIRPlugin plugin;
+    private final Plugin plugin;
+    private final SIRApi api;
     private final Listener listener;
 
     private final ConfigurableFile ignoreFile;
@@ -47,8 +48,8 @@ final class UserManagerImpl implements UserManager, Registrable {
     private final ConfigurableFile colorFile;
     private final ConfigurableFile nickFile;
 
-    public UserManagerImpl(SIRPlugin plugin) {
-        this.plugin = plugin;
+    protected BaseUserManager(@NotNull SIRApi api) {
+        this.plugin = (this.api = api).getPlugin();
 
         ignoreFile = createFile("ignore");
         muteFile = createFile("mute");
@@ -234,10 +235,13 @@ final class UserManagerImpl implements UserManager, Registrable {
         if (sender == null) return false;
         if (isDefaultPermission(permission)) return true;
 
-        if (sender.isOp() && !plugin.getConfiguration().isOverrideOp())
-            return true;
+        if (shouldBypassPermission(sender, permission)) return true;
 
         return sender.hasPermission(permission);
+    }
+
+    protected boolean shouldBypassPermission(@NotNull CommandSender sender, @NotNull String permission) {
+        return sender.isOp() && !api.getConfiguration().isOverrideOp();
     }
 
     private static boolean isDefaultPermission(String permission) {
@@ -392,8 +396,8 @@ final class UserManagerImpl implements UserManager, Registrable {
 
         @Override
         public boolean isMuted() {
-            if (plugin.getConfiguration().isCheckMute()
-                    && plugin.getCommandManager().isEnabled("mute"))
+            if (api.getConfiguration().isCheckMute()
+                    && api.getCommandManager().isEnabled("mute"))
                 return muted;
 
             Player player = user.getPlayer();
@@ -475,7 +479,7 @@ final class UserManagerImpl implements UserManager, Registrable {
                 task = null;
             }
 
-            task = plugin.getScheduler().runTaskLater(() -> {
+            task = api.getScheduler().runTaskLater(() -> {
                 this.remaining = 0;
                 muted = false;
                 expiresAt = -1;
@@ -622,7 +626,7 @@ final class UserManagerImpl implements UserManager, Registrable {
             }
 
             setImmune(true);
-            task = plugin.getScheduler().runTaskLater(() -> setImmune(false), seconds * 20L);
+            task = api.getScheduler().runTaskLater(() -> setImmune(false), seconds * 20L);
         }
     }
 
@@ -782,29 +786,29 @@ final class UserManagerImpl implements UserManager, Registrable {
         @Nullable
         public String getPrefix() {
             Player player = getPlayer();
-            return player == null ? null : plugin.getChat().getPrefix(player);
+            return player == null ? null : api.getChat().getPrefix(player);
         }
 
         @Nullable
         public String getSuffix() {
             Player player = getPlayer();
-            return player == null ? null : plugin.getChat().getSuffix(player);
+            return player == null ? null : api.getChat().getSuffix(player);
         }
 
         @Override
         public boolean hasPermission(String permission) {
             Player player = getPlayer();
-            return player != null && plugin.getUserManager().hasPermission(player, permission);
+            return player != null && api.getUserManager().hasPermission(player, permission);
         }
 
         @Override
         public boolean isLogged() {
-            return plugin.getModuleManager().getModule("Login") == null || logged;
+            return api.getModuleManager().getModule("Login") == null || logged;
         }
 
         @Override
         public boolean isVanished() {
-            if (plugin.getModuleManager().getModule("Vanish") == null) return false;
+            if (api.getModuleManager().getModule("Vanish") == null) return false;
 
             Player player = getPlayer();
             if (player == null) return false;

@@ -2,7 +2,6 @@ package com.bitaspire.sir;
 
 import lombok.SneakyThrows;
 import me.croabeast.file.ConfigurableFile;
-import com.bitaspire.sir.module.ModuleManager;
 import me.croabeast.takion.TakionLib;
 import me.croabeast.takion.channel.Channel;
 import me.croabeast.takion.logger.TakionLogger;
@@ -10,12 +9,14 @@ import me.croabeast.takion.message.MessageSender;
 import me.croabeast.takion.placeholder.PlaceholderManager;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.TreeMap;
 import java.util.regex.Pattern;
 
-final class Library extends TakionLib {
+class BaseLibrary extends TakionLib {
 
     private static final String[][] PLACEHOLDER_ALIASES = {
             {"{PLAYER}", "{player}"},
@@ -63,13 +64,17 @@ final class Library extends TakionLib {
             {"{commandStates}", "{command-states}"}
     };
 
-    private ConfigurableFile bossbars, webhooks;
-    private final SIRPlugin instance;
+    private final Plugin plugin;
+    private final SIRApi api;
+
+    private ConfigurableFile bossbars;
+    private ConfigurableFile webhooks;
 
     @SneakyThrows
-    Library(SIRPlugin instance) {
-        super(instance);
-        this.instance = instance;
+    BaseLibrary(@NotNull SIRApi api) {
+        super(api.getPlugin());
+        this.api = api;
+        this.plugin = api.getPlugin();
 
         registerPlayerPlaceholders();
 
@@ -114,11 +119,11 @@ final class Library extends TakionLib {
         manager.load("{YAW}", player -> player.getLocation().getYaw());
         manager.load("{PITCH}", player -> player.getLocation().getPitch());
 
-        manager.load("{prefix}", instance.getChat()::getPrefix);
-        manager.load("{suffix}", instance.getChat()::getSuffix);
+        manager.load("{prefix}", api.getChat()::getPrefix);
+        manager.load("{suffix}", api.getChat()::getSuffix);
     }
 
-    private String normalizePlaceholderAliases(String message) {
+    protected String normalizePlaceholderAliases(String message) {
         if (message == null || message.indexOf('{') < 0) return message;
 
         String normalized = message;
@@ -128,35 +133,33 @@ final class Library extends TakionLib {
         return normalized;
     }
 
-    void reload() {
+    public void reload() {
         super.setServerLogger(new TakionLogger(this, false) {
             public boolean isColored() {
-                return instance.getConfiguration().isColoredConsole();
+                return api.getConfiguration().isColoredConsole();
             }
             public boolean isStripPrefix() {
-                return !instance.getConfiguration().isShowPrefix();
+                return !api.getConfiguration().isShowPrefix();
             }
         });
 
         super.setLogger(new TakionLogger(this) {
             public boolean isColored() {
-                return instance.getConfiguration().isColoredConsole();
+                return api.getConfiguration().isColoredConsole();
             }
             public boolean isStripPrefix() {
-                return !instance.getConfiguration().isShowPrefix();
+                return !api.getConfiguration().isShowPrefix();
             }
         });
 
         super.setLoadedSender(new MessageSender(this) {
             {
-                ModuleManager manager = instance.getModuleManager();
+                addFunctions(BaseLibrary.this::normalizePlaceholderAliases);
 
-                addFunctions(Library.this::normalizePlaceholderAliases);
-
-                UserFormatter<?> emojis = manager.getFormatter("Emojis");
+                UserFormatter<?> emojis = api.getModuleManager().getFormatter("Emojis");
                 if (emojis != null) addFunctions(emojis::format);
 
-                UserFormatter<?> tags = manager.getFormatter("Tags");
+                UserFormatter<?> tags = api.getModuleManager().getFormatter("Tags");
                 if (tags != null) addFunctions(tags::format);
 
                 setSensitive(false);
@@ -165,12 +168,12 @@ final class Library extends TakionLib {
         });
 
         try {
-            bossbars = new ConfigurableFile(instance, "bossbars");
+            bossbars = new ConfigurableFile(plugin, "bossbars");
             bossbars.saveDefaults();
         } catch (Exception ignored) {}
 
         try {
-            webhooks = new ConfigurableFile(instance, "webhooks");
+            webhooks = new ConfigurableFile(plugin, "webhooks");
             webhooks.saveDefaults();
         } catch (Exception ignored) {}
     }
@@ -192,22 +195,22 @@ final class Library extends TakionLib {
 
     @NotNull
     public String getLangPrefixKey() {
-        return instance.getConfiguration().getPrefixKey();
+        return api.getConfiguration().getPrefixKey();
     }
 
     @NotNull
     public String getLangPrefix() {
-        return instance.getConfiguration().getPrefix();
+        return api.getConfiguration().getPrefix();
     }
 
     @NotNull
     public String getCenterPrefix() {
-        return instance.getConfiguration().getCenterPrefix();
+        return api.getConfiguration().getCenterPrefix();
     }
 
     @NotNull
     public String getLineSeparator() {
-        return Pattern.quote(instance.getConfiguration().getLineSeparator());
+        return Pattern.quote(api.getConfiguration().getLineSeparator());
     }
 
     @NotNull

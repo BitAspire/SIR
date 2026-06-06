@@ -37,11 +37,11 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
     private GlobalScheduler scheduler;
     private ChatProvider chat;
     private EconomyProvider economy;
-    private Library library;
+    private BaseLibrary library;
     private Config configuration;
 
     private ModuleManagerImpl moduleManager;
-    private UserManagerImpl userManager;
+    private BaseUserManager userManager;
     private CommandManagerImpl commandManager;
     @Getter(AccessLevel.NONE)
     private StartupDiagnostics startupDiagnostics;
@@ -72,9 +72,9 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
             }
         }).register();
 
-        library = new Library(this);
+        library = new BaseLibrary(this);
 
-        userManager = new UserManagerImpl(this);
+        userManager = new BaseUserManager(this);
         userManager.register();
 
         commandLang = new ConfigurableFile(this, "commands", "lang");
