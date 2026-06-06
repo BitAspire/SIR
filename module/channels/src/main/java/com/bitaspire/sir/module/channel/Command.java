@@ -4,7 +4,6 @@ import me.croabeast.command.TabBuilder;
 import me.croabeast.file.ConfigurableFile;
 import me.croabeast.file.ConfigurableUnit;
 import com.bitaspire.sir.command.SIRCommand;
-import com.bitaspire.sir.channel.ChatChannel;
 import com.bitaspire.sir.user.ChannelData;
 import com.bitaspire.sir.user.SIRUser;
 import org.apache.commons.lang.StringUtils;
