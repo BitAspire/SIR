@@ -166,6 +166,9 @@ abstract class BaseManager<I extends Information> {
         String folder = extensionFolder();
         String type   = extensionType();
         boolean alwaysUpdate = api.getConfiguration().isAlwaysUpdateJars();
+        Set<String> bundledFileNames = new LinkedHashSet<>();
+        for (String resource : bundled)
+            bundledFileNames.add(resource.substring((folder + "/").length()).toLowerCase(Locale.ROOT));
 
         File outputDir = new File(api.getPlugin().getDataFolder(), folder);
         if (saveDefaults && !outputDir.exists() && !outputDir.mkdirs()) {
@@ -205,7 +208,54 @@ abstract class BaseManager<I extends Information> {
                 }
             }
 
+            if (saveDefaults && deleteStaleBundledJars(outputDir, target, bundledFileNames) &&
+                    !startupUpdatedJars.contains(fileName))
+                startupUpdatedJars.add(fileName);
+
             if (!saveDefaults) onBundledJarExtracted(target);
+        }
+    }
+
+    private boolean deleteStaleBundledJars(File outputDir, File currentJar, Set<String> bundledFileNames) {
+        String currentName = readInformationName(currentJar);
+        if (currentName == null) return false;
+
+        File[] jars = outputDir.listFiles((dir, name) -> name.endsWith(".jar"));
+        if (jars == null || jars.length == 0) return false;
+
+        boolean deletedAny = false;
+        for (File jar : jars) {
+            if (jar.getName().equalsIgnoreCase(currentJar.getName())) continue;
+            if (bundledFileNames.contains(jar.getName().toLowerCase(Locale.ROOT))) continue;
+
+            String name = readInformationName(jar);
+            if (name == null || !name.equalsIgnoreCase(currentName)) continue;
+
+            if (jar.delete()) {
+                deletedAny = true;
+                log(LogLevel.INFO, "Deleted old " + extensionType() + " jar '" + jar.getName()
+                        + "' replaced by '" + currentJar.getName() + "'.");
+                continue;
+            }
+
+            log(LogLevel.WARN, "Could not delete old " + extensionType() + " jar '" + jar.getName()
+                    + "' replaced by '" + currentJar.getName() + "'.");
+        }
+        return deletedAny;
+    }
+
+    private String readInformationName(File jarFile) {
+        try (JarFile jar = new JarFile(jarFile)) {
+            JarEntry entry = jar.getJarEntry(ymlFileName());
+            if (entry == null) return null;
+
+            try (InputStream in = jar.getInputStream(entry);
+                 InputStreamReader reader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
+                I information = parseInformation(YamlConfiguration.loadConfiguration(reader));
+                return information == null ? null : information.getName();
+            }
+        } catch (Exception ignored) {
+            return null;
         }
     }
 }
