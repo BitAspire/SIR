@@ -395,10 +395,6 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
         return builder.toString();
     }
 
-    private String color(String legacyCode, String text) {
-        return legacyCode + text;
-    }
-
     private String count(int amount, String singular) {
         return amount + " " + singular + (amount == 1 ? "" : "s");
     }
