@@ -24,7 +24,6 @@ import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.prismatic.chat.ChatComponent;
 import me.croabeast.prismatic.chat.MultiComponent;
 import me.croabeast.prismatic.chat.ChatFormat;
-import me.croabeast.takion.format.StringFormat;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
@@ -303,18 +302,15 @@ final class Factory {
                     return ReplaceUtils.replaceEach(keys, values, s);
                 });
 
-            if (chat)
-                applier.apply(s -> {
-                    StringFormat f = api.getLibrary().getFormatManager().get("SMALL_CAPS");
-                    return f.accept(s);
-                });
-
             ChatFormat<ChatComponent<?>> f = MultiComponent.DEFAULT_FORMAT;
             if (isDefault() && !f.isFormatted(applier.toString()))
                 return applier
                         .apply(s -> api.getLibrary().colorize(target, parser, s))
                         .apply(api.getLibrary().getCharacterManager()::align)
                         .toString();
+
+            if (chat)
+                applier.apply(api.getLibrary()::prepareText);
 
             return (isChatEventless() ? applier : applier.apply(f::removeFormat)).toString();
         }

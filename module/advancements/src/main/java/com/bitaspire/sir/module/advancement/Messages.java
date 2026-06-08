@@ -79,7 +79,7 @@ final class Messages {
                 Matcher pm = pPattern.matcher(c), cm = cPattern.matcher(c);
 
                 StringApplier applier = StringApplier.simplified(c)
-                        .apply(s -> library.getPlaceholderManager().replace(player, s))
+                        .apply(s -> library.replace(player, s, false))
                         .apply(PlainFormat.TRIM_START_SPACES::accept);
 
                 if (pm.find() && player != null) {

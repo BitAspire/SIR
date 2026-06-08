@@ -13,7 +13,6 @@ import me.croabeast.file.Configurable;
 import me.croabeast.prismatic.PrismaticAPI;
 import com.bitaspire.sir.SIRApi;
 import com.bitaspire.sir.file.ExtensionFile;
-import me.croabeast.takion.format.PlainFormat;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Color;
 import org.bukkit.configuration.ConfigurationSection;
@@ -181,8 +180,7 @@ final class Config {
                 if (StringUtils.isBlank(string)) return string;
 
                 return StringApplier.simplified(string).apply(base)
-                        .apply(s -> SIRApi.instance().getLibrary().getPlaceholderManager().replace(player, s))
-                        .apply(s -> PlainFormat.PLACEHOLDER_API.accept(player, s))
+                        .apply(s -> SIRApi.instance().getLibrary().replace(player, s, false))
                         .apply(PrismaticAPI::stripAll)
                         .apply(DiscordUtil::translateEmotes)
                         .toString();
