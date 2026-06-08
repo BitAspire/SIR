@@ -164,6 +164,72 @@ public abstract class BaseStartupDiagnostics implements RuntimeDiagnostics {
         }
     }
 
+    protected final void beginRuntimeDiagnostics() {
+        clearRuntimeDiagnostics();
+        collecting = true;
+    }
+
+    protected final String writeRuntimeDiagnostics(@NotNull String operation,
+                                                   long durationMs,
+                                                   SectionOutput... outputs) {
+        collecting = false;
+        if (!saveDetails) return null;
+
+        String normalized = operation.trim().isEmpty()
+                ? "runtime"
+                : operation.trim().toLowerCase(Locale.ENGLISH);
+
+        List<String> summary = new ArrayList<>();
+        summary.add(capitalize(normalized));
+        summary.add(repeat(normalized.length()));
+        summary.add("Duration: " + durationMs + "ms");
+
+        List<SectionOutput> sections = Arrays.asList(outputs);
+        File logsDir = new File(plugin.getDataFolder(), "logs" + File.separator + normalized + "s");
+        File sessionDir = uniqueSessionDir(logsDir);
+
+        try {
+            if (!sessionDir.exists() && !sessionDir.mkdirs())
+                throw new IOException("Could not create " + sessionDir.getPath());
+
+            writeFile(new File(sessionDir, "summary.log"), summary);
+            for (SectionOutput section : sections) {
+                writeFile(
+                        new File(sessionDir, section.fileName),
+                        renderSection(
+                                section.section.title,
+                                section.snapshot,
+                                section.section.requirements,
+                                section.section.events
+                        )
+                );
+            }
+            writeFile(new File(sessionDir, normalized + "-full.log"), runtimeFull(summary, sections));
+
+            if (latestFolder) refreshLatest(logsDir, sessionDir);
+            pruneSessions(logsDir);
+
+            return latestFolder
+                    ? "logs/" + normalized + "s/latest/"
+                    : "logs/" + normalized + "s/" + sessionDir.getName() + "/";
+        } catch (Exception exception) {
+            plugin.getLogger().warning("Failed to write " + normalized + " diagnostics: " + exception.getMessage());
+            return null;
+        }
+    }
+
+    protected final void clearRuntimeDiagnostics() {
+        clearSection(moduleSection);
+        clearSection(commandSection);
+        integrationLines.clear();
+        fullLines.clear();
+    }
+
+    protected final void clearSection(@NotNull DiagnosticSection section) {
+        section.events.clear();
+        section.requirements.clear();
+    }
+
     private boolean isVerboseConsole() {
         return "verbose".equalsIgnoreCase(consoleMode) || "debug".equalsIgnoreCase(consoleMode);
     }
@@ -255,6 +321,28 @@ public abstract class BaseStartupDiagnostics implements RuntimeDiagnostics {
         return lines;
     }
 
+    private List<String> runtimeFull(List<String> summary, List<SectionOutput> sections) {
+        List<String> lines = new ArrayList<>(summary);
+
+        for (SectionOutput section : sections) {
+            lines.add("");
+            lines.addAll(renderSection(
+                    section.section.title,
+                    section.snapshot,
+                    section.section.requirements,
+                    section.section.events
+            ));
+        }
+
+        if (!fullLines.isEmpty()) {
+            lines.add("");
+            lines.add("Raw Events");
+            lines.addAll(fullLines);
+        }
+
+        return lines;
+    }
+
     private File uniqueSessionDir(File logsDir) {
         File dir = new File(logsDir, sessionName);
         int index = 1;
@@ -333,6 +421,11 @@ public abstract class BaseStartupDiagnostics implements RuntimeDiagnostics {
         StringBuilder builder = new StringBuilder(length);
         for (int i = 0; i < length; i++) builder.append('-');
         return builder.toString();
+    }
+
+    private String capitalize(String value) {
+        if (value == null || value.isEmpty()) return "";
+        return Character.toUpperCase(value.charAt(0)) + value.substring(1);
     }
 
     protected static final class DiagnosticSection {

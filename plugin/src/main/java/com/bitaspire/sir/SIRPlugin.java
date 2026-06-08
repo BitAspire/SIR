@@ -503,19 +503,27 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
 
     @Override
     public void reload() {
-        commandLang.reload();
+        Timer timer = Timer.create();
+        if (startupDiagnostics != null) startupDiagnostics.beginReload();
 
-        configuration = new ConfigImpl(this);
+        try {
+            commandLang.reload();
 
-        commandManager.saveStates();
-        moduleManager.saveStates();
+            configuration = new ConfigImpl(this);
 
-        commandManager.unloadAll();
-        moduleManager.unloadAll();
+            commandManager.saveStates();
+            moduleManager.saveStates();
 
-        moduleManager.loadAll();
-        commandManager.loadAll();
+            commandManager.unloadAll();
+            moduleManager.unloadAll();
 
-        library.reload();
+            moduleManager.loadAll();
+            commandManager.loadAll();
+
+            library.reload();
+        } finally {
+            if (startupDiagnostics != null)
+                startupDiagnostics.writeReload(timer.current());
+        }
     }
 }

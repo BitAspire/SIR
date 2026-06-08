@@ -70,12 +70,12 @@ options:
     # Enable this to automatically apply updates to modules and commands.
     always-update: true
 
-  # Startup log output.
-  # summary: shows only the compact startup report in console.
-  # verbose: keeps detailed manager loading messages in console too.
+  # Startup/reload log output.
+  # summary: shows only the compact startup report and keeps reload details out of console.
+  # verbose: keeps detailed manager loading/reload messages in console too.
   startup-logs:
     console: summary
-    # Save module, command, integration, and full startup details under logs/.
+    # Save startup details under logs/ and reload details under logs/reloads/.
     save-details: true
     # Keep a copy of the most recent startup diagnostics in logs/latest/.
     latest-folder: true

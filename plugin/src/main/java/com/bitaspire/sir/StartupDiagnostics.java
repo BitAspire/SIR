@@ -2,6 +2,7 @@ package com.bitaspire.sir;
 
 import com.bitaspire.sir.file.Config;
 
+import java.util.Collections;
 import java.util.List;
 
 final class StartupDiagnostics extends BaseStartupDiagnostics {
@@ -24,6 +25,19 @@ final class StartupDiagnostics extends BaseStartupDiagnostics {
 
     void integration(String line) {
         recordIntegration(line);
+    }
+
+    void beginReload() {
+        beginRuntimeDiagnostics();
+    }
+
+    String writeReload(long durationMs) {
+        return writeRuntimeDiagnostics(
+                "reload",
+                durationMs,
+                output("modules.log", getModuleSection(), Collections.emptyList()),
+                output("commands.log", getCommandSection(), Collections.emptyList())
+        );
     }
 
     void write(
