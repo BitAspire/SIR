@@ -107,7 +107,11 @@ final class ModernParser {
         ConfigurationSection target = config.createSection("root");
 
         Resolver.copyLeaves(parent, target);
+        // Fallback selection and global/local routing must be explicit per channel, not inherited from the base channel.
+        target.set("access.default", null);
+        target.set("global", null);
         apply(source, target);
+        normalizeImplicitGlobalChannel(key, source, target);
         finalize(target, false);
 
         cache.put(key, config);
@@ -151,6 +155,17 @@ final class ModernParser {
 
         copy(source, target, "logging.enabled", "logging.enabled");
         copy(source, target, "logging.format", "logging.format");
+    }
+
+    private void normalizeImplicitGlobalChannel(
+            @NotNull String key,
+            @NotNull ConfigurationSection source,
+            @NotNull ConfigurationSection target
+    ) {
+        if (!key.matches("(?i)global")) return;
+        if (source.isSet("global") || source.isSet("audience.radius") || source.isSet("radius")) return;
+
+        target.set("radius", 0);
     }
 
     private void copy(@NotNull ConfigurationSection source, @NotNull ConfigurationSection target, @NotNull String path) {

@@ -60,12 +60,17 @@ channels:
     # Higher priority channels win when multiple channels match the same message.
     priority: 100
     access:
+      # This channel is only selected by its prefix or commands.
+      default: false
       # Prefixes typed before a message to select this channel.
       prefixes: [ "!" ]
       # Commands that send directly through this channel.
       commands: [ "/g", "/global" ]
       # If true, the selected prefix is removed from the final message.
       strip-prefix: true
+    audience:
+      # Global messages are not radius-limited.
+      radius: 0
     style:
       tag: '&8[&6Global&8]'
       # Hover text shown when the chat component supports interactive messages.
@@ -79,6 +84,8 @@ channels:
     permission: 'sir.channel.staff.use'
     priority: 200
     access:
+      # This channel is only selected by its prefix or commands.
+      default: false
       prefixes: [ "#" ]
       commands: [ "/sc", "/staffchat" ]
     audience:
@@ -104,6 +111,8 @@ channels:
   member-local:
     permission: 'sir.channel.member.use'
     access:
+      # This channel is only selected by its prefix or commands.
+      default: false
       prefixes: [ "@" ]
       commands: [ "/memberlocal" ]
     audience:
@@ -123,6 +132,8 @@ channels:
     # Copies missing options from another channel before this entry is applied.
     inherits: 'global'
     access:
+      # This channel is only selected by its prefix or commands.
+      default: false
       prefixes: [ "$" ]
       commands: [ "/tradechat", "/tc" ]
     style:
