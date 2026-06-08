@@ -203,6 +203,22 @@ final class MigrationService {
         if (colorChanged) chatColorTarget.save(new File(usersFolder, "chat-color.yml"));
     }
 
+    private File moduleFolder(String moduleKey) {
+        return moduleFolder(new File(plugin.getDataFolder(), "modules"), moduleKey);
+    }
+
+    private File moduleFolder(File modulesFolder, String moduleKey) {
+        return new File(modulesFolder, toModuleName(moduleKey));
+    }
+
+    private File moduleFile(String moduleKey, String fileName) {
+        return moduleFile(new File(plugin.getDataFolder(), "modules"), moduleKey, fileName);
+    }
+
+    private File moduleFile(File modulesFolder, String moduleKey, String fileName) {
+        return new File(moduleFolder(modulesFolder, moduleKey), fileName);
+    }
+
     private void migrateSirModules(File sirFolder, Result result) throws IOException {
         File modulesFolder = new File(sirFolder, "modules");
         if (!modulesFolder.isDirectory()) return;
@@ -212,57 +228,57 @@ final class MigrationService {
             throw new IOException("Could not create modules folder.");
 
         copyIfPresent(new File(modulesFolder, "announcements" + File.separator + "config.yml"),
-                new File(targetModulesFolder, "announcements" + File.separator + "config.yml"),
+                moduleFile(targetModulesFolder, "announcements", "config.yml"),
                 result);
         migrateSirAnnouncements(new File(modulesFolder, "announcements" + File.separator + "announces.yml"),
-                new File(targetModulesFolder, "announcements" + File.separator + "announcements.yml"),
+                moduleFile(targetModulesFolder, "announcements", "announcements.yml"),
                 result);
 
         migrateSirJoinQuitConfig(new File(modulesFolder, "join_quit" + File.separator + "config.yml"),
-                new File(targetModulesFolder, "join-quit" + File.separator + "config.yml"),
+                moduleFile(targetModulesFolder, "join-quit", "config.yml"),
                 result);
         migrateSirJoinQuitMessages(new File(modulesFolder, "join_quit" + File.separator + "messages.yml"),
-                new File(targetModulesFolder, "join-quit" + File.separator + "messages.yml"),
+                moduleFile(targetModulesFolder, "join-quit", "messages.yml"),
                 result);
 
         migrateSirAdvancements(new File(modulesFolder, "advancements" + File.separator + "config.yml"),
-                new File(targetModulesFolder, "advancements" + File.separator + "config.yml"),
+                moduleFile(targetModulesFolder, "advancements", "config.yml"),
                 result);
 
         migrateSirMotd(new File(modulesFolder, "motd" + File.separator + "config.yml"),
-                new File(targetModulesFolder, "motd" + File.separator + "config.yml"),
+                moduleFile(targetModulesFolder, "motd", "config.yml"),
                 result);
 
         migrateLegacySirChannels(new File(modulesFolder, "chat" + File.separator + "channels.yml"),
-                new File(targetModulesFolder, "channels" + File.separator + "channels.yml"),
+                moduleFile(targetModulesFolder, "channels", "channels.yml"),
                 result);
         copyIfPresent(new File(modulesFolder, "chat" + File.separator + "config.yml"),
-                new File(targetModulesFolder, "channels" + File.separator + "config.yml"),
+                moduleFile(targetModulesFolder, "channels", "config.yml"),
                 result);
         copyIfPresent(new File(modulesFolder, "chat" + File.separator + "tags.yml"),
-                new File(targetModulesFolder, "tags" + File.separator + "tags.yml"),
+                moduleFile(targetModulesFolder, "tags", "tags.yml"),
                 result);
         copyIfPresent(new File(modulesFolder, "chat" + File.separator + "moderation.yml"),
-                new File(targetModulesFolder, "moderation" + File.separator + "moderation.yml"),
+                moduleFile(targetModulesFolder, "moderation", "moderation.yml"),
                 result);
         copyIfPresent(new File(modulesFolder, "chat" + File.separator + "emojis.yml"),
-                new File(targetModulesFolder, "emojis" + File.separator + "emojis.yml"),
+                moduleFile(targetModulesFolder, "emojis", "emojis.yml"),
                 result);
         copyIfPresent(new File(modulesFolder, "chat" + File.separator + "cooldowns.yml"),
-                new File(targetModulesFolder, "cooldowns" + File.separator + "cooldowns.yml"),
+                moduleFile(targetModulesFolder, "cooldowns", "cooldowns.yml"),
                 result);
         copyIfPresent(new File(modulesFolder, "chat" + File.separator + "mentions.yml"),
-                new File(targetModulesFolder, "mentions" + File.separator + "mentions.yml"),
+                moduleFile(targetModulesFolder, "mentions", "mentions.yml"),
                 result);
 
         migrateLegacySirDiscordConfig(new File(modulesFolder, "hook" + File.separator + "discord.yml"),
-                new File(targetModulesFolder, "discord" + File.separator + "config.yml"),
+                moduleFile(targetModulesFolder, "discord", "config.yml"),
                 result);
         migrateLegacySirLoginConfig(new File(modulesFolder, "hook" + File.separator + "login.yml"),
-                new File(targetModulesFolder, "join-quit" + File.separator + "config.yml"),
+                moduleFile(targetModulesFolder, "join-quit", "config.yml"),
                 result);
         migrateLegacySirVanishConfig(new File(modulesFolder, "hook" + File.separator + "vanish.yml"),
-                new File(targetModulesFolder, "vanish" + File.separator + "config.yml"),
+                moduleFile(targetModulesFolder, "vanish", "config.yml"),
                 result);
     }
 
@@ -552,8 +568,7 @@ final class MigrationService {
         int radius = chat.getInt("radius", 0);
         if (format == null && radius == 0) return;
 
-        File channelsFile = new File(plugin.getDataFolder(),
-                "modules" + File.separator + "channels" + File.separator + "channels.yml");
+        File channelsFile = moduleFile("channels", "channels.yml");
         YamlConfiguration target = channelsFile.isFile()
                 ? YamlConfiguration.loadConfiguration(channelsFile)
                 : new YamlConfiguration();
@@ -603,8 +618,7 @@ final class MigrationService {
 
         if (world == null || x == null || y == null || z == null) return;
 
-        File messagesFile = new File(plugin.getDataFolder(),
-                "modules" + File.separator + "join-quit" + File.separator + "messages.yml");
+        File messagesFile = moduleFile("join-quit", "messages.yml");
         YamlConfiguration target = messagesFile.isFile()
                 ? YamlConfiguration.loadConfiguration(messagesFile)
                 : new YamlConfiguration();
@@ -640,8 +654,7 @@ final class MigrationService {
 
         YamlConfiguration discordConfig = YamlConfiguration.loadConfiguration(configFile);
 
-        File targetFile = new File(plugin.getDataFolder(),
-                "modules" + File.separator + "discord" + File.separator + "config.yml");
+        File targetFile = moduleFile("discord", "config.yml");
         YamlConfiguration target = targetFile.isFile()
                 ? YamlConfiguration.loadConfiguration(targetFile)
                 : new YamlConfiguration();
@@ -873,7 +886,7 @@ final class MigrationService {
     }
 
     private void migrateEssentialsChannelsLang(Properties messages, Result result) throws IOException {
-        File targetFile = new File(plugin.getDataFolder(), "modules" + File.separator + "channels" + File.separator + "config.yml");
+        File targetFile = moduleFile("channels", "config.yml");
         YamlConfiguration target = targetFile.isFile()
                 ? YamlConfiguration.loadConfiguration(targetFile)
                 : new YamlConfiguration();
@@ -901,7 +914,7 @@ final class MigrationService {
         boolean hasQuitMessage = isSomething(quitMessage);
         if (!hasJoinMessage && !hasQuitMessage) return;
 
-        File joinQuitFolder = new File(plugin.getDataFolder(), "modules" + File.separator + "join-quit");
+        File joinQuitFolder = moduleFolder("join-quit");
         File configFile = new File(joinQuitFolder, "config.yml");
         File messagesFile = new File(joinQuitFolder, "messages.yml");
 
@@ -935,7 +948,7 @@ final class MigrationService {
         File motdFile = new File(essentialsFolder, "motd.txt");
         if (!motdFile.isFile()) return;
 
-        File targetFile = new File(plugin.getDataFolder(), "modules" + File.separator + "motd" + File.separator + "motd.yml");
+        File targetFile = moduleFile("motd", "motd.yml");
         List<String> lines = Files.readAllLines(motdFile.toPath());
         if (lines.isEmpty()) return;
 
