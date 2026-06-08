@@ -30,7 +30,7 @@ final class Listener extends com.bitaspire.sir.Listener {
     private final Channels main;
 
     private boolean handleEmptyMessage(MessageSender sender, String message) {
-        if (!main.config.allowsEmpty() || !StringUtils.isBlank(message))
+        if (main.config.allowsEmpty() || !StringUtils.isBlank(message))
             return false;
 
         sender.copy().send(main.config.getAllowEmptyMessages());
