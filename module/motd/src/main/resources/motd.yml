@@ -9,6 +9,7 @@
 # MOTD entries. Each child key is a named style that can be selected or randomized.
 # MOTD text supports MiniMessage through Takion/PrismaticAPI, SIR tags,
 # legacy color codes, hex colors, and placeholders where available.
+# Prefix a line with <C> to center it.
 motd:
   first:
     # First line of the server list MOTD.
@@ -17,5 +18,5 @@ motd:
     2: '&7IP:&e play.example.com'
 
   custom-name:
-    1: '               &7A community Minecraft server'
-    2: '                 &aEnjoy your stay'
+    1: '<C>&7A community Minecraft server'
+    2: '<C>&aEnjoy your stay'

@@ -1,6 +1,7 @@
 package com.bitaspire.sir.module.motd;
 
 import lombok.RequiredArgsConstructor;
+import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.takion.TakionLib;
 import me.croabeast.takion.logger.LogLevel;
 import org.bukkit.Bukkit;
@@ -35,8 +36,26 @@ final class Listener extends com.bitaspire.sir.Listener {
         }
 
         TakionLib lib = main.getApi().getLibrary();
-        return s -> lib.getCharacterManager()
-                .align(134, lib.colorize(player[0], s));
+        return text -> {
+            String[] lines = text.split("\\r?\\n", -1);
+            for (int i = 0; i < lines.length; i++)
+                lines[i] = centerLine(lib, player[0], lines[i]);
+            return String.join("\n", lines);
+        };
+    }
+
+    private String centerLine(TakionLib lib, Player player, String line) {
+        String text = line == null ? "" : line;
+
+        String p = main.getApi().getConfiguration().getCenterPrefix();
+        if (p == null || p.isEmpty() || !text.startsWith(p))
+            return lib.colorize(player, text);
+
+        text = text.substring(p.length()).trim();
+        if (text.isEmpty()) return "";
+
+        text = lib.replace(player, text);
+        return PrismaticAPI.colorize(player, lib.getCharacterManager().align(130, p + text));
     }
 
     @EventHandler
