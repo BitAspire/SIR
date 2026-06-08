@@ -148,7 +148,6 @@ class CommandManagerImpl extends BaseManager<ProviderInformation> implements Com
 
     private ProviderInformation readFile(InputStream stream, String source) {
         if (stream == null) {
-            log(LogLevel.WARN, "commands.yml not found for " + source + ", skipping.");
             return null;
         }
 
@@ -568,7 +567,8 @@ class CommandManagerImpl extends BaseManager<ProviderInformation> implements Com
     }
 
     public void unloadAll() {
-        for (String name : new ArrayList<>(registry.getNames())) unload(name, false);
+        for (String name : new ArrayList<>(registry.getNames()))
+            if (registry.contains(name)) unload(name, false);
 
         for (LoadedProvider entry : providers.values()) {
             try {
