@@ -22,6 +22,7 @@ final class ConfigImpl implements Config {
             prefix = " &e&lSIR &8>&7",
             centerPrefix = "<C>",
             lineSeparator = "<n>";
+    private int chatCenterWidth = 154;
 
     private boolean moduleJars = true,
             addonJars = true,
@@ -60,6 +61,7 @@ final class ConfigImpl implements Config {
             prefixKey = file.get("values.lang-prefix-key", prefixKey);
             prefix = file.get("values.lang-prefix", prefix);
             centerPrefix = file.get("values.center-prefix", centerPrefix);
+            chatCenterWidth = file.getConfiguration().getInt("values.center-width.chat", chatCenterWidth);
             lineSeparator = file.get("values.line-separator", lineSeparator);
         } catch (Exception ignored) {}
     }

@@ -105,6 +105,13 @@ values:
   # Works in SIR configuration files and supported inputs
   center-prefix: '<C>'
 
+  # Center Widths:
+  # Widths are Minecraft font pixels used by server-side centering.
+  # The server cannot read each player's client chat width setting, so this is
+  # an approximation for centered chat messages.
+  center-width:
+    chat: 154
+
   # Line Break Character
   # Used to create multi-line messages
   # Applications:

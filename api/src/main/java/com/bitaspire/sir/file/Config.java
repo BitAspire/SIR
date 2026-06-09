@@ -94,6 +94,15 @@ public interface Config {
     String getCenterPrefix();
 
     /**
+     * Returns the pixel width used when centering in-game chat messages.
+     *
+     * @return the chat center width.
+     */
+    default int getChatCenterWidth() {
+        return 154;
+    }
+
+    /**
      * Returns the string used as a visual line separator in chat output.
      *
      * @return the line separator.
