@@ -25,3 +25,6 @@ server-icon:
 # - Stored in modules/motd/icons/.
 # - Filename must match server-icon.image.
 random-motd: false
+
+# Width, in Minecraft font pixels, used by <C> centered MOTD lines.
+center-width: 130

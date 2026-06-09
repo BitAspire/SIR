@@ -55,7 +55,7 @@ final class Listener extends com.bitaspire.sir.Listener {
         if (text.isEmpty()) return "";
 
         text = lib.replace(player, text);
-        return PrismaticAPI.colorize(player, lib.getCharacterManager().align(130, p + text));
+        return PrismaticAPI.colorize(player, lib.getCharacterManager().align(main.config.getCenterWidth(), p + text));
     }
 
     @EventHandler
