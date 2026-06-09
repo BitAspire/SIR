@@ -306,7 +306,8 @@ final class Factory {
             if (isDefault() && !f.isFormatted(applier.toString()))
                 return applier
                         .apply(s -> api.getLibrary().colorize(target, parser, s))
-                        .apply(api.getLibrary().getCharacterManager()::align)
+                        .apply(s -> api.getLibrary().getCharacterManager()
+                                .align(api.getConfiguration().getChatCenterWidth(), s))
                         .toString();
 
             if (chat)

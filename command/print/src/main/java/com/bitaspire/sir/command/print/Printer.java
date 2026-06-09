@@ -39,6 +39,7 @@ final class Printer {
     void print(CommandSender sender, String input, String key) {
         String message = SIRApi.joinArray(index, args);
         String center = library.getCenterPrefix();
+        int centerWidth = api.getConfiguration().getChatCenterWidth();
 
         ChannelManager channelManager = library.getChannelManager();
         String argument = args[2];
@@ -69,7 +70,11 @@ final class Printer {
                             break;
                     }
 
-                    channel.send(player, parse(player, string));
+                    String parsed = parse(player, string);
+                    if (parsed != null && parsed.startsWith(center))
+                        parsed = library.getCharacterManager().align(centerWidth, parsed);
+
+                    channel.send(player, parsed);
                 }
                 continue;
             }

@@ -33,8 +33,11 @@ final class Announcement implements PermissibleUnit {
         } catch (Exception ignored) {}
 
         worlds = Configurable.toStringList(section, "worlds");
+        SIRApi api = SIRApi.instance();
+        int centerWidth = api.getConfiguration().getChatCenterWidth();
+
         lines = Configurable.toStringList(section, "lines");
-        lines.replaceAll(SIRApi.instance().getLibrary().getCharacterManager()::align);
+        lines.replaceAll(line -> api.getLibrary().getCharacterManager().align(centerWidth, line));
         commands = Configurable.toStringList(section, "commands");
     }
 
