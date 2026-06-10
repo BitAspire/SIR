@@ -12,12 +12,14 @@ enabled: true
 # Defines how the swearing will be controlled: BLOCK (block the message) or REPLACE (replace banned words).
 control: BLOCK
 
-# List of banned words or regular expressions to detect swearing.
-# If an input starts with [regex], will work as a regex string
+# List of banned words, regular expressions, or remote JSON word lists to detect swearing.
+# If an input starts with [regex], it will work as a regex string.
+# If an input starts with [json], it will load a remote JSON array of strings.
 banned-words:
   - "bad-word1"
   - "bad-word2"
   - "[regex] (?i)f(.[^ ]*)?ck"
+  # - "[json] https://example.com/example.json"
 
 # Replacement options that will be applied if the control type is REPLACE.
 replace-options:
