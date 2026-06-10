@@ -17,7 +17,6 @@ final class TagExpansion extends PAPIExpansion {
     }
 
     @Nullable
-    @Override
     public String onRequest(OfflinePlayer off, @NotNull String params) {
         Player player = off.getPlayer();
         if (player == null) return null;

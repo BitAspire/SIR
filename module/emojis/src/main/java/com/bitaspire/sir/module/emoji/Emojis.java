@@ -15,7 +15,6 @@ public class Emojis extends SIRModule implements UserFormatter<Object>, PluginDe
     private Object hook;
 
     @NotNull
-    @Override
     public String[] getSoftDependencies() {
         return new String[]{PAPI};
     }

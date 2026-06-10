@@ -20,7 +20,6 @@ public class Tags extends SIRModule implements UserFormatter<Object>, PluginDepe
     private Object hook;
 
     @NotNull
-    @Override
     public String[] getSoftDependencies() {
         return new String[]{PAPI};
     }

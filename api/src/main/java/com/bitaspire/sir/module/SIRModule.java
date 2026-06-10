@@ -110,7 +110,6 @@ public abstract class SIRModule extends SIRExtension<ModuleInformation> implemen
     }
 
     @NotNull
-    @Override
     public final File getDataFolder() {
         if (dataFolder == null && api != null)
             dataFolder = new File(api.getPlugin().getDataFolder(), "modules" + File.separator + getName());
@@ -122,7 +121,6 @@ public abstract class SIRModule extends SIRExtension<ModuleInformation> implemen
     }
 
     @NotNull
-    @Override
     public final String getName() {
         return information.getName();
     }

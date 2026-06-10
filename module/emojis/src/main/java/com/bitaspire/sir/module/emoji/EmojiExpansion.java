@@ -14,7 +14,6 @@ final class EmojiExpansion extends PAPIExpansion {
     }
 
     @NotNull
-    @Override
     public String onRequest(OfflinePlayer off, @NotNull String params) {
         Emoji emoji = data.emojis.get(params);
         return emoji != null && emoji.getValue() != null ? emoji.getValue() : "";
