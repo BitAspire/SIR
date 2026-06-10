@@ -383,16 +383,20 @@ final class MigrationService {
         if (!worlds.isEmpty())
             target.set("audience.worlds", worlds);
 
+        boolean localAudience = !resolveLegacySirGlobal(source, forcedLocal);
+
         String recipientPermission = firstNonBlank(
                 source.getString("recipient-permission"),
-                source.getString("permission")
+                source.getString("audience.permission"),
+                localAudience ? source.getString("permission") : null
         );
         if (hasText(recipientPermission))
             target.set("audience.permission", recipientPermission);
 
         String recipientGroup = firstNonBlank(
                 source.getString("recipient-group"),
-                source.getString("group")
+                source.getString("audience.group"),
+                localAudience ? source.getString("group") : null
         );
         if (hasText(recipientGroup))
             target.set("audience.group", recipientGroup);

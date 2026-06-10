@@ -52,10 +52,10 @@ final class ModernParser {
         return new Layout(config);
     }
 
-    @NotNull
     private ConfigurationSection resolveDefault() {
         YamlConfiguration cached = cache.get("__default__");
-        if (cached != null) return cached.getConfigurationSection("root");
+        if (cached != null)
+            return cached.getConfigurationSection("root");
 
         YamlConfiguration config = new YamlConfiguration();
         ConfigurationSection target = config.createSection("root");
@@ -75,10 +75,10 @@ final class ModernParser {
         return target;
     }
 
-    @NotNull
     private ConfigurationSection resolve(@NotNull String key, @NotNull Set<String> resolving) {
         YamlConfiguration cached = cache.get(key);
-        if (cached != null) return cached.getConfigurationSection("root");
+        if (cached != null)
+            return cached.getConfigurationSection("root");
 
         ConfigurationSection source = channels.get(key);
         if (source == null) return resolveDefault();
@@ -174,8 +174,8 @@ final class ModernParser {
 
     private void copy(@NotNull ConfigurationSection source, @NotNull ConfigurationSection target,
                       @NotNull String sourcePath, @NotNull String targetPath) {
-        if (!source.isSet(sourcePath)) return;
-        target.set(targetPath, source.get(sourcePath));
+        if (source.isSet(sourcePath))
+            target.set(targetPath, source.get(sourcePath));
     }
 
     private void finalize(@NotNull ConfigurationSection target, boolean defaults) {
@@ -189,11 +189,7 @@ final class ModernParser {
 
         int radius = Math.max(0, target.getInt("radius", 0));
         target.set("radius", radius);
-
-        if (!target.isSet("global"))
-            target.set("global", radius <= 0);
-        else
-            target.set("global", target.getBoolean("global"));
+        target.set("global", target.isSet("global") ? target.getBoolean("global") : radius == 0);
 
         Resolver.promotePrefixes(target.getConfigurationSection("access"));
     }

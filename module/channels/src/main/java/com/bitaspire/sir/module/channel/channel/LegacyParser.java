@@ -60,7 +60,7 @@ final class LegacyParser {
         Resolver.setIfAbsent(target, "logging.enabled", false);
 
         Resolver.promotePrefixes(target.getConfigurationSection("access"));
-        Resolver.mirrorAudiencePermissions(target);
+        Resolver.mirrorAudiencePermissions(target, false);
     }
 
     private void normalizeEntry(@NotNull ConfigurationSection source, @NotNull ConfigurationSection target, boolean local) {
@@ -74,7 +74,7 @@ final class LegacyParser {
         Resolver.setIfAbsent(target, "access.strip-prefix", true);
 
         Resolver.promotePrefixes(target.getConfigurationSection("access"));
-        Resolver.mirrorAudiencePermissions(target);
+        Resolver.mirrorAudiencePermissions(target, local || !target.getBoolean("global", true));
 
         if (!local)
             target.set("access.default",

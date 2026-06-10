@@ -94,7 +94,7 @@ final class Factory {
                     fromParent("radius", c -> c.getAudience().getRadius(), global ? -1 : 100),
                     fromParent("same-world", c -> c.getAudience().isSameWorld(), false),
                     fromList("worlds", c -> c.getAudience().getWorldsNames()),
-                    fromParent("recipient-permission", c -> c.getAudience().getPermission(), permission),
+                    fromParent("recipient-permission", c -> c.getAudience().getPermission(), "DEFAULT"),
                     fromParent("recipient-group", c -> c.getAudience().getGroup(), getGroup()),
                     fromParent("include-sender", c -> c.getAudience().shouldIncludeSender(), true)
             );
@@ -275,7 +275,7 @@ final class Factory {
             String format = chat ? style.getFormat() : logging.getFormat();
 
             StringApplier applier = StringApplier.simplified(format)
-                    .apply(s -> api.getLibrary().getPlaceholderManager().replace(parser, s))
+                    .apply(s -> api.getLibrary().replace(parser, s))
                     .apply(s -> {
                         String[] values = getChatValues(checker.check(parser, string));
                         return ReplaceUtils.replaceEach(CHAT_KEYS, values, s);

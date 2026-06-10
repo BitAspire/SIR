@@ -1,5 +1,6 @@
 package com.bitaspire.sir.module.channel.channel;
 
+import lombok.experimental.UtilityClass;
 import me.croabeast.file.Configurable;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.configuration.ConfigurationSection;
@@ -11,11 +12,10 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-public final class Resolver {
+@UtilityClass
+public class Resolver {
 
-    private Resolver() {}
-
-    public static void copyLeaves(@Nullable ConfigurationSection source, @NotNull ConfigurationSection target) {
+    public void copyLeaves(@Nullable ConfigurationSection source, @NotNull ConfigurationSection target) {
         if (source == null) return;
 
         for (String key : source.getKeys(true)) {
@@ -26,25 +26,17 @@ public final class Resolver {
         }
     }
 
-    @NotNull
-    public static ConfigurationSection cloneAsSection(@Nullable ConfigurationSection source) {
-        YamlConfiguration config = new YamlConfiguration();
-        ConfigurationSection section = config.createSection("root");
-        copyLeaves(source, section);
-        return section;
-    }
-
-    public static void setIfAbsent(@NotNull ConfigurationSection section, @NotNull String path, Object value) {
+    public void setIfAbsent(@NotNull ConfigurationSection section, @NotNull String path, Object value) {
         if (!section.isSet(path)) section.set(path, value);
     }
 
     @NotNull
-    public static List<String> strings(@Nullable ConfigurationSection section, @NotNull String path) {
+    public List<String> strings(@Nullable ConfigurationSection section, @NotNull String path) {
         if (section == null) return new ArrayList<>();
         return Configurable.toStringList(section, path, new ArrayList<>());
     }
 
-    public static boolean hasExplicitAccess(@Nullable ConfigurationSection section) {
+    public boolean hasExplicitAccess(@Nullable ConfigurationSection section) {
         if (section == null) return false;
 
         ConfigurationSection access = section.getConfigurationSection("access");
@@ -54,7 +46,7 @@ public final class Resolver {
     }
 
     @NotNull
-    public static List<String> prefixes(@Nullable ConfigurationSection access) {
+    public List<String> prefixes(@Nullable ConfigurationSection access) {
         List<String> prefixes = strings(access, "prefixes");
         if (!prefixes.isEmpty()) {
             prefixes.removeIf(StringUtils::isBlank);
@@ -70,7 +62,7 @@ public final class Resolver {
         return list;
     }
 
-    public static void promotePrefixes(@Nullable ConfigurationSection access) {
+    public void promotePrefixes(@Nullable ConfigurationSection access) {
         if (access == null) return;
 
         List<String> prefixes = prefixes(access);
@@ -80,15 +72,15 @@ public final class Resolver {
         access.set("prefix", prefixes.get(0));
     }
 
-    public static void mirrorAudiencePermissions(@NotNull ConfigurationSection section) {
-        if (section.isSet("permission") && !section.isSet("recipient-permission"))
+    public void mirrorAudiencePermissions(@NotNull ConfigurationSection section, boolean implicit) {
+        if (implicit && section.isSet("permission") && !section.isSet("recipient-permission"))
             section.set("recipient-permission", section.getString("permission"));
 
-        if (section.isSet("group") && !section.isSet("recipient-group"))
+        if (implicit && section.isSet("group") && !section.isSet("recipient-group"))
             section.set("recipient-group", section.getString("group"));
     }
 
-    public static void promoteModernAliases(@NotNull ConfigurationSection section) {
+    public void promoteModernAliases(@NotNull ConfigurationSection section) {
         alias(section, "radius", "audience.radius");
         alias(section, "same-world", "audience.same-world");
         alias(section, "worlds", "audience.worlds");
@@ -110,7 +102,7 @@ public final class Resolver {
         alias(section, "click.input", "style.click.input");
     }
 
-    private static void alias(@NotNull ConfigurationSection section, @NotNull String targetPath, @NotNull String sourcePath) {
+    private void alias(@NotNull ConfigurationSection section, @NotNull String targetPath, @NotNull String sourcePath) {
         if (!section.isSet(targetPath) && section.isSet(sourcePath))
             section.set(targetPath, section.get(sourcePath));
     }
