@@ -4,6 +4,7 @@ import lombok.Getter;
 import me.croabeast.file.Configurable;
 import com.bitaspire.sir.PermissibleUnit;
 import com.bitaspire.sir.SoundSection;
+import com.bitaspire.sir.user.SIRUser;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.List;
@@ -39,5 +40,9 @@ final class Mention implements PermissibleUnit {
             SoundSection temp = new SoundSection(section.getConfigurationSection("sound.receiver"));
             if (temp.isEnabled()) receiverSound = temp;
         } catch (Exception ignored) {}
+    }
+
+    boolean canUse(SIRUser user) {
+        return user != null && hasPermission(user) && isInGroupAsNull(user.getPlayer());
     }
 }

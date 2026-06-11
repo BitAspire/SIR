@@ -1,5 +1,6 @@
 package com.bitaspire.sir.module.mention;
 
+import com.bitaspire.sir.ChatCompletions;
 import me.croabeast.common.util.ReplaceUtils;
 import me.croabeast.prismatic.PrismaticAPI;
 import com.bitaspire.sir.ChatToggleable;
@@ -13,7 +14,11 @@ import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -21,15 +26,22 @@ import java.util.regex.Pattern;
 public class Mentions extends SIRModule implements UserFormatter<ChatChannel>, ChatToggleable {
 
     Data data;
+    private ChatCompletions completions;
 
     @Override
     public boolean register() {
         data = new Data(this);
+        completions = new ChatCompletions(getApi(), this::getCompletions);
+        completions.register();
         return true;
     }
 
     @Override
     public boolean unregister() {
+        if (completions != null) {
+            completions.unregister();
+            completions = null;
+        }
         return true;
     }
 
@@ -45,7 +57,7 @@ public class Mentions extends SIRModule implements UserFormatter<ChatChannel>, C
         SoundSection firstSound = null;
 
         for (Mention mention : data.getMentions()) {
-            if (!mention.isInGroupAsNull(user.getPlayer()) || !mention.hasPermission(user))
+            if (!mention.canUse(user))
                 continue;
 
             String prefix = mention.getPrefix();
@@ -126,5 +138,32 @@ public class Mentions extends SIRModule implements UserFormatter<ChatChannel>, C
     @NotNull
     public String format(SIRUser user, String string) {
         return format(user, string, null);
+    }
+
+    private Collection<String> getCompletions(SIRUser user) {
+        if (user == null || !user.isOnline() || !isEnabled() || data == null)
+            return Collections.emptyList();
+
+        Set<String> values = new LinkedHashSet<>();
+
+        for (Mention mention : data.getMentions()) {
+            if (!mention.canUse(user)) continue;
+
+            String prefix = mention.getPrefix();
+            if (StringUtils.isBlank(prefix)) continue;
+
+            for (SIRUser target : getApi().getUserManager().getUsers(true)) {
+                if (!canSuggest(user, target)) continue;
+                values.add(prefix + target.getPlayer().getName());
+            }
+        }
+
+        return values;
+    }
+
+    private boolean canSuggest(SIRUser user, SIRUser target) {
+        if (target == null || !target.isOnline() || user == target) return false;
+        if (target.getIgnoreData().isIgnoring(user, true)) return false;
+        return user.getPlayer().canSee(target.getPlayer());
     }
 }
