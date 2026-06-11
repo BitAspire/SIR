@@ -22,6 +22,7 @@ final class Data {
     }
 
     Announcement fromIndex(int count) {
-        return new LinkedList<>(announcements.values()).get(count);
+        LinkedList<Announcement> list = new LinkedList<>(announcements.values());
+        return count < 0 || count >= list.size() ? null : list.get(count);
     }
 }

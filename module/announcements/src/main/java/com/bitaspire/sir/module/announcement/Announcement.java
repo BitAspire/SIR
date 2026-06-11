@@ -52,7 +52,7 @@ final class Announcement implements PermissibleUnit {
             SIRUser user = SIRApi.instance().getUserManager().getUser(p);
             if (user == null || !main.isToggled(user)) continue;
 
-            if (!user.isVanished() && hasPermission(user))
+            if (hasPermission(user))
                 users.add(user);
         }
 

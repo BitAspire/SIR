@@ -28,6 +28,11 @@ public class Announcements extends SIRModule implements CommandProvider, ChatTog
         if (!isEnabled() || config.getInterval() <= 0 || task != null)
             return;
 
+        if (data.getAnnouncements().isEmpty()) {
+            getLogger().log(LogLevel.WARN, "No announcements configured; announcement task will not start.");
+            return;
+        }
+
         task = getApi().getScheduler().runTaskTimer(
                 () -> {
                     int size = data.getAnnouncements().size() - 1;
@@ -48,8 +53,7 @@ public class Announcements extends SIRModule implements CommandProvider, ChatTog
     }
 
     private void stop() {
-        if (isEnabled() || task == null)
-            return;
+        if (task == null) return;
 
         task.cancel();
         task = null;
