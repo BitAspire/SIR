@@ -61,6 +61,7 @@ final class Listener extends com.bitaspire.sir.Listener {
     @EventHandler
     private void onPing(ServerListPingEvent event) {
         if (!main.isEnabled()) return;
+        if (main.data == null || main.data.getList().isEmpty()) return;
 
         int motdCount = main.data.getList().size() - 1;
         if (motdIndex > motdCount) motdIndex = 0;
@@ -87,6 +88,8 @@ final class Listener extends com.bitaspire.sir.Listener {
             default: break;
         }
 
+        if (main.loader == null) return;
+
         int iconCount = main.loader.getIcons().size() - 1;
         if (iconIndex > iconCount) iconIndex = 0;
 
@@ -97,11 +100,13 @@ final class Listener extends com.bitaspire.sir.Listener {
                     break;
 
                 case "LIST":
+                    if (iconCount < 0) break;
                     event.setServerIcon(main.loader.getIcons().get(iconIndex));
                     iconIndex = iconIndex < iconCount ? (iconIndex + 1) : 0;
                     break;
 
                 case "RANDOM":
+                    if (iconCount < 0) break;
                     event.setServerIcon(main.loader.getIcons().get(iconIndex));
                     iconIndex = new Random().nextInt(iconCount + 1);
                     break;

@@ -21,8 +21,16 @@ public final class MOTD extends SIRModule {
 
     @Override
     public boolean unregister() {
-        loader.unload();
-        listener.unregister();
+        if (loader != null) {
+            loader.unload();
+            loader = null;
+        }
+
+        if (listener != null) {
+            listener.unregister();
+            listener = null;
+        }
+
         return true;
     }
 }
