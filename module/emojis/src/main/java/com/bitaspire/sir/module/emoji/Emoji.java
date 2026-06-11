@@ -67,7 +67,7 @@ final class Emoji implements PermissibleUnit {
 
     String parse(SIRUser user, String line) {
         if ((StringUtils.isBlank(line) || key == null) ||
-                (user != null && !hasPermission(user)))
+                (user != null && !canUse(user)))
             return line;
 
         String replacement = (value == null ? "" : value) + PrismaticAPI.getEndColor(line);
@@ -108,5 +108,13 @@ final class Emoji implements PermissibleUnit {
 
         m.appendTail(out);
         return out.toString();
+    }
+
+    boolean canUse(SIRUser user) {
+        return user != null && hasPermission(user) && isInGroupAsNull(user.getPlayer());
+    }
+
+    boolean isCompletionEligible() {
+        return StringUtils.isNotBlank(key) && !isRegex();
     }
 }
