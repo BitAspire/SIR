@@ -9,11 +9,13 @@ import com.bitaspire.sir.channel.Click;
 import com.bitaspire.sir.module.DiscordService;
 import com.bitaspire.sir.module.ModuleManager;
 import com.bitaspire.sir.user.SIRUser;
+import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.takion.TakionLib;
 import me.croabeast.takion.channel.Channel;
 import me.croabeast.prismatic.chat.MultiComponent;
 import me.croabeast.takion.message.MessageSender;
 import org.apache.commons.lang.StringUtils;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -23,18 +25,31 @@ import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 @RequiredArgsConstructor
 final class Listener extends com.bitaspire.sir.Listener {
 
+    private static final Pattern RGB_HEX_CODE = Pattern.compile("(?i)([&\\u00A7]#|\\{#)[0-9a-f]{6}}?");
+
     private final Channels main;
 
     private boolean handleEmptyMessage(MessageSender sender, String message) {
-        if (main.config.allowsEmpty() || !StringUtils.isBlank(message))
+        if (main.config.allowsEmpty() || !isVisibleBlank(message))
             return false;
 
         sender.copy().send(main.config.getAllowEmptyMessages());
         return true;
+    }
+
+    private boolean isVisibleBlank(String message) {
+        if (StringUtils.isBlank(message)) return true;
+
+        String stripped = RGB_HEX_CODE.matcher(message).replaceAll("");
+        stripped = PrismaticAPI.stripAll(stripped);
+        stripped = ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', stripped));
+
+        return StringUtils.isBlank(stripped);
     }
 
     private String stripPrefix(ChatChannel channel, String message) {
