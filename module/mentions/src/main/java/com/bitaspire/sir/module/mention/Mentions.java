@@ -12,6 +12,7 @@ import me.croabeast.prismatic.chat.MultiComponent;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
@@ -50,10 +51,11 @@ public class Mentions extends SIRModule implements UserFormatter<ChatChannel>, C
             String prefix = mention.getPrefix();
             if (StringUtils.isBlank(prefix)) continue;
 
-            Pattern pattern = Pattern.compile(Pattern.quote(prefix) + "(.[^ ]+)\\b");
+            Pattern pattern = Pattern.compile(Pattern.quote(prefix) + "([^\\s]+)\\b");
             Matcher matcher = pattern.matcher(string);
+            StringBuffer buffer = new StringBuffer();
 
-            int start, end;
+            boolean replacedAny = false;
             while (matcher.find()) {
                 SIRUser target = getApi().getUserManager().fromClosest(matcher.group(1));
                 if ((target == null || user == target ||
@@ -68,10 +70,7 @@ public class Mentions extends SIRModule implements UserFormatter<ChatChannel>, C
                 );
                 if (operator == null) operator = op;
 
-                end = matcher.start();
-                start = matcher.end();
-
-                String finder = string.substring(start, end);
+                String finder = matcher.group();
                 String color = PrismaticAPI.getEndColor(finder);
 
                 boolean receiverEnabled = isToggled(target);
@@ -89,7 +88,7 @@ public class Mentions extends SIRModule implements UserFormatter<ChatChannel>, C
                 if (senderEnabled && firstMessages == null) firstMessages = mention.getSenderMessages();
                 if (senderEnabled && firstSound == null) firstSound = mention.getSenderSound();
 
-                List<String> hover = mention.getHover();
+                List<String> hover = new ArrayList<>(mention.getHover());
                 hover.replaceAll(op);
 
                 String click = op.apply(mention.getClick());
@@ -103,12 +102,18 @@ public class Mentions extends SIRModule implements UserFormatter<ChatChannel>, C
                 String replace = getApi().getLibrary().colorize(user.getPlayer(), result);
                 if (color != null) replace += color;
 
-                string = string.replace(matcher.group(), replace);
+                matcher.appendReplacement(buffer, Matcher.quoteReplacement(replace));
+                replacedAny = true;
+            }
+
+            if (replacedAny) {
+                matcher.appendTail(buffer);
+                string = buffer.toString();
             }
         }
 
         if (senderEnabled && firstSound != null) firstSound.playSound(user);
-        if (senderEnabled)
+        if (senderEnabled && firstMessages != null)
             getApi().getLibrary().getLoadedSender()
                     .addFunctions(operator)
                     .setLogger(false)
