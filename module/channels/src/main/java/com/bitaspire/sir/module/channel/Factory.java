@@ -40,7 +40,10 @@ import java.util.function.Function;
 final class Factory {
 
     private final String DEFAULT_FORMAT = " &7{player}: {message}";
-    private final String[] CHAT_KEYS = {"{tag}", "{prefix}", "{sir-prefix}", "{suffix}", "{sir-suffix}", "{color}", "{message}"};
+    private final String[] CHAT_KEYS = {
+            "{tag}", "{prefix}", "{sir-prefix}", "{suffix}", "{sir-suffix}",
+            "{color}", "{chat-color}", "{color-start}", "{color-end}", "{message}"
+    };
 
     @Getter
     abstract class BaseChannel implements ChatChannel {
@@ -254,16 +257,43 @@ final class Factory {
         }
 
         public String[] getChatValues(String message) {
+            return getChatValues(null, message);
+        }
+
+        public String[] getChatValues(SIRUser user, String message) {
             Style style = getStyle();
+            String chatColorStart = chatColorStart(user);
+            String chatColorEnd = chatColorEnd(user);
+            String color = StringUtils.defaultIfBlank(style.getColor(), chatColorStart);
+
             return new String[] {
                     style.getTag(),
                     style.getPrefix(),
                     style.getPrefix(),
                     style.getSuffix(),
                     style.getSuffix(),
-                    style.getColor(),
+                    color,
+                    chatColorStart,
+                    chatColorStart,
+                    chatColorEnd,
                     message
             };
+        }
+
+        @NotNull
+        private String chatColorStart(@Nullable SIRUser user) {
+            if (user == null) return "";
+
+            ColorData data = user.getColorData();
+            return data == null ? "" : StringUtils.defaultString(data.getStart());
+        }
+
+        @NotNull
+        private String chatColorEnd(@Nullable SIRUser user) {
+            if (user == null) return "";
+
+            ColorData data = user.getColorData();
+            return data == null ? "" : StringUtils.defaultString(data.getEnd());
         }
 
         private boolean hasPermission(SIRUser user, String permission) {
@@ -273,15 +303,14 @@ final class Factory {
         @NotNull
         public String formatString(Player target, Player parser, String string, boolean chat) {
             String format = chat ? style.getFormat() : logging.getFormat();
+            SIRUser user = api.getUserManager().getUser(parser);
 
             StringApplier applier = StringApplier.simplified(format)
                     .apply(s -> api.getLibrary().replace(parser, s))
                     .apply(s -> {
-                        String[] values = getChatValues(checker.check(parser, string));
+                        String[] values = getChatValues(user, checker.check(parser, string));
                         return ReplaceUtils.replaceEach(CHAT_KEYS, values, s);
                     });
-
-            SIRUser user = api.getUserManager().getUser(parser);
 
             UserFormatter<?> emojis = api.getModuleManager().getFormatter("Emojis");
             if (emojis != null) applier.apply(s -> emojis.format(user, s));
@@ -291,16 +320,6 @@ final class Factory {
 
             UserFormatter<ChatChannel> mentions = api.getModuleManager().getFormatter("Mentions");
             if (mentions != null) applier.apply(s -> mentions.format(user, s, this));
-
-            if (user != null)
-                applier.apply(s -> {
-                    String[] keys = {"{color-start}", "{color-end}"};
-
-                    ColorData data = user.getColorData();
-                    String[] values = {data.getStart(), data.getEnd()};
-
-                    return ReplaceUtils.replaceEach(keys, values, s);
-                });
 
             ChatFormat<ChatComponent<?>> f = MultiComponent.DEFAULT_FORMAT;
             if (isDefault() && !f.isFormatted(applier.toString()))

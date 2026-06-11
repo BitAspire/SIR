@@ -165,6 +165,21 @@ public interface ChatChannel extends PermissibleUnit {
     String[] getChatValues(String message);
 
     /**
+     * Returns the resolved placeholder values for the given raw message and sender context.
+     *
+     * <p> Implementations may use the sender to resolve user-specific placeholders.
+     * The default implementation keeps backwards compatibility with older channel implementations.
+     *
+     * @param user the sending user, or {@code null} if unavailable.
+     * @param message the raw chat message.
+     * @return the resolved value array corresponding to {@link #getChatKeys()}.
+     */
+    @NotNull
+    default String[] getChatValues(@Nullable SIRUser user, String message) {
+        return getChatValues(message);
+    }
+
+    /**
      * Formats a string for {@code target} as parsed by {@code parser}.
      *
      * @param target the player receiving the formatted string (may differ from the sender).

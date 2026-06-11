@@ -171,12 +171,12 @@ final class Listener extends com.bitaspire.sir.Listener {
             if (discord != null)
                 discord.sendMessage(
                         discord.isRestricted() ? "restricted" : name, player,
-                        s -> ReplaceUtils.replaceEach(keys, channel.getChatValues(m), s)
+                        s -> ReplaceUtils.replaceEach(keys, channel.getChatValues(event.getUser(), m), s)
                 );
         }
 
         lib.getLogger().log(channel.formatString(player, message, false));
-        String[] values = channel.getChatValues(message);
+        String[] values = channel.getChatValues(event.getUser(), message);
 
         List<String> hover = channel.getStyle().getHover();
         if (hover != null && !hover.isEmpty()) {

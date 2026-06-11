@@ -44,9 +44,9 @@ default-channel:
       special: false
       # Allows RGB or hex colors when supported by the server.
       rgb: false
-      # Color used when the message does not include an allowed color.
+      # Channel color used by {color}. If unset, {color} falls back to the sender's chat color.
       default: '&f'
-    # Final chat line. Common placeholders: {tag}, {player}, {color}, and {message}.
+    # Final chat line. Common placeholders: {tag}, {player}, {color}, {chat-color}, {color-start}, {color-end}, and {message}.
     format: '{tag} &7{player}&8: {color}{message}'
   # Logging controls extra channel-specific chat logging.
   logging:
