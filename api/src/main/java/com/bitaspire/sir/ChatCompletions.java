@@ -2,6 +2,7 @@ package com.bitaspire.sir;
 
 import com.bitaspire.sir.user.SIRUser;
 import lombok.RequiredArgsConstructor;
+import me.croabeast.takion.logger.LogLevel;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -46,12 +47,13 @@ public final class ChatCompletions {
     private final Listener listener = new Listener() {
         @EventHandler(priority = EventPriority.MONITOR)
         private void onJoin(PlayerJoinEvent event) {
-            api.getScheduler().runTaskLater(() -> refresh(event.getPlayer()), 1L);
+            api.getScheduler().runTaskLater(ChatCompletions.this::refreshAll, 1L);
         }
 
         @EventHandler(priority = EventPriority.MONITOR)
         private void onQuit(PlayerQuitEvent event) {
             applied.remove(event.getPlayer().getUniqueId());
+            api.getScheduler().runTaskLater(ChatCompletions.this::refreshAll, 1L);
         }
     };
 
@@ -145,7 +147,7 @@ public final class ChatCompletions {
         for (String name : names) {
             try {
                 return type.getMethod(name, Collection.class);
-            } catch (NoSuchMethodException ignored) {}
+            } catch (Throwable ignored) {}
         }
         return null;
     }
@@ -154,7 +156,10 @@ public final class ChatCompletions {
         try {
             method.invoke(player, completions);
             return true;
-        } catch (IllegalAccessException | InvocationTargetException | RuntimeException ignored) {
+        } catch (Throwable e) {
+            Throwable cause = e.getCause() != null ? e.getCause() : e;
+            SIRApi.instance().getLibrary().getLogger().log(LogLevel.WARN,
+                    "Chat completions failed for " + player.getName() + ": " + cause);
             return false;
         }
     }
