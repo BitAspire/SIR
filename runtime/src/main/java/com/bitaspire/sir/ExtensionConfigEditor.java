@@ -27,6 +27,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -315,13 +316,17 @@ final class ExtensionConfigEditor<E extends SIRExtension<?>> {
     }
 
     private boolean hasBundledConfig(E extension) {
-        return extension.getClassLoader().getResource("config.yml") != null;
+        ClassLoader cl = extension.getClassLoader();
+        if (cl instanceof URLClassLoader)
+            return ((URLClassLoader) cl).findResource("config.yml") != null;
+        return cl.getResource("config.yml") != null;
     }
 
     @Nullable
     private File ensureConfigFile(E extension) {
-        File configFile = configFile(extension);
-        if (configFile.isFile()) return configFile;
+        File file = configFile(extension);
+        if (file.isFile()) return file;
+
         if (!hasBundledConfig(extension)) return null;
 
         try {
@@ -333,7 +338,7 @@ final class ExtensionConfigEditor<E extends SIRExtension<?>> {
             return null;
         }
 
-        return configFile.isFile() ? configFile : null;
+        return file.isFile() ? file : null;
     }
 
     private void save(YamlConfiguration configuration, File configFile) {
