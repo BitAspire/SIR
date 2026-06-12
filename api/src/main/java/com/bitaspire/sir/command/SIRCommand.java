@@ -61,7 +61,7 @@ public abstract class SIRCommand extends BukkitCommand {
 
         setExecuteCheck((s, e) -> Utils.create(s).send("<P> &7Error executing the command " + getName() + ": &c" + e.getLocalizedMessage()));
         setCompleteCheck((s, e) -> Utils.create(s).send("<P> &7Error completing the command " + getName() + ": &c" + e.getLocalizedMessage()));
-        setArgumentCheck((s, a) -> Utils.create(s).addPlaceholder("{arg}", a).send("wrong-arg", "<P> &cInvalid argument: &f{arg}&c."));
+        setArgumentCheck((s, a) -> Utils.create(this, s).addPlaceholder("{arg}", a).send("wrong-arg", "<P> &cInvalid argument: &f{arg}&c."));
     }
 
     @ApiStatus.Internal
