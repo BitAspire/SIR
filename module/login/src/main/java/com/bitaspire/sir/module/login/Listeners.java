@@ -1,9 +1,5 @@
 package com.bitaspire.sir.module.login;
 
-import com.nickuc.login.api.event.bukkit.auth.AuthenticateEvent;
-import com.nickuc.openlogin.bukkit.api.events.AsyncLoginEvent;
-import com.nickuc.openlogin.bukkit.api.events.AsyncRegisterEvent;
-import fr.xephi.authme.events.LoginEvent;
 import com.bitaspire.sir.module.JoinQuitService;
 
 import lombok.RequiredArgsConstructor;
@@ -13,7 +9,6 @@ import com.bitaspire.sir.user.SIRUser;
 import me.croabeast.takion.logger.LogLevel;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
 import org.bukkit.plugin.PluginManager;
 
 import java.util.ArrayList;
@@ -45,38 +40,22 @@ final class Listeners implements Registrable {
         PluginManager manager = Bukkit.getPluginManager();
         listeners.clear();
 
-        if (manager.isPluginEnabled("AuthMe"))
-            listeners.add(new Listener() {
-                @EventHandler
-                private void onLogin(LoginEvent event) {
-                    logUser(event.getPlayer());
-                }
-            });
+        if (manager.isPluginEnabled("AuthMe") && classExists("fr.xephi.authme.events.LoginEvent"))
+            listeners.add(new AuthMeListener(this));
 
         if (manager.isPluginEnabled("nLogin"))
             try {
                 Class.forName("com.nickuc.login.api.nLoginAPIHolder");
-                listeners.add(new Listener() {
-                    @EventHandler
-                    private void onLogin(AuthenticateEvent event) {
-                        logUser(event.getPlayer());
-                    }
-                });
+                if (classExists("com.nickuc.login.api.event.bukkit.auth.AuthenticateEvent"))
+                    listeners.add(new NLoginListener(this));
             } catch (Exception e) {
                 main.getApi().getLibrary().getLogger().log(LogLevel.WARN, "Update nLogin to version 10.0+ to use the login feature.");
             }
 
-        if (manager.isPluginEnabled("OpeNLogin"))
-            listeners.add(new Listener() {
-                @EventHandler
-                private void onLogin(AsyncLoginEvent event) {
-                    logUser(event.getPlayer());
-                }
-                @EventHandler
-                private void onRegister(AsyncRegisterEvent event) {
-                    logUser(event.getPlayer());
-                }
-            });
+        if (manager.isPluginEnabled("OpeNLogin")
+                && classExists("com.nickuc.openlogin.bukkit.api.events.AsyncLoginEvent")
+                && classExists("com.nickuc.openlogin.bukkit.api.events.AsyncRegisterEvent"))
+            listeners.add(new OpenLoginListener(this));
 
         boolean registered = true;
         for (Listener listener : listeners)
@@ -94,5 +73,14 @@ final class Listeners implements Registrable {
 
         listeners.clear();
         return unregistered;
+    }
+
+    private boolean classExists(String name) {
+        try {
+            Class.forName(name, false, Listeners.class.getClassLoader());
+            return true;
+        } catch (Throwable ignored) {
+            return false;
+        }
     }
 }
