@@ -1,15 +1,9 @@
 package com.bitaspire.sir.module.vanish;
 
-import com.Zrips.CMI.events.CMIPlayerUnVanishEvent;
-import com.Zrips.CMI.events.CMIPlayerVanishEvent;
-import de.myzelyam.api.vanish.PlayerVanishStateChangeEvent;
 import com.bitaspire.sir.module.JoinQuitService;
-import net.ess3.api.IUser;
-import net.ess3.api.events.VanishStatusChangeEvent;
 import me.croabeast.common.Registrable;
 import com.bitaspire.sir.Listener;
 import com.bitaspire.sir.user.SIRUser;
-import com.bitaspire.sir.user.UserManager;
 import me.croabeast.takion.message.MessageSender;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -17,6 +11,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.plugin.PluginManager;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -88,54 +83,53 @@ final class Listeners implements Registrable {
         };
     }
 
-    private Listener listeners;
+    private final List<Listener> listeners = new ArrayList<>();
 
     @Override
     public boolean isRegistered() {
-        return (listeners != null && listeners.isRegistered()) && listener.isRegistered();
+        return listener.isRegistered() && listeners.stream().allMatch(Listener::isRegistered);
     }
 
     @Override
     public boolean register() {
         PluginManager manager = Bukkit.getPluginManager();
-        UserManager userManager = main.getApi().getUserManager();
+        listeners.clear();
 
-        if (manager.isPluginEnabled("Essentials"))
-            listeners = new Listener() {
-                @EventHandler
-                private void onVanish(VanishStatusChangeEvent event) {
-                    IUser user = event.getAffected();
-                    new VanishEvent(userManager.getUser(user.getBase()), user.isVanished()).call();
-                }
-            };
+        if ((manager.isPluginEnabled("SuperVanish") || manager.isPluginEnabled("PremiumVanish"))
+                && classExists("de.myzelyam.api.vanish.PlayerVanishStateChangeEvent"))
+            listeners.add(new SuperVanishListener(main));
+        else if (manager.isPluginEnabled("CMI")
+                && classExists("com.Zrips.CMI.events.CMIPlayerVanishEvent")
+                && classExists("com.Zrips.CMI.events.CMIPlayerUnVanishEvent"))
+            listeners.add(new CmiVanishListener(main));
+        else if (manager.isPluginEnabled("Essentials")
+                && classExists("net.ess3.api.events.VanishStatusChangeEvent"))
+            listeners.add(new EssentialsVanishListener(main));
 
-        if (manager.isPluginEnabled("CMI"))
-            listeners = new Listener() {
-                @EventHandler
-                private void onVanish(CMIPlayerVanishEvent event) {
-                    new VanishEvent(userManager.getUser(event.getPlayer()), false).call();
-                }
+        boolean registered = listener.register();
+        for (Listener listener : listeners)
+            registered &= listener.register();
 
-                @EventHandler
-                private void onUnVanish(CMIPlayerUnVanishEvent event) {
-                    new VanishEvent(userManager.getUser(event.getPlayer()), true).call();
-                }
-            };
-
-        if (manager.isPluginEnabled("SuperVanish") || manager.isPluginEnabled("PremiumVanish"))
-            listeners = new Listener() {
-                @EventHandler
-                private void onVanish(PlayerVanishStateChangeEvent event) {
-                    Player player = Bukkit.getPlayer(event.getUUID());
-                    new VanishEvent(userManager.getUser(player), !event.isVanishing()).call();
-                }
-            };
-
-        return (listeners == null || listeners.register()) && listener.register();
+        if (!registered) unregister();
+        return registered;
     }
 
     @Override
     public boolean unregister() {
-        return (listeners == null || listeners.unregister()) && listener.unregister();
+        boolean unregistered = listener.unregister();
+        for (Listener listener : listeners)
+            unregistered &= listener.unregister();
+
+        listeners.clear();
+        return unregistered;
+    }
+
+    private boolean classExists(String name) {
+        try {
+            Class.forName(name, false, Listeners.class.getClassLoader());
+            return true;
+        } catch (Throwable ignored) {
+            return false;
+        }
     }
 }
