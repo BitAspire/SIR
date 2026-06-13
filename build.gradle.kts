@@ -7,7 +7,7 @@ plugins {
 
 allprojects {
     group = "com.bitaspire.sir"
-    version = "2.3.9"
+    version = "2.3.10"
 
     repositories {
         mavenCentral()
