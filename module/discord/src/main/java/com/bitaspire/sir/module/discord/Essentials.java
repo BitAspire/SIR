@@ -2,14 +2,12 @@ package com.bitaspire.sir.module.discord;
 
 import lombok.experimental.UtilityClass;
 import me.croabeast.common.applier.StringApplier;
-import me.croabeast.common.reflect.Reflector;
 import net.essentialsx.api.v2.ChatType;
 import net.essentialsx.api.v2.events.discord.DiscordChatMessageEvent;
-import net.essentialsx.discord.EssentialsDiscord;
-import net.essentialsx.discord.JDADiscordService;
+import net.essentialsx.api.v2.services.discord.DiscordService;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.util.function.UnaryOperator;
 
@@ -17,14 +15,13 @@ import java.util.function.UnaryOperator;
 class Essentials {
 
     void send(Player player, String message, UnaryOperator<String> formatter) {
-        EssentialsDiscord discord;
-        try {
-            discord = JavaPlugin.getPlugin(EssentialsDiscord.class);
-        } catch (Exception e) {
-            return;
-        }
+        RegisteredServiceProvider<DiscordService> registration =
+                Bukkit.getServicesManager().getRegistration(DiscordService.class);
+        if (registration == null) return;
 
-        JDADiscordService service = Reflector.from(() -> discord).get("jda");
+        DiscordService service = registration.getProvider();
+        if (service == null) return;
+
         message = StringApplier.simplified(message).apply(formatter).toString();
 
         DiscordChatMessageEvent event = new DiscordChatMessageEvent(player, message, ChatType.UNKNOWN);
