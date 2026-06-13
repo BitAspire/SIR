@@ -1,7 +1,5 @@
 package com.bitaspire.sir;
 
-import com.Zrips.CMI.Containers.CMIUser;
-import com.earth2me.essentials.Essentials;
 import lombok.Getter;
 import lombok.Setter;
 import me.croabeast.common.Registrable;
@@ -10,8 +8,6 @@ import me.croabeast.file.ConfigurableFile;
 import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.scheduler.GlobalTask;
 import com.bitaspire.sir.user.*;
-import me.leoko.advancedban.manager.PunishmentManager;
-import me.leoko.advancedban.manager.UUIDManager;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -26,7 +22,6 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -404,18 +399,15 @@ class BaseUserManager implements UserManager, Registrable {
             if (player == null) return muted;
 
             if (Exceptions.isPluginEnabled("Essentials")) {
-                Essentials essentials = JavaPlugin.getPlugin(Essentials.class);
-                return essentials.getUser(player).isMuted();
+                return ExternalUserHooks.isEssentialsMuted(player);
             }
 
             if (Exceptions.isPluginEnabled("AdvancedBan")) {
-                final String id = UUIDManager.get().getUUID(user.getName());
-                return PunishmentManager.get().isMuted(id);
+                return ExternalUserHooks.isAdvancedBanMuted(user.getName());
             }
 
             if (Exceptions.isPluginEnabled("CMI")) {
-                CMIUser cmiUser = CMIUser.getUser(player);
-                return cmiUser != null && cmiUser.isMuted();
+                return ExternalUserHooks.isCmiMuted(player);
             }
 
             return false;
@@ -816,13 +808,12 @@ class BaseUserManager implements UserManager, Registrable {
             PluginManager manager = plugin.getServer().getPluginManager();
 
             Plugin essentials = manager.getPlugin("Essentials");
-            if (essentials != null)
-                return ((Essentials) essentials).getUser(player).isVanished();
+            if (essentials != null && essentials.isEnabled())
+                return ExternalUserHooks.isEssentialsVanished(player);
 
-            if (manager.getPlugin("CMI") != null) {
-                CMIUser cmiUser = CMIUser.getUser(player);
-                if (cmiUser != null) return cmiUser.isVanished();
-            }
+            Plugin cmi = manager.getPlugin("CMI");
+            if (cmi != null && cmi.isEnabled() && ExternalUserHooks.isCmiVanished(player))
+                return true;
 
             for (MetadataValue meta : player.getMetadata("vanished"))
                 if (meta.asBoolean()) return true;
