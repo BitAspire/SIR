@@ -1,5 +1,6 @@
 package com.bitaspire.sir;
 
+import com.bitaspire.sir.chat.ChatProcessor;
 import com.github.stefvanschie.inventoryframework.gui.GuiComponent;
 import com.github.stefvanschie.inventoryframework.gui.GuiItem;
 import com.github.stefvanschie.inventoryframework.gui.type.AnvilGui;
@@ -61,6 +62,7 @@ final class ExtensionConfigEditor<E extends SIRExtension<?>> {
 
         new BookEditListener().register();
         new StringEditListener().register();
+        api.getProcessorManager().register(new StringEditProcessor());
     }
 
     boolean hasConfig(E extension) {
@@ -415,6 +417,27 @@ final class ExtensionConfigEditor<E extends SIRExtension<?>> {
         return text;
     }
 
+    private boolean handleStringEdit(Player player, String message) {
+        StringEditSession<E> session = pendingStringEdits.remove(player.getUniqueId());
+        if (session == null) return false;
+
+        api.getScheduler().runTask(() -> {
+            if ("cancel".equalsIgnoreCase(message)) {
+                player.sendMessage(PrismaticAPI.colorize("&cEdit cancelled."));
+                open(session.extension, player, session.rootPath);
+                return;
+            }
+
+            YamlConfiguration configuration = YamlConfiguration.loadConfiguration(session.configFile);
+            configuration.set(session.key, coerce(message));
+            save(configuration, session.configFile);
+            reload(session.extension);
+            open(session.extension, player, session.rootPath);
+        });
+
+        return true;
+    }
+
     private final class BookEditListener extends Listener {
         @EventHandler
         void onEditBook(PlayerEditBookEvent event) {
@@ -435,25 +458,23 @@ final class ExtensionConfigEditor<E extends SIRExtension<?>> {
     private final class StringEditListener extends Listener {
         @EventHandler
         void onChatEdit(AsyncPlayerChatEvent event) {
-            StringEditSession<E> session = pendingStringEdits.remove(event.getPlayer().getUniqueId());
-            if (session == null) return;
+            if (api.getProcessorManager().isModernPipelineActive()) return;
 
-            event.setCancelled(true);
-            String message = event.getMessage();
-            api.getScheduler().runTask(() -> {
-                Player player = event.getPlayer();
-                if ("cancel".equalsIgnoreCase(message)) {
-                    player.sendMessage(PrismaticAPI.colorize("&cEdit cancelled."));
-                    open(session.extension, player, session.rootPath);
-                    return;
-                }
+            if (handleStringEdit(event.getPlayer(), event.getMessage()))
+                event.setCancelled(true);
+        }
+    }
 
-                YamlConfiguration configuration = YamlConfiguration.loadConfiguration(session.configFile);
-                configuration.set(session.key, coerce(message));
-                save(configuration, session.configFile);
-                reload(session.extension);
-                open(session.extension, player, session.rootPath);
-            });
+    private final class StringEditProcessor implements ChatProcessor {
+        @Override
+        public int getPriority() {
+            return -10000;
+        }
+
+        @Override
+        public void process(@NotNull ChatProcessor.Context context) {
+            if (!handleStringEdit(context.getPlayer(), context.getMessage())) return;
+            context.cancel();
         }
     }
 
