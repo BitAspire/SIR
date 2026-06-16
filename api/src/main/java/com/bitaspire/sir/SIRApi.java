@@ -1,6 +1,8 @@
 package com.bitaspire.sir;
 
 import com.bitaspire.sir.file.Config;
+import com.bitaspire.sir.chat.ChatProcessor;
+import com.bitaspire.sir.chat.ProcessorManager;
 import me.croabeast.common.util.ArrayUtils;
 import me.croabeast.scheduler.GlobalScheduler;
 import com.bitaspire.sir.addon.AddonManager;
@@ -104,6 +106,15 @@ public interface SIRApi {
      */
     @NotNull
     CommandManager getCommandManager();
+
+    /**
+     * Returns the processor manager responsible for registering and executing
+     * {@link ChatProcessor} instances.
+     *
+     * @return the processor manager.
+     */
+    @NotNull
+    ProcessorManager getProcessorManager();
 
     /**
      * Returns the TakionLib instance used for messaging, logging, and placeholders.

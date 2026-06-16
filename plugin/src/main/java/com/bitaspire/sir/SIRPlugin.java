@@ -11,6 +11,7 @@ import me.croabeast.scheduler.GlobalScheduler;
 import com.bitaspire.sir.command.CommandManager;
 import com.bitaspire.sir.command.CommandProvider;
 import com.bitaspire.sir.command.SIRCommand;
+import com.bitaspire.sir.chat.ProcessorManager;
 import com.bitaspire.sir.module.ModuleManager;
 import com.bitaspire.sir.module.SIRModule;
 import com.bitaspire.sir.user.UserManager;
@@ -43,6 +44,7 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
     private ModuleManagerImpl moduleManager;
     private BaseUserManager userManager;
     private CommandManagerImpl commandManager;
+    private ProcessorManagerImpl processorManager;
     @Getter(AccessLevel.NONE)
     private StartupDiagnostics startupDiagnostics;
 
@@ -59,6 +61,7 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
 
         configuration = new ConfigImpl(this);
         startupDiagnostics = StartupDiagnostics.create(this);
+        processorManager = new ProcessorManagerImpl(this);
         moduleManager = new ModuleManagerImpl(this, startupDiagnostics);
         commandManager = new CommandManagerImpl(this, startupDiagnostics);
 
@@ -499,6 +502,11 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
     @NotNull
     public UserManager getUserManager() {
         return userManager;
+    }
+
+    @NotNull
+    public ProcessorManager getProcessorManager() {
+        return processorManager;
     }
 
     @Override
