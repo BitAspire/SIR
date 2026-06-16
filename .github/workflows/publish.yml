@@ -268,7 +268,7 @@ jobs:
 
           MODULES=(
             advancements announcements channels cooldowns discord emojis
-            join-quit login mentions moderation motd tags vanish
+            join-quit login mentions moderation motd scoreboard tags vanish
           )
           COMMANDS=(
             clear-chat color ignore message mute nick print settings
