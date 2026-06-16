@@ -1,5 +1,6 @@
 package com.bitaspire.sir.module.cooldown;
 
+import com.bitaspire.sir.chat.ChatProcessor;
 import lombok.RequiredArgsConstructor;
 import com.bitaspire.sir.SIRApi;
 import com.bitaspire.sir.user.SIRUser;
@@ -20,6 +21,7 @@ final class Listener extends com.bitaspire.sir.Listener {
 
     @EventHandler
     private void onChat(AsyncPlayerChatEvent event) {
+        if (main.getApi().getProcessorManager().isModernPipelineActive()) return;
         if (event.isCancelled() || !main.isEnabled()) return;
 
         SIRUser user = main.getApi()
@@ -27,6 +29,16 @@ final class Listener extends com.bitaspire.sir.Listener {
                 .getUser(event.getPlayer());
         if (user == null) return;
 
+        ChatProcessor.Context context = new ChatProcessor.Context(user, event.getMessage(), event.isAsynchronous());
+        process(context);
+
+        if (context.isCancelled()) event.setCancelled(true);
+    }
+
+    void process(ChatProcessor.Context context) {
+        if (context.isCancelled() || !main.isEnabled()) return;
+
+        SIRUser user = context.getUser();
         CooldownUnit unit = main.data.getUnit(user);
         if (unit == null) return;
 
@@ -38,7 +50,7 @@ final class Listener extends com.bitaspire.sir.Listener {
         long rest = System.currentTimeMillis() - timer;
         if (rest >= time * 1000L) return;
 
-        event.setCancelled(true);
+        context.cancel();
         int result = Math.round(rest / 1000F);
 
         if (unit.isSpamEnabled()) {
