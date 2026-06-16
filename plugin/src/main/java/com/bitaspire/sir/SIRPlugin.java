@@ -293,7 +293,7 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
         addConsole(report, divider());
         addConsole(report, section("Integrations"));
         addConsole(report, row(MAIN  + "[+]", "Active",  LABEL, count(active,  "hook"),          VALUE));
-        addConsole(report, row(MUTED + "[-]", "Missing", LABEL, count(missing, "optional hook"), MUTED));
+        addConsole(report, row(MUTED + "[-]", "Missing", LABEL, count(missing, "optional"), MUTED));
 
         addIntegration(report, "PlaceholderAPI: " + status(papi));
         addIntegration(report, "InteractiveChat: " + status(interactive));
@@ -305,10 +305,10 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
         addConsole(report, divider());
         addConsole(report, section("Status"));
         addConsole(report, row(MAIN  + "[+]", "Startup",      LABEL, "complete",                       VALUE));
-        addConsole(report, row(LABEL + "[i]", "Loading time", LABEL, formatDuration(loadingTime),      INFO));
+        addConsole(report, row(INFO + "[i]", "Loading time", LABEL, formatDuration(loadingTime),      INFO));
 
         if (startupDiagnostics != null && startupDiagnostics.hasDetails())
-            addConsole(report, row(LABEL + "[i]", "Details", LABEL, startupDiagnostics.getDetailPath(), INFO));
+            addConsole(report, row(INFO + "[i]", "Details", LABEL, startupDiagnostics.getDetailPath(), INFO));
 
         addConsole(report, divider());
     }
@@ -353,10 +353,12 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
     private List<String> headerLines() {
         List<String> lines = new ArrayList<>();
         lines.add(MAIN + "===================================");
-        lines.add(MAIN + " * ____ * ___ * ____");
-        lines.add(MAIN + "* (___ * * |* * |___)");
-        lines.add(MAIN + "* ____) . _|_ . | * \\ . &f" + getDescription().getVersion());
-        lines.add(LABEL + "      Developed by " + getDescription().getAuthors().get(0));
+        lines.add(MAIN + ",d88P\"\\  888  888\"~,");
+        lines.add(MAIN + "8888     888  888   \\");
+        lines.add(MAIN + "`Y88b    888  888   █");
+        lines.add(MAIN + " `Y88b,  888  888   /");
+        lines.add(MAIN + "   8888  888  888-=\"  &7" + getDescription().getVersion());
+        lines.add(MAIN + "\\_d88P'  888  888  \\_ &7by CroaBeast");
         lines.add(MAIN + "===================================");
         return lines;
     }
@@ -380,7 +382,7 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
     }
 
     private String section(String name) {
-        return MAIN + name;
+        return "&7» " + MAIN + name;
     }
 
     private String divider() {
@@ -393,8 +395,8 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
 
     private String dotted(String label) {
         StringBuilder builder = new StringBuilder(label);
-        if (builder.length() < 16) builder.append(' ');
-        while (builder.length() < 16) builder.append('.');
+        if (builder.length() < 15) builder.append(' ');
+        while (builder.length() < 15) builder.append('.');
         return builder.toString();
     }
 
