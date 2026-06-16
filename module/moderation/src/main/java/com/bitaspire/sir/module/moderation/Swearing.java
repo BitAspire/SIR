@@ -1,13 +1,12 @@
 package com.bitaspire.sir.module.moderation;
 
+import com.bitaspire.sir.chat.ChatProcessor;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
 import me.croabeast.common.CollectionBuilder;
 import me.croabeast.takion.logger.LogLevel;
-import org.bukkit.entity.Player;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
@@ -47,10 +46,8 @@ final class Swearing extends Module {
     }
 
     @Override
-    boolean processCancellation(AsyncPlayerChatEvent event) {
-        String message = event.getMessage();
-        Player player = event.getPlayer();
-
+    void process0(ChatProcessor.Context context) {
+        String message = context.getMessage();
         boolean foundAny = false;
         boolean block = file.get("control", "BLOCK").matches("(?i)block");
 
@@ -69,11 +66,14 @@ final class Swearing extends Module {
                 String replace = getReplacement(list, group);
 
                 if (!foundAny) foundAny = true;
-                event.setMessage(message = message.replace(group, replace));
+                context.setMessage(message = message.replace(group, replace));
             }
         }
 
-        return foundAny && validateAndExecuteActions(player, message, file.getConfiguration().getInt("actions.maximum-violations", 3));
+        if (!foundAny) return;
+
+        validateAndExecuteActions(context.getPlayer(), message, file.getConfiguration().getInt("actions.maximum-violations", 3));
+        if (block) context.cancel();
     }
 
     private void reloadLines() {

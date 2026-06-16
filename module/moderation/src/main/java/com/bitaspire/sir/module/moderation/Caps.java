@@ -1,7 +1,6 @@
 package com.bitaspire.sir.module.moderation;
 
-import org.bukkit.entity.Player;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
+import com.bitaspire.sir.chat.ChatProcessor;
 
 import java.util.Locale;
 
@@ -30,20 +29,20 @@ final class Caps extends Module {
     }
 
     @Override
-    boolean processCancellation(AsyncPlayerChatEvent event) {
-        String message = event.getMessage();
-        Player player = event.getPlayer();
+    void process0(ChatProcessor.Context context) {
+        String message = context.getMessage();
 
         int capsCount = longestConsecutiveUppercase(message);
 
         int max = file.getConfiguration().getInt("maximum-caps", 10);
-        if (capsCount <= max) return false;
+        if (capsCount <= max) return;
 
-        validateAndExecuteActions(player, message, max);
-        if (file.get("control", "BLOCK").matches("(?i)block"))
-            return true;
+        validateAndExecuteActions(context.getPlayer(), message, max);
+        if (file.get("control", "BLOCK").matches("(?i)block")) {
+            context.cancel();
+            return;
+        }
 
-        event.setMessage(message.toLowerCase(Locale.ENGLISH));
-        return false;
+        context.setMessage(message.toLowerCase(Locale.ENGLISH));
     }
 }

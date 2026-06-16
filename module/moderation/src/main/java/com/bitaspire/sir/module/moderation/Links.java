@@ -1,8 +1,7 @@
 package com.bitaspire.sir.module.moderation;
 
+import com.bitaspire.sir.chat.ChatProcessor;
 import me.croabeast.prismatic.chat.ChatComponent;
-import org.bukkit.entity.Player;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,9 +15,8 @@ final class Links extends Module {
     }
 
     @Override
-    boolean processCancellation(AsyncPlayerChatEvent event) {
-        String message = event.getMessage();
-        Player player = event.getPlayer();
+    void process0(ChatProcessor.Context context) {
+        String message = context.getMessage();
 
         List<String> links = file.toStringList("allowed-links");
         boolean foundAny = false;
@@ -44,12 +42,14 @@ final class Links extends Module {
 
         if (foundAny) {
             validateAndExecuteActions(
-                    player, message,
+                    context.getPlayer(), message,
                     file.getConfiguration().getInt("actions.maximum-violations", 3)
             );
 
-            if (file.get("control", "BLOCK").matches("(?i)block"))
-                return true;
+            if (file.get("control", "BLOCK").matches("(?i)block")) {
+                context.cancel();
+                return;
+            }
 
             List<String> list = file.toStringList("replace-options.replacements");
 
@@ -58,9 +58,7 @@ final class Links extends Module {
                 message = message.replace(link, replace);
             }
 
-            event.setMessage(message);
+            context.setMessage(message);
         }
-
-        return false;
     }
 }

@@ -1,5 +1,6 @@
 package com.bitaspire.sir.module.moderation;
 
+import com.bitaspire.sir.chat.ChatProcessor;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import me.croabeast.common.CollectionBuilder;
@@ -9,6 +10,7 @@ import me.croabeast.file.Configurable;
 import me.croabeast.file.ConfigurableFile;
 import com.bitaspire.sir.file.ExtensionFile;
 import com.bitaspire.sir.SIRApi;
+import com.bitaspire.sir.user.SIRUser;
 import me.croabeast.takion.message.MessageSender;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
@@ -35,8 +37,16 @@ abstract class Module implements Registrable {
 
         @EventHandler(priority = EventPriority.LOWEST)
         private void onChatViolation(AsyncPlayerChatEvent event) {
-            if (!file.get("enabled", true)) return;
-            if (processCancellation(event)) event.setCancelled(true);
+            if (main.getApi().getProcessorManager().isModernPipelineActive()) return;
+
+            SIRUser user = main.getApi().getUserManager().getUser(event.getPlayer());
+            if (user == null) return;
+
+            ChatProcessor.Context context = new ChatProcessor.Context(user, event.getMessage(), event.isAsynchronous());
+            process(context);
+
+            event.setMessage(context.getMessage());
+            if (context.isCancelled()) event.setCancelled(true);
         }
     };
 
@@ -73,7 +83,13 @@ abstract class Module implements Registrable {
         return replacements.get(index);
     }
 
-    abstract boolean processCancellation(AsyncPlayerChatEvent event);
+    final void process(ChatProcessor.Context context) {
+        if (!file.get("enabled", true)) return;
+        if (main.getApi().getUserManager().hasPermission(context.getPlayer(), bypass)) return;
+        process0(context);
+    }
+
+    abstract void process0(ChatProcessor.Context context);
 
     boolean validateAndExecuteActions(Player player, String message, int max) {
         MessageSender sender = main.getApi().getLibrary().getLoadedSender()

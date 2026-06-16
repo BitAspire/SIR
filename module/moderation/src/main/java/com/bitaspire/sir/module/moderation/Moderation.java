@@ -1,8 +1,10 @@
 package com.bitaspire.sir.module.moderation;
 
+import com.bitaspire.sir.chat.ChatProcessor;
 import com.bitaspire.sir.module.SIRModule;
+import org.jetbrains.annotations.NotNull;
 
-public final class Moderation extends SIRModule {
+public final class Moderation extends SIRModule implements ChatProcessor {
 
     Config config;
     Swearing swearing;
@@ -27,5 +29,26 @@ public final class Moderation extends SIRModule {
         format.unregister();
         links.unregister();
         return true;
+    }
+
+    @Override
+    public int getPriority() {
+        return -500;
+    }
+
+    @Override
+    public void process(@NotNull ChatProcessor.Context context) {
+        if (!isEnabled()) return;
+
+        swearing.process(context);
+        if (context.isCancelled()) return;
+
+        caps.process(context);
+        if (context.isCancelled()) return;
+
+        format.process(context);
+        if (context.isCancelled()) return;
+
+        links.process(context);
     }
 }
