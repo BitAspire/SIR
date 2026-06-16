@@ -1,0 +1,38 @@
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
+# Scoreboard command language. Text values support MiniMessage through
+# Takion/PrismaticAPI, SIR formatting tags, legacy color codes, and placeholders.
+lang:
+  # Command overview shown by /scoreboard help.
+  help:
+    - "<P> &7Scoreboard commands:"
+    - " &8- &b/scoreboard toggle [player]"
+    - " &8- &b/scoreboard reload"
+    - " &8- &b/scoreboard refresh [player]"
+    - " &8- &b/scoreboard debug [player]"
+  # Reloads scoreboard files and active profile data.
+  reload: "<P> &aScoreboard module reloaded."
+  # Sent after refreshing a single player's scoreboard.
+  refresh: "<P> &aScoreboard refreshed for &f{player}&a."
+  # Sent after refreshing every online player's scoreboard.
+  refresh-all: "<P> &aScoreboards refreshed for all online players."
+  # Sent when a player's scoreboard display is enabled.
+  toggle-on: "<P> &aScoreboard enabled for &f{player}&a."
+  # Sent when a player's scoreboard display is disabled.
+  toggle-off: "<P> &cScoreboard disabled for &f{player}&c."
+  # Diagnostic output for administrators.
+  debug:
+    - "<P> &7Scoreboard debug for &f{player}&7:"
+    - " &8- &7profile: &b{profile}"
+    - " &8- &7animations: &b{animated}"
+    - " &8- &7lines: &b{lines}"
+  # Sent when a target player name cannot be resolved.
+  not-player: "<P> &cPlayer not found: &f{target}&c."
+  # Console must provide an explicit player for player-specific actions.
+  player-only: "<P> &cYou must specify a player from console."

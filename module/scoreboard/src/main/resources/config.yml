@@ -1,0 +1,36 @@
+###############################################################################
+#                   Simple In-game Receptionist (SIR)                        #
+#                      Free Software | BitAspire.com                          #
+#                                                                             #
+#              WIKI: https://wiki.bitaspire.com/en/docs/sir                  #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
+# Main behavior for the Scoreboard module.
+settings:
+  # Profile used when no condition matches.
+  default-profile: default
+
+  # Keep player toggle choices only until the module reloads.
+  # A persistent storage file can be added later without changing profiles.yml.
+  toggle-persistence: false
+
+# Performance controls.
+performance:
+  # Ticks between updates when at least one loaded profile has animated title or lines.
+  animated-update-ticks: 5
+
+  # Ticks between updates when no loaded profile has animations.
+  static-update-ticks: 40
+
+  # Refresh on join, quit and world changes even when static mode is active.
+  # If this is true and all animations are disabled, no repeating task is kept.
+  update-only-when-needed: true
+
+# Compatibility controls for legacy servers.
+compatibility:
+  # Split lines into team prefix/suffix parts that are safe for 1.8 scoreboards.
+  legacy-safe-split: true
+
+  # Sidebar scoreboards support up to 15 visible lines. Higher values are ignored.
+  max-lines: 15

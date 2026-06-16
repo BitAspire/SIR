@@ -1,0 +1,72 @@
+###############################################################################
+#                   Simple In-game Receptionist (SIR)                        #
+#                      Free Software | BitAspire.com                          #
+#                                                                             #
+#              WIKI: https://wiki.bitaspire.com/en/docs/sir                  #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
+# Scoreboard profiles are resolved by priority.
+# The highest-priority profile whose conditions match the player is used.
+# Text values support MiniMessage through Takion/PrismaticAPI, SIR formatting
+# tags, legacy color codes, hex colors, PlaceholderAPI values, and SIR placeholders.
+profiles:
+  default:
+    # Higher values win when multiple profiles match.
+    priority: 0
+    # Empty conditions make this profile available to every player.
+    conditions: {}
+
+    title:
+      # When true, frames rotate using the interval below.
+      animated: true
+      # Ticks between title frame changes.
+      interval: 5
+      # Scoreboard title frames.
+      frames:
+        - "&e&lSIR"
+        - "&6&lSIR"
+
+    lines:
+      # When true, value frames can rotate. False keeps the listed lines static.
+      animated: false
+      # Ticks between line refreshes for this profile.
+      update-ticks: 20
+      # Sidebar lines from top to bottom. Empty strings create blank spacer lines.
+      value:
+        - "&7&m----------------"
+        - "&fPlayer: &b{player}"
+        - "&fRank: &a%vault_rank%"
+        - "&fOnline: &e{online}&8/&e{max_online}"
+        - ""
+        - "&fWorld: &b{world}"
+        - "&fPing: &a{ping}ms"
+        - "&7&m----------------"
+
+  staff:
+    # Staff profile overrides the default profile when its conditions match.
+    priority: 100
+    conditions:
+      # Player must have at least one listed permission to match this profile.
+      permissions:
+        - "sir.scoreboard.staff"
+
+    title:
+      animated: true
+      interval: 10
+      frames:
+        - "&c&lSTAFF"
+        - "&4&lSTAFF"
+
+    lines:
+      animated: false
+      update-ticks: 20
+      # Extra operational data for staff members.
+      value:
+        - "&7&m----------------"
+        - "&cStaff View"
+        - "&fPlayer: &b{player}"
+        - "&fWorld: &e{world}"
+        - "&fPing: &a{ping}ms"
+        - "&fTPS: &a{tps}"
+        - "&7&m----------------"

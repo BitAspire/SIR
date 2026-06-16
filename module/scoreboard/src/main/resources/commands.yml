@@ -1,0 +1,28 @@
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
+main: com.bitaspire.sir.module.scoreboard.ScoreboardModule
+name: Scoreboard
+title: "&bScoreboard Commands"
+description:
+  - "&7Administrative controls for the scoreboard module."
+
+commands:
+  scoreboard:
+    aliases: [ scoreboards, sb ]
+    override-existing: true
+    permission: sir.scoreboard
+    description: "Manage SIR scoreboards."
+    usage: "/scoreboard <toggle|reload|refresh|debug>"
+    permission-message: "&cYou do not have permission to use this command."
+    sub-commands:
+      help: sir.scoreboard.help
+      toggle: sir.scoreboard.toggle
+      reload: sir.scoreboard.reload
+      refresh: sir.scoreboard.refresh
+      debug: sir.scoreboard.debug
