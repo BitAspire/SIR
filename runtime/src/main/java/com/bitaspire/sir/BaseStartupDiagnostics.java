@@ -355,7 +355,13 @@ public abstract class BaseStartupDiagnostics implements RuntimeDiagnostics {
 
     private void refreshLatest(File logsDir, File sessionDir) throws IOException {
         File latest = new File(logsDir, "latest");
-        deleteRecursively(latest);
+        if (latest.exists() && !latest.isDirectory())
+            deleteRecursively(latest);
+
+        if (!latest.exists() && !latest.mkdirs())
+            throw new IOException("Could not create " + latest.getPath());
+
+        clearDirectory(latest);
         copyDirectory(sessionDir, latest);
     }
 
@@ -393,12 +399,17 @@ public abstract class BaseStartupDiagnostics implements RuntimeDiagnostics {
     private void deleteRecursively(File file) throws IOException {
         if (file == null || !file.exists()) return;
 
+        if (file.isDirectory()) clearDirectory(file);
+        Files.deleteIfExists(file.toPath());
+    }
+
+    private void clearDirectory(File file) throws IOException {
+        if (file == null || !file.isDirectory()) return;
+
         File[] children = file.listFiles();
         if (children != null) {
             for (File child : children) deleteRecursively(child);
         }
-
-        Files.deleteIfExists(file.toPath());
     }
 
     private void writeFile(File file, List<String> lines) throws IOException {
