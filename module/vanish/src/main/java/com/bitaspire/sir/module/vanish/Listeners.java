@@ -1,5 +1,6 @@
 package com.bitaspire.sir.module.vanish;
 
+import com.bitaspire.sir.chat.ChatProcessor;
 import com.bitaspire.sir.module.JoinQuitService;
 import me.croabeast.common.Registrable;
 import com.bitaspire.sir.Listener;
@@ -41,49 +42,63 @@ final class Listeners implements Registrable {
 
             @EventHandler
             private void onChat(AsyncPlayerChatEvent event) {
+                if (main.getApi().getProcessorManager().isModernPipelineActive()) return;
                 if (event.isCancelled() || !main.isEnabled() || !main.config.isChatEnabled())
                     return;
 
-                String key = main.config.getChatKey();
-                if (key == null || key.isEmpty()) return;
+                SIRUser user = main.getApi().getUserManager().getUser(event.getPlayer());
+                if (user == null) return;
 
-                String message = event.getMessage();
-                Player player = event.getPlayer();
+                ChatProcessor.Context context = new ChatProcessor.Context(user, event.getMessage(), event.isAsynchronous());
+                processChat(context);
 
-                List<String> list = main.config.getNotAllowed();
-
-                MessageSender sender = main.getApi().getLibrary().getLoadedSender().setTargets(player);
-                if (main.config.isRegex()) {
-                    Matcher match = Pattern.compile(key).matcher(message);
-
-                    if (!match.find()) {
-                        event.setCancelled(true);
-                        sender.send(list);
-                        return;
-                    }
-
-                    event.setMessage(message.replace(match.group(), ""));
-                    return;
-                }
-
-                boolean prefix = main.config.isPrefix();
-                int kLen = key.length();
-
-                boolean ok = prefix ? message.startsWith(key) : message.endsWith(key);
-                if (!ok) {
-                    event.setCancelled(true);
-                    sender.send(list);
-                    return;
-                }
-
-                event.setMessage(!prefix ?
-                        message.substring(0, message.length() - kLen) :
-                        message.substring(kLen));
+                event.setMessage(context.getMessage());
+                if (context.isCancelled()) event.setCancelled(true);
             }
         };
     }
 
     private final List<Listener> listeners = new ArrayList<>();
+
+    void processChat(ChatProcessor.Context context) {
+        if (context.isCancelled() || !main.isEnabled() || !main.config.isChatEnabled())
+            return;
+
+        String key = main.config.getChatKey();
+        if (key == null || key.isEmpty()) return;
+
+        String message = context.getMessage();
+        Player player = context.getPlayer();
+        List<String> list = main.config.getNotAllowed();
+
+        MessageSender sender = main.getApi().getLibrary().getLoadedSender().setTargets(player);
+        if (main.config.isRegex()) {
+            Matcher match = Pattern.compile(key).matcher(message);
+
+            if (!match.find()) {
+                context.cancel();
+                sender.send(list);
+                return;
+            }
+
+            context.setMessage(message.replace(match.group(), ""));
+            return;
+        }
+
+        boolean prefix = main.config.isPrefix();
+        int kLen = key.length();
+
+        boolean ok = prefix ? message.startsWith(key) : message.endsWith(key);
+        if (!ok) {
+            context.cancel();
+            sender.send(list);
+            return;
+        }
+
+        context.setMessage(!prefix ?
+                message.substring(0, message.length() - kLen) :
+                message.substring(kLen));
+    }
 
     @Override
     public boolean isRegistered() {
