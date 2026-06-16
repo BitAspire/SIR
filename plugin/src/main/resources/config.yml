@@ -96,7 +96,7 @@ values:
   # The prefix added when lang-prefix-key is detected
   # Default: ' &e&lSIR &8>&7'
   # Supports MiniMessage, SIR formatting tags, legacy color codes, and hex colors.
-  lang-prefix: ' &e&lSIR &8>&7'
+  lang-prefix: ' &e&lSIR &8»&7'
 
   # Center Text Marker
   # Used to center messages in chat

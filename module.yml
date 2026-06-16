@@ -21,7 +21,7 @@ description:
 depend:
   - Core
   - Chat
-# Optional hooks loaded when the dependency is available.
+# Optional module hooks loaded when the dependency is available.
 soft-depend:
   - Placeholders
   - FancyMenu
