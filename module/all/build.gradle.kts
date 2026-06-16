@@ -12,6 +12,7 @@ val moduleProjects = listOf(
     project(":module:mentions"),
     project(":module:moderation"),
     project(":module:motd"),
+    project(":module:scoreboard"),
     project(":module:tags"),
     project(":module:vanish")
 )
