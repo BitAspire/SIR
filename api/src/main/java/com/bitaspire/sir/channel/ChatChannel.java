@@ -25,6 +25,15 @@ public interface ChatChannel extends PermissibleUnit {
     boolean isGlobal();
 
     /**
+     * Returns whether messages from this channel should be relayed through the Discord module.
+     *
+     * @return {@code true} if Discord relay is enabled for this channel.
+     */
+    default boolean relayToDiscord() {
+        return false;
+    }
+
+    /**
      * Returns whether this channel is local (radius-based), i.e., not global.
      *
      * @return {@code true} if local.

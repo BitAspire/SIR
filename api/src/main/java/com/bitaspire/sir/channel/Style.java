@@ -67,6 +67,15 @@ public interface Style {
     boolean allowsRgbColors();
 
     /**
+     * Returns whether players may use MiniMessage tags.
+     *
+     * @return {@code true} if MiniMessage tags are allowed.
+     */
+    default boolean allowsMiniMessage() {
+        return false;
+    }
+
+    /**
      * Returns the click action attached to messages in this channel, if any.
      *
      * @return the click action, or {@code null} if not configured.

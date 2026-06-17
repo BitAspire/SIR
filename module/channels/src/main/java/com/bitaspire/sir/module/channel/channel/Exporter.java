@@ -53,6 +53,7 @@ final class Exporter {
         setIfPresent(source, target, "enabled");
         setIfPresent(source, target, "description");
         setIfPresent(source, target, "priority");
+        setIfPresent(source, target, "relay-to-discord");
         setIfPresent(source, target, "permission");
         setIfPresent(source, target, "group");
         setIfPresent(source, target, "inherits");
@@ -111,6 +112,7 @@ final class Exporter {
         colors.set("normal", source.getBoolean("color-options.normal", false));
         colors.set("special", source.getBoolean("color-options.special", false));
         colors.set("rgb", source.getBoolean("color-options.rgb", false));
+        colors.set("mini-message", source.getBoolean("color-options.mini-message", false));
 
         writeClick(source, style);
     }

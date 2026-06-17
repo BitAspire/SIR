@@ -126,6 +126,7 @@ final class ModernParser {
         copy(source, target, "description");
         copy(source, target, "priority");
         copy(source, target, "global");
+        copy(source, target, "relay-to-discord");
         copy(source, target, "permission");
         copy(source, target, "group");
 
@@ -148,6 +149,7 @@ final class ModernParser {
         copy(source, target, "style.colors.normal", "color-options.normal");
         copy(source, target, "style.colors.special", "color-options.special");
         copy(source, target, "style.colors.rgb", "color-options.rgb");
+        copy(source, target, "style.colors.mini-message", "color-options.mini-message");
         copy(source, target, "style.hover", "hover");
         copy(source, target, "style.format", "format");
         copy(source, target, "style.click.action", "click.action");
@@ -186,6 +188,7 @@ final class ModernParser {
         Resolver.setIfAbsent(target, "access.strip-prefix", true);
         Resolver.setIfAbsent(target, "logging.enabled", false);
         Resolver.setIfAbsent(target, "access.default", defaults);
+        Resolver.setIfAbsent(target, "relay-to-discord", false);
 
         int radius = Math.max(0, target.getInt("radius", 0));
         target.set("radius", radius);

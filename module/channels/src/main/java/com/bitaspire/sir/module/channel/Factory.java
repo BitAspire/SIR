@@ -9,12 +9,9 @@ import com.bitaspire.sir.channel.Click;
 import com.bitaspire.sir.channel.Logging;
 import com.bitaspire.sir.channel.Style;
 import com.bitaspire.sir.module.channel.channel.Resolver;
-import com.bitaspire.sir.user.ColorData;
 import com.bitaspire.sir.user.SIRUser;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.Accessors;
 import lombok.experimental.UtilityClass;
 import me.croabeast.common.CollectionBuilder;
 import me.croabeast.common.applier.StringApplier;
@@ -59,6 +56,8 @@ final class Factory {
 
         private final String permission;
         private final int priority;
+        @Accessors(fluent = true)
+        private final boolean relayToDiscord;
 
         private final Access access;
         private final Audience audience;
@@ -85,6 +84,7 @@ final class Factory {
                     "priority", ChatChannel::getPriority,
                     permission.matches("(?i)DEFAULT") ? 0 : 1
             );
+            relayToDiscord = fromParent("relay-to-discord", ChatChannel::relayToDiscord, false);
 
             access = new AccessImpl(
                     fromParent("access.default", c -> c.getAccess().isDefault(), false),
@@ -110,6 +110,7 @@ final class Factory {
                     fromParent("color-options.normal", c -> c.getStyle().allowsNormalColors(), false),
                     fromParent("color-options.special", c -> c.getStyle().allowsSpecialColors(), false),
                     fromParent("color-options.rgb", c -> c.getStyle().allowsRgbColors(), false),
+                    fromParent("color-options.mini-message", c -> c.getStyle().allowsMiniMessage(), false),
                     clickAction(),
                     fromList("hover", c -> c.getStyle().getHover()),
                     fromParent("format", c -> c.getStyle().getFormat(), DEFAULT_FORMAT).trim()
@@ -118,19 +119,14 @@ final class Factory {
             checker = new ColorChecker(
                     style.allowsNormalColors(),
                     style.allowsSpecialColors(),
-                    style.allowsRgbColors()
+                    style.allowsRgbColors(),
+                    style.allowsMiniMessage()
             );
 
             logging = new LoggingImpl(
                     fromParent("logging.enabled", c -> c.getLogging().isEnabled(), false),
                     resolveLogFormat(main)
             );
-        }
-
-        @NotNull
-        @Override
-        public String getName() {
-            return name;
         }
 
         private boolean useParents(String path) {
@@ -282,18 +278,12 @@ final class Factory {
 
         @NotNull
         private String chatColorStart(@Nullable SIRUser user) {
-            if (user == null) return "";
-
-            ColorData data = user.getColorData();
-            return data == null ? "" : StringUtils.defaultString(data.getStart());
+            return user == null ? "" : StringUtils.defaultString(user.getColorData().getStart());
         }
 
         @NotNull
         private String chatColorEnd(@Nullable SIRUser user) {
-            if (user == null) return "";
-
-            ColorData data = user.getColorData();
-            return data == null ? "" : StringUtils.defaultString(data.getEnd());
+            return user == null ? "" : StringUtils.defaultString(user.getColorData().getEnd());
         }
 
         private boolean hasPermission(SIRUser user, String permission) {
@@ -340,12 +330,13 @@ final class Factory {
             return "BaseChannel{path=" + section.getCurrentPath() +
                     ", permission='" + permission + '\'' +
                     ", priority=" + priority + ", global=" + global +
+                    ", relayToDiscord=" + relayToDiscord +
                     ", format='" + style.getFormat() + '\'' + '}';
         }
     }
 
-    @Getter
     @RequiredArgsConstructor
+    @Getter
     class AccessImpl implements Access {
 
         private final boolean defaultAccess;
@@ -372,8 +363,8 @@ final class Factory {
         }
     }
 
-    @Getter
     @RequiredArgsConstructor
+    @Getter
     class AudienceImpl implements Audience {
 
         private final int radius;
@@ -399,8 +390,8 @@ final class Factory {
         }
     }
 
-    @Getter
     @RequiredArgsConstructor
+    @Getter
     class ClickImpl implements Click {
 
         private final ChatComponent.Click action;
@@ -424,6 +415,7 @@ final class Factory {
         }
     }
 
+    @AllArgsConstructor
     @Getter
     class StyleImpl implements Style {
 
@@ -434,35 +426,12 @@ final class Factory {
         private final boolean normalColors;
         private final boolean specialColors;
         private final boolean rgbColors;
+        private final boolean miniMessage;
         private final Click click;
         private final List<String> hover;
 
         @Setter
         private String format;
-
-        private StyleImpl(
-                String tag,
-                String prefix,
-                String suffix,
-                String color,
-                boolean normalColors,
-                boolean specialColors,
-                boolean rgbColors,
-                Click click,
-                List<String> hover,
-                String format
-        ) {
-            this.tag = tag;
-            this.prefix = prefix;
-            this.suffix = suffix;
-            this.color = color;
-            this.normalColors = normalColors;
-            this.specialColors = specialColors;
-            this.rgbColors = rgbColors;
-            this.click = click;
-            this.hover = hover;
-            this.format = format;
-        }
 
         @Override
         public boolean allowsNormalColors() {
@@ -480,6 +449,11 @@ final class Factory {
         }
 
         @Override
+        public boolean allowsMiniMessage() {
+            return miniMessage;
+        }
+
+        @Override
         public String toString() {
             return "Style{tag='" + tag + '\'' +
                     ", prefix='" + prefix + '\'' +
@@ -488,12 +462,13 @@ final class Factory {
                     ", normal=" + normalColors +
                     ", special=" + specialColors +
                     ", rgb=" + rgbColors +
+                    ", miniMessage=" + miniMessage +
                     ", format='" + format + '\'' + '}';
         }
     }
 
-    @Getter
     @RequiredArgsConstructor
+    @Getter
     class LoggingImpl implements Logging {
 
         private final boolean enabled;
@@ -509,7 +484,7 @@ final class Factory {
     class ColorChecker {
 
         static final String PERM = "sir.color.chat.";
-        final boolean normal, special, rgb;
+        final boolean normal, special, rgb, miniMessage;
 
         boolean notColor(Player player, String perm) {
             boolean allowed;
@@ -519,6 +494,9 @@ final class Factory {
                     break;
                 case "rgb":
                     allowed = rgb;
+                    break;
+                case "mini-message":
+                    allowed = miniMessage;
                     break;
                 case "normal":
                 default:
@@ -538,13 +516,16 @@ final class Factory {
                 applier.apply(PrismaticAPI::stripRGB);
             if (notColor(player, "special"))
                 applier.apply(PrismaticAPI::stripSpecial);
+            if (notColor(player, "mini-message"))
+                applier.apply(PrismaticAPI::stripMiniMessage);
 
             return applier.toString();
         }
 
         @Override
         public String toString() {
-            return "ColorChecker{normal=" + normal + ", special=" + special + ", rgb=" + rgb + '}';
+            return "ColorChecker{normal=" + normal + ", special=" + special +
+                    ", rgb=" + rgb + ", miniMessage=" + miniMessage + '}';
         }
     }
 }

@@ -44,6 +44,8 @@ default-channel:
       special: false
       # Allows RGB or hex colors when supported by the server.
       rgb: false
+      # Allows MiniMessage tags in player messages.
+      mini-message: false
       # Channel color used by {color}. If unset, {color} falls back to the sender's chat color.
       default: '&f'
     # Final chat line. Common placeholders: {tag}, {player}, {color}, {chat-color}, {color-start}, {color-end}, and {message}.
@@ -52,6 +54,9 @@ default-channel:
   logging:
     # If false, SIR uses the legacy/global chat logger behavior.
     enabled: false
+  # If true, messages from this channel are relayed through the Discord module.
+  # This is independent of radius/global delivery; keep false for staff/private channels.
+  relay-to-discord: false
 
 # Additional named channels. Each child key is the channel ID used by commands and user settings.
 channels:
@@ -77,6 +82,8 @@ channels:
       hover:
         - '&7Message sent to the whole server.'
       format: '{tag} &7{player}&8: {color}{message}'
+    # Enable this only if this channel should be sent to Discord.
+    relay-to-discord: false
 
   # Staff-only channel example.
   staff:
@@ -98,6 +105,7 @@ channels:
         normal: true
         special: true
         rgb: true
+        mini-message: false
         default: '&c'
       hover:
         - '&7Only visible to staff.'
@@ -106,6 +114,8 @@ channels:
       enabled: true
       # Format used by the channel-specific logger.
       format: '&7[Staff] {player}: {message}'
+    # Keep false to avoid sending staff chat to Discord.
+    relay-to-discord: false
 
   # Local member channel example with distance and permission filters.
   member-local:
@@ -124,6 +134,7 @@ channels:
       prefix: '&6Member'
       colors:
         normal: true
+        mini-message: false
         default: '&f'
       format: '{tag} {prefix} &7{player}&8: {color}{message}'
 

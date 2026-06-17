@@ -95,6 +95,7 @@ public class Resolver {
         alias(section, "color-options.normal", "style.colors.normal");
         alias(section, "color-options.special", "style.colors.special");
         alias(section, "color-options.rgb", "style.colors.rgb");
+        alias(section, "color-options.mini-message", "style.colors.mini-message");
         alias(section, "hover", "style.hover");
         alias(section, "format", "style.format");
         alias(section, "click.action", "style.click.action");

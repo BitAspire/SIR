@@ -47,7 +47,7 @@ final class Listener extends com.bitaspire.sir.Listener {
 
         String stripped = RGB_HEX_CODE.matcher(message).replaceAll("");
         stripped = PrismaticAPI.stripAll(stripped);
-        stripped = ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', stripped));
+        stripped = ChatColor.stripColor(PrismaticAPI.colorize(stripped));
 
         return StringUtils.isBlank(stripped);
     }
@@ -163,7 +163,7 @@ final class Listener extends com.bitaspire.sir.Listener {
         String message = event.getMessage();
 
         ModuleManager manager = main.getApi().getModuleManager();
-        if (manager.isEnabled("Discord")) {
+        if (channel.relayToDiscord() && manager.isEnabled("Discord")) {
             String m = lib.getPlaceholderManager().replace(player, message);
             String name = event.isGlobal() ? "global-chat" : channel.getName();
 

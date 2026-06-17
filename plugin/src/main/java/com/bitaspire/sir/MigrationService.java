@@ -420,6 +420,8 @@ final class MigrationService {
             target.set("style.colors.special", source.getBoolean("color-options.special", false));
         if (defaults || source.isSet("color-options.rgb"))
             target.set("style.colors.rgb", source.getBoolean("color-options.rgb", false));
+        if (defaults || source.isSet("color-options.mini-message"))
+            target.set("style.colors.mini-message", source.getBoolean("color-options.mini-message", false));
 
         List<String> hover = source.getStringList("hover");
         if (!hover.isEmpty())
