@@ -42,28 +42,6 @@ jobs:
           echo "TAKION_VERSION=$TAKION_VERSION" >> "$GITHUB_ENV"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Upload SIR artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: SIR-artifacts-${{ env.VERSION }}
-          if-no-files-found: error
-          path: |
-            api/build/libs/api-${{ env.VERSION }}.jar
-            api/build/libs/api-${{ env.VERSION }}-sources.jar
-            api/build/libs/api-${{ env.VERSION }}-javadoc.jar
-            runtime/build/libs/runtime-${{ env.VERSION }}.jar
-            runtime/build/libs/runtime-${{ env.VERSION }}-sources.jar
-            runtime/build/libs/runtime-${{ env.VERSION }}-javadoc.jar
-            command/*/build/libs/*-${{ env.VERSION }}.jar
-            command/*/build/libs/*-${{ env.VERSION }}-sources.jar
-            command/*/build/libs/*-${{ env.VERSION }}-javadoc.jar
-            !command/all/build/libs/**
-            module/*/build/libs/*-${{ env.VERSION }}.jar
-            module/*/build/libs/*-${{ env.VERSION }}-sources.jar
-            module/*/build/libs/*-${{ env.VERSION }}-javadoc.jar
-            !module/all/build/libs/**
-            plugin/build/libs/SIR-${{ env.VERSION }}.jar
-
       - name: Checkout Maven repository
         if: github.event_name != 'pull_request'
         uses: actions/checkout@v4
