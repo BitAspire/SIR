@@ -33,6 +33,7 @@ public final class Channels extends SIRModule implements CommandProvider {
         }
 
         (listener = new Listener(this)).register();
+        refreshChatListenerAfterStartup();
         return true;
     }
 
@@ -40,5 +41,16 @@ public final class Channels extends SIRModule implements CommandProvider {
     public boolean unregister() {
         listener.unregister();
         return true;
+    }
+
+    private void refreshChatListenerAfterStartup() {
+        getApi().getScheduler().runTaskLater(() -> {
+            if (listener == null) return;
+
+            // Plugins enabled after SIR may register an equal-priority chat formatter.
+            // Rebinding after startup gives Channels the same deterministic order as /sir reload.
+            listener.unregister();
+            listener.register();
+        }, 1L);
     }
 }
