@@ -6,7 +6,7 @@ import com.bitaspire.sir.PluginDependant;
 import com.bitaspire.sir.module.SIRModule;
 import org.jetbrains.annotations.NotNull;
 
-public final class Vanish extends SIRModule implements PluginDependant, ChatProcessor {
+public class Vanish extends SIRModule implements PluginDependant, ChatProcessor {
 
     Config config;
     Listeners listeners;
