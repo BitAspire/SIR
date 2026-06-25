@@ -18,10 +18,11 @@ profiles:
     conditions: {}
 
     title:
-      # When true, frames rotate using the interval below.
+      # When true, frames rotate using interval-ticks below.
       animated: true
       # Ticks between title frame changes.
-      interval: 5
+      # 20 ticks = 1 second. Legacy key "interval" is still accepted.
+      interval-ticks: 5
       # Scoreboard title frames.
       frames:
         - "&e&lSIR"
@@ -30,8 +31,9 @@ profiles:
     lines:
       # When true, value frames can rotate. False keeps the listed lines static.
       animated: false
-      # Ticks between line refreshes for this profile.
-      update-ticks: 20
+      # Ticks between line frame changes when animated is true.
+      # 20 ticks = 1 second. Legacy keys "interval" and "update-ticks" are still accepted.
+      interval-ticks: 20
       # Sidebar lines from top to bottom. Empty strings create blank spacer lines.
       value:
         - "&7&m----------------"
@@ -53,14 +55,14 @@ profiles:
 
     title:
       animated: true
-      interval: 10
+      interval-ticks: 10
       frames:
         - "&c&lSTAFF"
         - "&4&lSTAFF"
 
     lines:
       animated: false
-      update-ticks: 20
+      interval-ticks: 20
       # Extra operational data for staff members.
       value:
         - "&7&m----------------"

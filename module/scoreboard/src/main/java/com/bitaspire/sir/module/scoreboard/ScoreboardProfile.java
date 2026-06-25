@@ -69,10 +69,19 @@ final class ScoreboardProfile {
         return values.stream().anyMatch(value -> value != null && value.equalsIgnoreCase(target));
     }
 
+    private static int ticks(ConfigurationSection section, String... paths) {
+        for (String path : paths) {
+            if (section.contains(path))
+                return Math.max(1, section.getInt(path, 20));
+        }
+
+        return Math.max(1, 20);
+    }
+
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
     private static final class AnimatedText {
         private final boolean animated;
-        private final int interval;
+        private final int intervalTicks;
         private final List<String> frames;
 
         static AnimatedText from(ConfigurationSection section, String fallback) {
@@ -80,16 +89,16 @@ final class ScoreboardProfile {
                 return create(false, 20, Collections.singletonList(fallback));
 
             boolean animated = section.getBoolean("animated", false);
-            int interval = section.getInt("interval", 20);
+            int intervalTicks = ticks(section, "interval-ticks", "interval");
             List<String> frames = section.getStringList("frames");
             if (frames.isEmpty() && StringUtils.isNotBlank(section.getString("value")))
                 frames.add(section.getString("value"));
 
-            return create(animated, interval, frames);
+            return create(animated, intervalTicks, frames);
         }
 
-        private static AnimatedText create(boolean animated, int interval, List<String> frames) {
-            return new AnimatedText(animated, Math.max(1, interval), frames.isEmpty() ? Collections.singletonList("") : frames);
+        private static AnimatedText create(boolean animated, int intervalTicks, List<String> frames) {
+            return new AnimatedText(animated, Math.max(1, intervalTicks), frames.isEmpty() ? Collections.singletonList("") : frames);
         }
 
         boolean isAnimated() {
@@ -98,7 +107,7 @@ final class ScoreboardProfile {
 
         String frame(long tick) {
             if (!isAnimated()) return frames.get(0);
-            int index = (int) ((tick / interval) % frames.size());
+            int index = (int) ((tick / intervalTicks) % frames.size());
             return frames.get(index);
         }
     }
@@ -106,7 +115,7 @@ final class ScoreboardProfile {
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
     private static final class AnimatedLines {
         private final boolean animated;
-        private final int interval;
+        private final int intervalTicks;
         private final List<List<String>> frames;
 
         static AnimatedLines from(ConfigurationSection section) {
@@ -114,7 +123,7 @@ final class ScoreboardProfile {
                 return create(false, 20, Collections.emptyList());
 
             boolean animated = section.getBoolean("animated", false);
-            int interval = section.getInt("interval", section.getInt("update-ticks", 20));
+            int intervalTicks = ticks(section, "interval-ticks", "interval", "update-ticks");
             List<List<String>> frames = new ArrayList<>();
 
             if (animated) {
@@ -134,11 +143,11 @@ final class ScoreboardProfile {
             if (frames.isEmpty())
                 frames.add(section.getStringList("value"));
 
-            return create(animated, interval, frames);
+            return create(animated, intervalTicks, frames);
         }
 
-        private static AnimatedLines create(boolean animated, int interval, List<List<String>> frames) {
-            return new AnimatedLines(animated, Math.max(1, interval),
+        private static AnimatedLines create(boolean animated, int intervalTicks, List<List<String>> frames) {
+            return new AnimatedLines(animated, Math.max(1, intervalTicks),
                     frames.isEmpty() ? Collections.singletonList(Collections.emptyList()) : frames);
         }
 
@@ -148,7 +157,7 @@ final class ScoreboardProfile {
 
         List<String> frame(long tick) {
             if (!isAnimated()) return frames.get(0);
-            int index = (int) ((tick / interval) % frames.size());
+            int index = (int) ((tick / intervalTicks) % frames.size());
             return frames.get(index);
         }
     }
