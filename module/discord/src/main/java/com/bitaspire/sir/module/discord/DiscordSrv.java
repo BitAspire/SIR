@@ -24,7 +24,7 @@ import java.util.function.UnaryOperator;
 class DiscordSrv {
 
     // DiscordSRV drops webhook messages with blank content, even if they carry embeds.
-    private static final String WEBHOOK_BLANK_CONTENT = "\u200B";
+    private final String WEBHOOK_BLANK_CONTENT = "\u200B";
 
     String translateEmotes(String string) {
         try {
@@ -40,11 +40,12 @@ class DiscordSrv {
             List<TextChannel> channels = resolveChannels(ids, template.defaultServer);
             if (channels.isEmpty()) return;
 
+            String formattedName = StringUtils.isNotBlank(template.name) ? formatter.apply(template.name) : null;
             String formattedText = StringUtils.isNotBlank(template.text) ? formatter.apply(template.text) : null;
             MessageEmbed embed = template.enabled ? createEmbed(template, formatter).build() : null;
 
             for (TextChannel channel : channels)
-                sendToChannel(channel, player, template.playerWebhook, formattedText, embed);
+                sendToChannel(channel, player, template.playerWebhook, formattedName, formattedText, embed);
         } catch (Throwable ignored) {}
     }
 
@@ -118,10 +119,10 @@ class DiscordSrv {
         return StringUtils.isNotBlank(string) && string.startsWith("https");
     }
 
-    private void sendToChannel(TextChannel channel, Player player, boolean playerWebhook,
+    private void sendToChannel(TextChannel channel, Player player, boolean playerWebhook, String formattedName,
                                String formattedText, MessageEmbed embed) {
         if (playerWebhook && player != null) {
-            sendViaWebhook(channel, player, formattedText, embed);
+            sendViaWebhook(channel, player, formattedName, formattedText, embed);
             return;
         }
 
@@ -132,7 +133,8 @@ class DiscordSrv {
             channel.sendMessageEmbeds(Collections.singletonList(embed)).queue();
     }
 
-    private void sendViaWebhook(TextChannel channel, Player player, String formattedText, MessageEmbed embed) {
+    private void sendViaWebhook(TextChannel channel, Player player, String formattedName, String formattedText,
+                                MessageEmbed embed) {
         boolean hasText = StringUtils.isNotBlank(formattedText);
         if (!hasText && embed == null) return;
 
@@ -142,7 +144,7 @@ class DiscordSrv {
 
         WebhookUtil.deliverMessage(
                 channel,
-                player.getName(),
+                StringUtils.defaultIfBlank(formattedName, player.getName()),
                 DiscordSRV.getAvatarUrl(player),
                 hasText ? formattedText : WEBHOOK_BLANK_CONTENT,
                 embeds

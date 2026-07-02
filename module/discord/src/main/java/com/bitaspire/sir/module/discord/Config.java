@@ -67,6 +67,7 @@ final class Config {
 
         final Author author;
 
+        final String name;
         final String text;
         final String color;
         final String thumbnail;
@@ -78,6 +79,7 @@ final class Config {
             this.backend = backend;
             this.defaultServer = defaultServer;
 
+            this.name = section.getString("name", section.getString("username", ""));
             this.text = section.getString("text");
 
             ConfigurationSection authorSection = section.getConfigurationSection("embed.author");

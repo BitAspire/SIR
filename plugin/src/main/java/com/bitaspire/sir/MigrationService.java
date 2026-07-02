@@ -1523,6 +1523,14 @@ final class MigrationService {
             changed = true;
         }
 
+        if (source.contains("name")) {
+            target.set(base + ".name", source.getString("name", ""));
+            changed = true;
+        } else if (source.contains("username")) {
+            target.set(base + ".name", source.getString("username", ""));
+            changed = true;
+        }
+
         target.set(base + ".player-webhook", source.getBoolean("player-webhook", false));
         changed = true;
 

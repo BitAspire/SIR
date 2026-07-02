@@ -104,6 +104,8 @@ messages:
 
   # Global chat relay template. {prefix}, {player}, {suffix}, and {message} come from chat.
   global-chat:
+    # Webhook username when player-webhook is true. Leave empty to use the Minecraft username.
+    name: ''
     text: '**{prefix}** {player} `{suffix}` :white_small_square: {message}'
     player-webhook: false
 
