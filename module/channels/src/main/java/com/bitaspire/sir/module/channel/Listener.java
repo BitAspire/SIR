@@ -159,7 +159,6 @@ final class Listener extends com.bitaspire.sir.Listener {
         ChatChannel channel = event.getChannel();
         Player player = event.getPlayer();
 
-        String[] keys = channel.getChatKeys();
         String message = event.getMessage();
 
         ModuleManager manager = main.getApi().getModuleManager();
@@ -171,11 +170,12 @@ final class Listener extends com.bitaspire.sir.Listener {
             if (discord != null)
                 discord.sendMessage(
                         discord.isRestricted() ? "restricted" : name, player,
-                        s -> ReplaceUtils.replaceEach(keys, channel.getChatValues(event.getUser(), m), s)
+                        DiscordRelayFormatter.create(channel, event.getUser(), m)
                 );
         }
 
         lib.getLogger().log(channel.formatString(player, message, false));
+        String[] keys = channel.getChatKeys();
         String[] values = channel.getChatValues(event.getUser(), message);
 
         List<String> hover = channel.getStyle().getHover();
