@@ -14,6 +14,10 @@ import me.croabeast.takion.TakionLib;
 import me.croabeast.takion.channel.Channel;
 import me.croabeast.prismatic.chat.MultiComponent;
 import me.croabeast.takion.message.MessageSender;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -62,13 +66,13 @@ final class Listener extends com.bitaspire.sir.Listener {
         return StringUtils.stripStart(message.substring(prefix.length()), null);
     }
 
-    private void dispatch(SIRUser user, ChatChannel channel, String message, boolean async) {
+    void dispatch(SIRUser user, ChatChannel channel, String message, boolean async) {
         ChatEvent chat = new ChatEvent(user, channel, message, async);
         chat.setGlobal(channel.isGlobal());
         chat.call();
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.LOWEST)
     private void onChat(AsyncPlayerChatEvent event) {
         if (event.isCancelled() || !main.isEnabled()) return;
 
@@ -115,8 +119,10 @@ final class Listener extends com.bitaspire.sir.Listener {
         ChatChannel channel = main.data.getFallback(user);
         if (channel == null) return;
 
-        String output = channel.formatString(user.getPlayer(), message, true);
+        MessageMask mask = MessageMask.create(channel, message);
+        String output = channel.formatString(user.getPlayer(), mask.getMessage(), true);
         if (main.config.useBukkitFormat()) {
+            output = mask.restore(output);
             event.setFormat(MultiComponent.DEFAULT_FORMAT.removeFormat(output).replace("%", "%%"));
             return;
         }
@@ -160,6 +166,8 @@ final class Listener extends com.bitaspire.sir.Listener {
         Player player = event.getPlayer();
 
         String message = event.getMessage();
+        MessageMask mask = MessageMask.create(channel, message);
+        String displayMessage = mask.getMessage();
 
         ModuleManager manager = main.getApi().getModuleManager();
         if (channel.relayToDiscord() && manager.isEnabled("Discord")) {
@@ -176,7 +184,7 @@ final class Listener extends com.bitaspire.sir.Listener {
 
         lib.getLogger().log(channel.formatString(player, message, false));
         String[] keys = channel.getChatKeys();
-        String[] values = channel.getChatValues(event.getUser(), message);
+        String[] values = channel.getChatValues(event.getUser(), displayMessage);
 
         List<String> hover = channel.getStyle().getHover();
         if (hover != null && !hover.isEmpty()) {
@@ -201,7 +209,7 @@ final class Listener extends com.bitaspire.sir.Listener {
         for (SIRUser user : users) {
             Player p = user.getPlayer();
 
-            String temp = channel.formatString(p, player, message, true);
+            String temp = channel.formatString(p, player, displayMessage, true);
             temp = chat.formatString(p, player, temp);
 
             MultiComponent component = MultiComponent.fromString(lib.getChatProcessor(), temp);
@@ -209,7 +217,107 @@ final class Listener extends com.bitaspire.sir.Listener {
             if (click != null)
                 component.setClickToAll(click.getAction(), input);
 
-            p.spigot().sendMessage(component.compile(player));
+            BaseComponent[] compiled = component.compile(player);
+            mask.restore(compiled);
+            p.spigot().sendMessage(compiled);
+        }
+    }
+
+    private static final class MessageMask {
+
+        private final String token;
+        private final String message;
+
+        private MessageMask(String token, String message) {
+            this.token = token;
+            this.message = message;
+        }
+
+        private static MessageMask create(ChatChannel channel, String message) {
+            String token = createToken(message);
+            String masked = mask(message, token, channel.getStyle().allowsMiniMessage());
+
+            return masked.equals(message) ? new MessageMask(null, message) : new MessageMask(token, masked);
+        }
+
+        private static String createToken(String message) {
+            String base = "__SIR_LITERAL_LT_" + Integer.toHexString(System.identityHashCode(message)) + "_";
+            String token;
+            int index = 0;
+
+            do {
+                token = base + index++ + "__";
+            } while (message.contains(token));
+
+            return token;
+        }
+
+        private static String mask(String message, String token, boolean miniMessage) {
+            if (message.indexOf('<') == -1) return message;
+            if (!miniMessage) return message.replace("<", token);
+
+            StringBuilder builder = new StringBuilder(message.length());
+            for (int index = 0; index < message.length(); index++) {
+                char c = message.charAt(index);
+                if (c == '<' && !startsMiniMessageTag(message, index)) builder.append(token);
+                else builder.append(c);
+            }
+
+            return builder.toString();
+        }
+
+        private static boolean startsMiniMessageTag(String message, int index) {
+            int next = index + 1;
+            if (next >= message.length()) return false;
+            if (message.charAt(next) == '/') next++;
+            if (next >= message.length()) return false;
+
+            char start = message.charAt(next);
+            if (start != '#' && start != '_' && !Character.isLetter(start)) return false;
+
+            int end = message.indexOf('>', next + 1);
+            int nested = message.indexOf('<', next);
+            return end != -1 && (nested == -1 || nested > end);
+        }
+
+        private String getMessage() {
+            return message;
+        }
+
+        private String restore(String value) {
+            return token == null || value == null || value.indexOf(token) == -1 ? value : value.replace(token, "<");
+        }
+
+        private void restore(BaseComponent[] components) {
+            if (token == null || components == null) return;
+
+            for (BaseComponent component : components)
+                restore(component);
+        }
+
+        private void restore(BaseComponent component) {
+            if (component == null) return;
+
+            if (component instanceof TextComponent) {
+                TextComponent text = (TextComponent) component;
+                text.setText(restore(text.getText()));
+            }
+
+            String insertion = component.getInsertion();
+            if (insertion != null) component.setInsertion(restore(insertion));
+
+            ClickEvent click = component.getClickEvent();
+            if (click != null)
+                component.setClickEvent(new ClickEvent(click.getAction(), restore(click.getValue())));
+
+            HoverEvent hover = component.getHoverEvent();
+            if (hover != null)
+                restore(hover.getValue());
+
+            List<BaseComponent> extra = component.getExtra();
+            if (extra != null)
+                for (BaseComponent child : extra)
+                    restore(child);
         }
     }
 }
