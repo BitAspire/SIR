@@ -6,6 +6,9 @@
 #                   Discord: https://discord.gg/DC4Gqj3y5V                    #
 ###############################################################################
 
+# Shows fake join/quit messages when a player toggles vanish.
+fake-join-quit: true
+
 # Controls whether vanished players are blocked from normal chat.
 vanish-chat:
   # Enable this if vanished players should need a special chat prefix.

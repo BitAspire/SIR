@@ -26,4 +26,14 @@ public interface JoinQuitService {
      * @param join {@code true} to show the join message, {@code false} for the quit message.
      */
     void display(SIRUser user, boolean join);
+
+    /**
+     * Displays the join or quit message caused by a vanish state change.
+     *
+     * @param user the user whose vanish state changed.
+     * @param join {@code true} for fake join, {@code false} for fake quit.
+     */
+    default void displayVanish(SIRUser user, boolean join) {
+        display(user, join);
+    }
 }

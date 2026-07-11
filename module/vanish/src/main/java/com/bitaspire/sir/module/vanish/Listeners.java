@@ -35,9 +35,10 @@ final class Listeners implements Registrable {
 
                 JoinQuitService joinQuit = main.getApi().getModuleManager().getJoinQuitService();
                 if (joinQuit == null) return;
+                if (!main.config.isFakeJoinQuit()) return;
 
                 boolean join = !event.isVanished();
-                if (!joinQuit.isOnCooldown(user, join)) joinQuit.display(user, join);
+                if (!joinQuit.isOnCooldown(user, join)) joinQuit.displayVanish(user, join);
             }
 
             @EventHandler
