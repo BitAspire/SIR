@@ -18,6 +18,7 @@ public final class Channels extends SIRModule implements CommandProvider {
     Config config;
     Data data;
     Listener listener;
+    DiscordSrvRelayGuard discordRelayGuard;
 
     @Override
     public boolean register() {
@@ -33,14 +34,27 @@ public final class Channels extends SIRModule implements CommandProvider {
         }
 
         (listener = new Listener(this)).register();
+        registerDiscordRelayGuard();
         refreshChatListenerAfterStartup();
         return true;
     }
 
     @Override
     public boolean unregister() {
+        if (discordRelayGuard != null) discordRelayGuard.unregister();
         listener.unregister();
+        discordRelayGuard = null;
         return true;
+    }
+
+    private void registerDiscordRelayGuard() {
+        try {
+            if (!getApi().getPlugin().getServer().getPluginManager().isPluginEnabled("DiscordSRV"))
+                return;
+
+            discordRelayGuard = new DiscordSrvRelayGuard(this);
+            discordRelayGuard.register();
+        } catch (Throwable ignored) {}
     }
 
     private void refreshChatListenerAfterStartup() {
