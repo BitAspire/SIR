@@ -52,8 +52,13 @@ final class Config {
     }
 
     void send(String channel, Player player, UnaryOperator<String> operator) {
-        List<String> ids = channelIds.getOrDefault(channel, new ArrayList<>());
+        List<String> ids = channelIds.get(channel);
         EmbedTemplate template = embeds.get(channel);
+
+        if (template == null) template = embeds.get("global-chat");
+        if (ids == null || ids.isEmpty())
+            ids = channelIds.getOrDefault("global-chat", Collections.emptyList());
+
         if (template != null) template.send(player, ids, operator);
     }
 
