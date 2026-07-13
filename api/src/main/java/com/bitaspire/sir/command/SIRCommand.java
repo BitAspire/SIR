@@ -195,13 +195,16 @@ public abstract class SIRCommand extends BukkitCommand {
     @Override
     public boolean register(boolean sync) {
         reloadOptions();
+        if (!isRegistered()) CommandMapCleaner.purgeStaleEntries(this);
         return super.register(sync);
     }
 
     @Override
     public boolean unregister(boolean sync) {
         reloadOptions();
-        return super.unregister(sync);
+        boolean unregistered = super.unregister(sync);
+        CommandMapCleaner.purgeStaleEntries(this);
+        return unregistered;
     }
 
     @UtilityClass
