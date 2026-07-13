@@ -189,7 +189,7 @@ final class Listener extends com.bitaspire.sir.Listener {
         List<String> hover = channel.getStyle().getHover();
         if (hover != null && !hover.isEmpty()) {
             hover = new ArrayList<>(hover);
-            hover.replaceAll(s -> ReplaceUtils.replaceEach(keys, values, s));
+            hover.replaceAll(s -> lib.replace(player, ReplaceUtils.replaceEach(keys, values, s)));
         }
 
         Click click = channel.getStyle().getClick();
