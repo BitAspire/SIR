@@ -23,7 +23,12 @@ public class Vanish extends SIRModule implements PluginDependant, ChatProcessor 
 
     @Override
     public boolean unregister() {
-        listeners.unregister();
+        if (listeners != null) {
+            listeners.unregister();
+            listeners = null;
+        }
+
+        config = null;
         return true;
     }
 
