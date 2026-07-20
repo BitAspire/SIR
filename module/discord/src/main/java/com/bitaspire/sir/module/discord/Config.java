@@ -15,6 +15,10 @@ import java.util.function.UnaryOperator;
 
 final class Config {
 
+    private final Set<String> eventChannels = new HashSet<>(
+            Arrays.asList("first-join", "join", "quit", "advancements")
+    );
+
     private final String defaultServer;
     private final Discord.Backend backend;
     final boolean restricted;
@@ -54,10 +58,17 @@ final class Config {
     void send(String channel, Player player, UnaryOperator<String> operator) {
         List<String> ids = channelIds.get(channel);
         EmbedTemplate template = embeds.get(channel);
+        boolean eventChannel = eventChannels.contains(channel);
 
-        if (template == null) template = embeds.get("global-chat");
-        if (ids == null || ids.isEmpty())
+        if (template == null) {
+            if (eventChannel) return;
+            template = embeds.get("global-chat");
+        }
+
+        if (ids == null || ids.isEmpty()) {
+            if (eventChannel) return;
             ids = channelIds.getOrDefault("global-chat", Collections.emptyList());
+        }
 
         if (template != null) template.send(player, ids, operator);
     }
