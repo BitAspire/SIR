@@ -17,7 +17,9 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.UnaryOperator;
 
 @UtilityClass
@@ -153,9 +155,10 @@ class DiscordSrv {
 
     private List<TextChannel> resolveChannels(List<String> ids, String defaultServer) {
         List<TextChannel> channels = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
 
         TextChannel main = DiscordSRV.getPlugin().getMainTextChannel();
-        if (main != null) channels.add(main);
+        addChannel(channels, seen, main);
 
         for (String id : ids) {
             String guildId = null, channelId = id;
@@ -173,9 +176,13 @@ class DiscordSrv {
                     channel = guild.getTextChannelById(channelId);
             } catch (Exception ignored) {}
 
-            if (channel != null) channels.add(channel);
+            addChannel(channels, seen, channel);
         }
 
         return channels;
+    }
+
+    private void addChannel(List<TextChannel> channels, Set<String> seen, TextChannel channel) {
+        if (channel != null && seen.add(channel.getId())) channels.add(channel);
     }
 }
