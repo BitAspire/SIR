@@ -38,7 +38,7 @@ final class Caps extends Module {
         if (capsCount <= max) return;
 
         validateAndExecuteActions(context.getPlayer(), message, max);
-        if (file.get("control", "BLOCK").matches("(?i)block")) {
+        if ("block".equalsIgnoreCase(file.get("control", "BLOCK"))) {
             context.cancel();
             return;
         }

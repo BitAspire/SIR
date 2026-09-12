@@ -20,16 +20,18 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 abstract class Module implements Registrable {
 
     final String moduleName, bypass;
-    final Map<UUID, Integer> violations = new HashMap<>();
+    final Map<UUID, Integer> violations = new ConcurrentHashMap<>();
 
     private final Moderation main;
     final ConfigurableFile file;
 
-    private int replaceIndex = 0;
+    private final AtomicInteger replaceIndex = new AtomicInteger();
 
     private final CustomListener listener = new CustomListener() {
         @Getter
@@ -63,14 +65,13 @@ abstract class Module implements Registrable {
         if (replacements.isEmpty()) return word;
 
         final int size = replacements.size();
-        if (replaceIndex >= size) replaceIndex = 0;
 
-        String type = file.get("replace-options.type", "CHARACTER");
-
-        boolean isCharacter = type.matches("(?i)character");
+        boolean isCharacter = "character".equalsIgnoreCase(file.get("replace-options.type", "CHARACTER"));
         boolean order = file.get("replace-options.order", true);
 
-        int index = order ? replaceIndex++ : random.nextInt(size);
+        int index = order ?
+                replaceIndex.getAndUpdate(i -> (i + 1) % size) % size :
+                random.nextInt(size);
 
         if (isCharacter) {
             final StringBuilder sb = new StringBuilder();

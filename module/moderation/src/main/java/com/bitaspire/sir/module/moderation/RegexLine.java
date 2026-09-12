@@ -5,11 +5,12 @@ import java.util.regex.Pattern;
 
 final class RegexLine {
 
+    private static final Pattern REGEX_PREFIX = Pattern.compile("(?i)\\[regex] *");
+
     private final Pattern pattern;
 
     RegexLine(String line) {
-        Pattern regex = Pattern.compile("(?i)\\[regex] *");
-        Matcher matcher = regex.matcher(line);
+        Matcher matcher = REGEX_PREFIX.matcher(line);
 
         pattern = Pattern.compile(matcher.find() ?
                 line.replace(matcher.group(), "") : Pattern.quote(line));

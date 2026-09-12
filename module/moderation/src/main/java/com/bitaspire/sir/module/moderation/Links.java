@@ -6,7 +6,6 @@ import me.croabeast.prismatic.element.Element;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 final class Links extends Module {
 
@@ -29,7 +28,7 @@ final class Links extends Module {
             boolean allowed = false;
 
             for (String link : links)
-                if (match.matches("(?i)" + Pattern.quote(link))) {
+                if (match.equalsIgnoreCase(link)) {
                     allowed = true;
                     break;
                 }
@@ -46,7 +45,7 @@ final class Links extends Module {
                     file.getConfiguration().getInt("actions.maximum-violations", 3)
             );
 
-            if (file.get("control", "BLOCK").matches("(?i)block")) {
+            if ("block".equalsIgnoreCase(file.get("control", "BLOCK"))) {
                 context.cancel();
                 return;
             }

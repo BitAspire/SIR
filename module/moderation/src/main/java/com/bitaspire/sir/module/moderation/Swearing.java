@@ -49,30 +49,40 @@ final class Swearing extends Module {
     void process0(ChatProcessor.Context context) {
         String message = context.getMessage();
         boolean foundAny = false;
-        boolean block = file.get("control", "BLOCK").matches("(?i)block");
+        boolean block = "block".equalsIgnoreCase(file.get("control", "BLOCK"));
+
+        List<String> replacements = block ?
+                null : file.toStringList("replace-options.replacements");
 
         for (RegexLine line : lines) {
             Matcher matcher = line.matcher(message);
 
-            if (block && matcher.find()) {
-                foundAny = true;
-                break;
+            if (block) {
+                if (matcher.find()) {
+                    foundAny = true;
+                    break;
+                }
+                continue;
             }
 
-            while (matcher.find()) {
-                List<String> list = file.toStringList("replace-options.replacements");
+            if (!matcher.find()) continue;
 
-                String group = matcher.group();
-                String replace = getReplacement(list, group);
+            StringBuffer buffer = new StringBuffer(message.length());
+            do {
+                matcher.appendReplacement(buffer, Matcher.quoteReplacement(
+                        getReplacement(replacements, matcher.group())));
+            } while (matcher.find());
 
-                if (!foundAny) foundAny = true;
-                context.setMessage(message = message.replace(group, replace));
-            }
+            matcher.appendTail(buffer);
+
+            foundAny = true;
+            context.setMessage(message = buffer.toString());
         }
 
         if (!foundAny) return;
 
-        validateAndExecuteActions(context.getPlayer(), message, file.getConfiguration().getInt("actions.maximum-violations", 3));
+        validateAndExecuteActions(context.getPlayer(), message,
+                file.getConfiguration().getInt("actions.maximum-violations", 3));
         if (block) context.cancel();
     }
 
