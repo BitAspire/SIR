@@ -70,27 +70,27 @@ final class Emoji implements PermissibleUnit {
                 (user != null && !canUse(user)))
             return line;
 
-        String replacement = (value == null ? "" : value) + PrismaticAPI.getEndColor(line);
-
         if (isWord()) {
             if (exactPattern == null) return line;
 
             Matcher t = TOKENIZER.matcher(line);
             StringBuffer out = new StringBuffer(line.length());
+            String replacement = null;
 
             while (t.find()) {
                 String token = t.group();
-                if (token.isEmpty() || Character.isWhitespace(token.charAt(0))) {
+
+                if (token.isEmpty() || Character.isWhitespace(token.charAt(0))
+                        || !exactPattern.matcher(PrismaticAPI.stripAll(token)).matches()) {
                     t.appendReplacement(out, Matcher.quoteReplacement(token));
                     continue;
                 }
 
-                t.appendReplacement(out, Matcher.quoteReplacement(
-                        !exactPattern.matcher(PrismaticAPI.stripAll(token)).matches() ?
-                                token :
-                                replacement
-                ));
+                if (replacement == null) replacement = replacement(line);
+                t.appendReplacement(out, Matcher.quoteReplacement(replacement));
             }
+
+            if (replacement == null) return line;
 
             t.appendTail(out);
             return out.toString();
@@ -101,6 +101,7 @@ final class Emoji implements PermissibleUnit {
         Matcher m = findPattern.matcher(line);
         if (!m.find()) return line;
 
+        String replacement = replacement(line);
         StringBuffer out = new StringBuffer(line.length());
         do {
             m.appendReplacement(out, Matcher.quoteReplacement(replacement));
@@ -108,6 +109,10 @@ final class Emoji implements PermissibleUnit {
 
         m.appendTail(out);
         return out.toString();
+    }
+
+    private String replacement(String line) {
+        return (value == null ? "" : value) + PrismaticAPI.getEndColor(line);
     }
 
     boolean canUse(SIRUser user) {
