@@ -209,12 +209,11 @@ final class Factory {
             if (user == null) return previous;
 
             Audience audience = getAudience();
+            final List<World> worlds = audience.getWorlds();
+
             CollectionBuilder<SIRUser> users = CollectionBuilder
                     .of(previous)
-                    .filter(u -> {
-                        World world = u.getPlayer().getWorld();
-                        return audience.getWorlds().contains(world);
-                    });
+                    .filter(u -> worlds.contains(u.getPlayer().getWorld()));
 
             if (audience.isSameWorld()) {
                 World parserWorld = user.getPlayer().getWorld();
@@ -231,7 +230,7 @@ final class Factory {
                 users.filter(u -> api.getChat().getPermissionProvider().isInGroup(u.getPlayer(), audience.getGroup()));
 
             users.filter(u -> StringUtils.isBlank(audience.getPermission())
-                    || audience.getPermission().matches("(?i)DEFAULT")
+                    || "DEFAULT".equalsIgnoreCase(audience.getPermission())
                     || hasPermission(u, audience.getPermission()));
 
             if (isLocal() && !getAccess().isDefault())
