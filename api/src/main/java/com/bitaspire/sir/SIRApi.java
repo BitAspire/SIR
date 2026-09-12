@@ -21,6 +21,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -191,13 +192,15 @@ public interface SIRApi {
     static void executeCommands(SIRUser user, List<String> commands) {
         if (commands == null || commands.isEmpty()) return;
 
-        commands.removeIf(StringUtils::isBlank);
-        commands.replaceAll(String::trim);
+        final List<String> queued = new ArrayList<>(commands);
+
+        queued.removeIf(StringUtils::isBlank);
+        queued.replaceAll(String::trim);
 
         Player[] player = {null};
         if (user != null && user.isOnline()) {
             PlaceholderManager manager = instance().getLibrary().getPlaceholderManager();
-            commands.replaceAll(s -> manager.replace(player[0] = user.getPlayer(), s));
+            queued.replaceAll(s -> manager.replace(player[0] = user.getPlayer(), s));
         }
 
         instance().getScheduler().runTask(new Runnable() {
@@ -212,7 +215,7 @@ public interface SIRApi {
 
             @Override
             public void run() {
-                for (String command : commands) {
+                for (String command : queued) {
                     final String temp = command.toLowerCase(Locale.ENGLISH);
 
                     if (temp.startsWith("[player]") && player[0] != null) {
