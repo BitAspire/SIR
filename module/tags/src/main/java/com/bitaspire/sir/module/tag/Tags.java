@@ -16,6 +16,10 @@ public class Tags extends SIRModule implements UserFormatter<Object>, PluginDepe
 
     private static final String PAPI = "PlaceholderAPI";
 
+    private static final Pattern TAG_PATTERN = Pattern.compile("(?i)\\{tag_([^}]+)}");
+    private static final Pattern GROUP_PREFIX = Pattern.compile("(?i)group:(.+)");
+    private static final Pattern DEFAULT_TAG = Pattern.compile("(?i)default");
+
     Data data;
     private Object hook;
 
@@ -57,7 +61,7 @@ public class Tags extends SIRModule implements UserFormatter<Object>, PluginDepe
     }
 
     String parseTag(SIRUser user, String string) {
-        if (string.matches("(?i)group:(.+)")) {
+        if (GROUP_PREFIX.matcher(string).matches()) {
             List<Tag> tags = data.fromGroup(user, string.split(":")[1]);
             if (tags.isEmpty()) return null;
 
@@ -65,7 +69,7 @@ public class Tags extends SIRModule implements UserFormatter<Object>, PluginDepe
             return StringUtils.isNotBlank(name) ? name : null;
         }
 
-        if (string.matches("(?i)default")) {
+        if (DEFAULT_TAG.matcher(string).matches()) {
             Tag tag = data.getTag(user);
             if (tag == null) return null;
 
@@ -85,16 +89,18 @@ public class Tags extends SIRModule implements UserFormatter<Object>, PluginDepe
         if (user == null || StringUtils.isBlank(string) || !isEnabled())
             return string;
 
-        Pattern pattern = Pattern.compile("(?i)\\{tag_(.+)}");
-        Matcher matcher = pattern.matcher(string);
+        Matcher matcher = TAG_PATTERN.matcher(string);
+        if (!matcher.find()) return string;
 
-        while (matcher.find()) {
+        StringBuffer buffer = new StringBuffer(string.length());
+        do {
             String temp = parseTag(user, matcher.group(1));
-            if (temp != null)
-                string = string.replace(matcher.group(), temp);
-        }
+            matcher.appendReplacement(buffer, Matcher.quoteReplacement(
+                    temp != null ? temp : matcher.group()));
+        } while (matcher.find());
 
-        return string;
+        matcher.appendTail(buffer);
+        return buffer.toString();
     }
 
     @NotNull
