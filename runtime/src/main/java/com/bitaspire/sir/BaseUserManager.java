@@ -27,11 +27,12 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 class BaseUserManager implements UserManager, Registrable {
 
-    private final Map<UUID, BaseUser> userMap = new HashMap<>();
+    private final Map<UUID, BaseUser> userMap = new ConcurrentHashMap<>();
 
     private final Plugin plugin;
     private final SIRApi api;
