@@ -2,12 +2,14 @@ package com.bitaspire.sir.module.channel;
 
 import lombok.RequiredArgsConstructor;
 import me.croabeast.common.util.ReplaceUtils;
+import com.bitaspire.sir.module.ChatNotifier;
 import com.bitaspire.sir.SIRApi;
 import com.bitaspire.sir.channel.Access;
 import com.bitaspire.sir.channel.ChatChannel;
 import com.bitaspire.sir.channel.Click;
 import com.bitaspire.sir.module.DiscordService;
 import com.bitaspire.sir.module.ModuleManager;
+import com.bitaspire.sir.module.SIRModule;
 import com.bitaspire.sir.user.SIRUser;
 import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.takion.TakionLib;
@@ -64,6 +66,12 @@ final class Listener extends com.bitaspire.sir.Listener {
             return message;
 
         return StringUtils.stripStart(message.substring(prefix.length()), null);
+    }
+
+    private void notifyMentions(SIRUser user, String message, ChatChannel channel) {
+        SIRModule notifier = main.getApi().getModuleManager().getModule("Mentions");
+        if (notifier instanceof ChatNotifier)
+            ((ChatNotifier) notifier).notify(user, message, channel);
     }
 
     void dispatch(SIRUser user, ChatChannel channel, String message, boolean async) {
@@ -123,6 +131,7 @@ final class Listener extends com.bitaspire.sir.Listener {
         if (main.config.useBukkitFormat()) {
             output = mask.restore(output);
             event.setFormat(Element.stripMarkup(output).replace("%", "%%"));
+            notifyMentions(user, mask.getMessage(), channel);
             return;
         }
 
@@ -203,6 +212,8 @@ final class Listener extends com.bitaspire.sir.Listener {
 
         if (includeSender) users.add(event.getUser());
         else users.remove(event.getUser());
+
+        notifyMentions(event.getUser(), displayMessage, channel);
 
         for (SIRUser user : users) {
             Player p = user.getPlayer();

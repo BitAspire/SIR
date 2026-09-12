@@ -3,6 +3,7 @@ package com.bitaspire.sir.module.mention;
 import com.bitaspire.sir.ChatCompletions;
 import me.croabeast.common.util.ReplaceUtils;
 import me.croabeast.prismatic.PrismaticAPI;
+import com.bitaspire.sir.module.ChatNotifier;
 import com.bitaspire.sir.ChatToggleable;
 import com.bitaspire.sir.SoundSection;
 import com.bitaspire.sir.UserFormatter;
@@ -23,7 +24,7 @@ import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Mentions extends SIRModule implements UserFormatter<ChatChannel>, ChatToggleable {
+public class Mentions extends SIRModule implements UserFormatter<ChatChannel>, ChatToggleable, ChatNotifier {
 
     Data data;
     private ChatCompletions completions;
@@ -45,36 +46,54 @@ public class Mentions extends SIRModule implements UserFormatter<ChatChannel>, C
         return true;
     }
 
+    @Override
+    public void notify(@NotNull SIRUser sender, @NotNull String message, ChatChannel channel) {
+        resolve(sender, message, channel, true);
+    }
+
     @NotNull
     public String format(SIRUser user, String string, ChatChannel channel) {
+        return resolve(user, string, channel, false);
+    }
+
+    private String resolve(SIRUser user, String string, ChatChannel channel, boolean notify) {
         if (user == null || StringUtils.isBlank(string) || !isEnabled() || !user.isOnline())
             return string;
 
-        boolean senderEnabled = isToggled(user);
+        boolean senderEnabled = notify && isToggled(user);
 
         UnaryOperator<String> operator = null;
         List<String> firstMessages = null;
         SoundSection firstSound = null;
 
+        Set<SIRUser> recipients = null;
+        boolean recipientsResolved = false;
+
         for (Mention mention : data.getMentions()) {
             if (!mention.canUse(user))
                 continue;
 
-            String prefix = mention.getPrefix();
-            if (StringUtils.isBlank(prefix)) continue;
+            Pattern pattern = mention.getPattern();
+            if (pattern == null) continue;
 
-            Pattern pattern = Pattern.compile(Pattern.quote(prefix) + "([^\\s]+)\\b");
+            String prefix = mention.getPrefix();
             Matcher matcher = pattern.matcher(string);
             StringBuffer buffer = new StringBuffer();
 
             boolean replacedAny = false;
             while (matcher.find()) {
                 SIRUser target = getApi().getUserManager().fromClosest(matcher.group(1));
-                if ((target == null || user == target ||
-                        target.getIgnoreData().blocks(user, true)) ||
-                        (channel != null &&
-                                !channel.getRecipients(user).contains(target)))
+                if (target == null || user == target ||
+                        target.getIgnoreData().blocks(user, true))
                     continue;
+
+                if (channel != null) {
+                    if (!recipientsResolved) {
+                        recipients = channel.getRecipients(user);
+                        recipientsResolved = true;
+                    }
+                    if (!recipients.contains(target)) continue;
+                }
 
                 UnaryOperator<String> op = s -> ReplaceUtils.replaceEach(
                         new String[]{"{prefix}", "{sender}", "{receiver}"},
@@ -85,8 +104,7 @@ public class Mentions extends SIRModule implements UserFormatter<ChatChannel>, C
                 String finder = matcher.group();
                 String color = PrismaticAPI.getEndColor(finder);
 
-                boolean receiverEnabled = isToggled(target);
-                if (receiverEnabled) {
+                if (notify && isToggled(target)) {
                     getApi().getSender()
                             .setTargets(target.getPlayer())
                             .setLogger(false)

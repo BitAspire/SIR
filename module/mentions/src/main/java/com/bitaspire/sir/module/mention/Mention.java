@@ -8,6 +8,7 @@ import com.bitaspire.sir.user.SIRUser;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 @Getter
 final class Mention implements PermissibleUnit {
@@ -15,6 +16,7 @@ final class Mention implements PermissibleUnit {
     private final ConfigurationSection section;
 
     private final String prefix, click, value;
+    private final Pattern pattern;
     private final List<String> hover;
 
     private final List<String> senderMessages, receiverMessages;
@@ -26,6 +28,9 @@ final class Mention implements PermissibleUnit {
         prefix = section.getString("prefix");
         click = section.getString("click");
         value = section.getString("value");
+
+        pattern = prefix == null || prefix.isEmpty() ?
+                null : Pattern.compile(Pattern.quote(prefix) + "([^\\s]+)\\b");
 
         hover = Configurable.toStringList(section, "hover");
         senderMessages = Configurable.toStringList(section, "messages.sender");
