@@ -90,7 +90,7 @@ final class DataHandler implements Loadable {
             for (final AdvancementInfo info : information.values()) {
                 Advancement advancement = info.getBukkit();
 
-                String key = advancement.getKey().toString().replaceAll("[/:]", ".");
+                String key = advancement.getKey().toString().replace('/', '.').replace(':', '.');
                 if (keys.contains(key)) continue;
 
                 key = "data." + key;

@@ -25,6 +25,9 @@ import java.util.stream.Collectors;
 
 final class Messages {
 
+    private static final Pattern CONSOLE_PATTERN = Pattern.compile("(?i)^\\[(global|console)]");
+    private static final Pattern PLAYER_PATTERN = Pattern.compile("(?i)^\\[player]");
+
     final Advancements main;
 
     private final Map<Type, List<String>> messages = new HashMap<>(), commands = new HashMap<>();
@@ -69,14 +72,11 @@ final class Messages {
 
         List<String> commands = this.commands.getOrDefault(type, new ArrayList<>());
 
-        Pattern cPattern = Pattern.compile("(?i)^\\[(global|console)]");
-        Pattern pPattern = Pattern.compile("(?i)^\\[player]");
-
         main.getApi().getScheduler().runTask(() -> {
             for (String c : commands) {
                 if (StringUtils.isBlank(c)) continue;
 
-                Matcher pm = pPattern.matcher(c), cm = cPattern.matcher(c);
+                Matcher pm = PLAYER_PATTERN.matcher(c), cm = CONSOLE_PATTERN.matcher(c);
 
                 StringApplier applier = StringApplier.simplified(c)
                         .apply(s -> library.replace(player, s))
