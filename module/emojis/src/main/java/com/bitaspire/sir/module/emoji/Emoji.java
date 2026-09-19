@@ -66,9 +66,7 @@ final class Emoji implements PermissibleUnit {
     }
 
     String parse(SIRUser user, String line) {
-        if ((StringUtils.isBlank(line) || key == null) ||
-                (user != null && !canUse(user)))
-            return line;
+        if (StringUtils.isBlank(line) || key == null) return line;
 
         if (isWord()) {
             if (exactPattern == null) return line;
@@ -86,7 +84,10 @@ final class Emoji implements PermissibleUnit {
                     continue;
                 }
 
-                if (replacement == null) replacement = replacement(line);
+                if (replacement == null) {
+                    if (user != null && !canUse(user)) return line;
+                    replacement = replacement(line);
+                }
                 t.appendReplacement(out, Matcher.quoteReplacement(replacement));
             }
 
@@ -99,7 +100,7 @@ final class Emoji implements PermissibleUnit {
         if (findPattern == null) return line;
 
         Matcher m = findPattern.matcher(line);
-        if (!m.find()) return line;
+        if (!m.find() || (user != null && !canUse(user))) return line;
 
         String replacement = replacement(line);
         StringBuffer out = new StringBuffer(line.length());
