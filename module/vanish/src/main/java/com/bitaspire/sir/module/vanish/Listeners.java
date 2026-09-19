@@ -15,7 +15,6 @@ import org.bukkit.plugin.PluginManager;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 final class Listeners implements Registrable {
 
@@ -74,7 +73,7 @@ final class Listeners implements Registrable {
 
         MessageSender sender = main.getApi().getSender().setTargets(player);
         if (main.config.isRegex()) {
-            Matcher match = Pattern.compile(key).matcher(message);
+            Matcher match = main.config.getChatPattern().matcher(message);
 
             if (!match.find()) {
                 context.cancel();
