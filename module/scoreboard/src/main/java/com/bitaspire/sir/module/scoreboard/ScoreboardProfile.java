@@ -10,6 +10,10 @@ import org.bukkit.entity.Player;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Getter
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
@@ -17,14 +21,17 @@ final class ScoreboardProfile {
 
     private final String name;
     private final int priority;
-    private final List<String> worlds;
+    private final Set<String> worlds;
     private final List<String> permissions;
     private final AnimatedText title;
     private final AnimatedLines lines;
 
     static ScoreboardProfile from(String name, ConfigurationSection section) {
         ConfigurationSection conditions = section.getConfigurationSection("conditions");
-        List<String> worlds = conditions == null ? Collections.emptyList() : conditions.getStringList("worlds");
+        Set<String> worlds = conditions == null ? Collections.emptySet() : conditions.getStringList("worlds").stream()
+                .filter(Objects::nonNull)
+                .map(world -> world.toLowerCase(Locale.ROOT))
+                .collect(Collectors.toSet());
         List<String> permissions = conditions == null ? Collections.emptyList() : conditions.getStringList("permissions");
 
         return new ScoreboardProfile(
@@ -53,7 +60,7 @@ final class ScoreboardProfile {
     }
 
     boolean matches(ScoreboardModule module, Player player) {
-        if (!worlds.isEmpty() && !containsIgnoreCase(worlds, player.getWorld().getName()))
+        if (!worlds.isEmpty() && !worlds.contains(player.getWorld().getName().toLowerCase(Locale.ROOT)))
             return false;
 
         for (String permission : permissions) {
@@ -63,10 +70,6 @@ final class ScoreboardProfile {
         }
 
         return true;
-    }
-
-    private static boolean containsIgnoreCase(List<String> values, String target) {
-        return values.stream().anyMatch(value -> value != null && value.equalsIgnoreCase(target));
     }
 
     private static int ticks(ConfigurationSection section, String... paths) {

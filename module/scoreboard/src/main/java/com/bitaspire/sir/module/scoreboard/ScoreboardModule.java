@@ -159,7 +159,6 @@ public class ScoreboardModule extends SIRModule implements CommandProvider {
     }
 
     ScoreboardProfile resolveAutomaticProfile(Player player) {
-        ScoreboardProfile fallback = findProfile(defaultProfile);
         ScoreboardProfile best = null;
         for (ScoreboardProfile candidate : profiles.values()) {
             if (!candidate.matches(this, player)) continue;
@@ -167,7 +166,9 @@ public class ScoreboardModule extends SIRModule implements CommandProvider {
                 best = candidate;
         }
 
-        return best != null ? best : fallback != null ? fallback : firstProfile();
+        if (best != null) return best;
+        ScoreboardProfile fallback = findProfile(defaultProfile);
+        return fallback != null ? fallback : firstProfile();
     }
 
     private ScoreboardProfile firstProfile() {
