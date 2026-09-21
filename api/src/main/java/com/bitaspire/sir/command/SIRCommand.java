@@ -132,10 +132,14 @@ public abstract class SIRCommand extends BukkitCommand {
 
     @Override
     public final boolean isPermitted(CommandSender sender, boolean log) {
-        return testPermissionSilent(sender) || (log && Utils.create(this, sender)
+        if (testPermissionSilent(sender)) return true;
+
+        if (log) Utils.create(this, sender)
                 .addPlaceholder("{perm}", getPermission())
                 .addPlaceholder("{permission}", getPermission())
-                .send("no-permission", "<P> &cYou do not have permission: &f{perm}&c."));
+                .send("no-permission", "<P> &cYou do not have permission: &f{perm}&c.");
+
+        return false;
     }
 
     /**
@@ -170,10 +174,12 @@ public abstract class SIRCommand extends BukkitCommand {
         if (manager.hasPermission(sender, permission) || manager.hasPermission(sender, getPermission(true)))
             return true;
 
-        return log && Utils.create(this, sender)
+        if (log) Utils.create(this, sender)
                 .addPlaceholder("{perm}", permission)
                 .addPlaceholder("{permission}", permission)
                 .send("no-permission", "<P> &cYou do not have permission: &f{perm}&c.");
+
+        return false;
     }
 
     @Override
