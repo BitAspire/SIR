@@ -14,10 +14,12 @@ final class Tag implements PermissibleUnit {
 
     private final String tag;
     private final List<String> description;
+    private final List<String> hover;
 
     Tag(ConfigurationSection section) {
         this.section = section;
         tag = section.getString("tag");
         description = Configurable.toStringList(section, "description");
+        hover = Configurable.toStringList(section, "hover");
     }
 }

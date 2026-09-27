@@ -4,10 +4,13 @@ import com.bitaspire.sir.PluginDependant;
 import com.bitaspire.sir.UserFormatter;
 import com.bitaspire.sir.module.SIRModule;
 import com.bitaspire.sir.user.SIRUser;
+import me.croabeast.prismatic.element.Element;
 import me.croabeast.takion.logger.LogLevel;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -60,28 +63,40 @@ public class Tags extends SIRModule implements UserFormatter<Object>, PluginDepe
         }
     }
 
+    /** Plain tag text, as PlaceholderAPI and other plugins expect it. */
     String parseTag(SIRUser user, String string) {
+        return parseTag(user, string, false);
+    }
+
+    /**
+     * Resolves a tag input; with {@code hover}, the text is wrapped in the tag's hover markup
+     * so chat renders it. Only chat formatting asks for it.
+     */
+    String parseTag(SIRUser user, String string, boolean hover) {
         if (GROUP_PREFIX.matcher(string).matches()) {
             List<Tag> tags = data.fromGroup(user, string.split(":")[1]);
-            if (tags.isEmpty()) return null;
-
-            String name = tags.get(0).getTag();
-            return StringUtils.isNotBlank(name) ? name : null;
+            return tags.isEmpty() ? null : text(tags.get(0), hover);
         }
 
         if (DEFAULT_TAG.matcher(string).matches()) {
             Tag tag = data.getTag(user);
-            if (tag == null) return null;
-
-            String name = tag.getTag();
-            return StringUtils.isNotBlank(name) ? name : null;
+            return tag == null ? null : text(tag, hover);
         }
 
         Tag tag = data.getTags().get(string);
-        if (tag == null) return null;
+        return tag == null ? null : text(tag, hover);
+    }
 
-        String name = tag.getTag();
-        return StringUtils.isNotBlank(name) ? name : null;
+    @Nullable
+    private static String text(@NotNull Tag tag, boolean hover) {
+        return decorate(tag.getTag(), hover ? tag.getHover() : Collections.emptyList());
+    }
+
+    /** Returns {@code null} for blank text, else the text wrapped in hover markup if any lines are given. */
+    @Nullable
+    static String decorate(@Nullable String text, @NotNull List<String> hover) {
+        if (StringUtils.isBlank(text)) return null;
+        return hover.isEmpty() ? text : Element.builder().append(text).hover(hover).build().toMarkup();
     }
 
     @NotNull
@@ -94,7 +109,7 @@ public class Tags extends SIRModule implements UserFormatter<Object>, PluginDepe
 
         StringBuffer buffer = new StringBuffer(string.length());
         do {
-            String temp = parseTag(user, matcher.group(1));
+            String temp = parseTag(user, matcher.group(1), true);
             matcher.appendReplacement(buffer, Matcher.quoteReplacement(
                     temp != null ? temp : matcher.group()));
         } while (matcher.find());

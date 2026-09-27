@@ -17,7 +17,13 @@ tags:
     priority: 20
     # Optional player group requirement.
     group: member
-    # Hover/description lines shown where tag descriptions are supported.
+    # Description lines shown where tag descriptions are supported.
     description:
       - "This tag is available to players with the configured permission."
       - "Use this description to explain how the tag is obtained."
+    # Optional lines shown when a player hovers this tag in chat. PlaceholderAPI
+    # placeholders keep returning the plain tag text. A channel-wide hover is
+    # skipped on chat lines that carry a tag hover.
+    hover:
+      - "&7Tag: &f[Member]"
+      - "&7Granted by &ftag.member&7."
