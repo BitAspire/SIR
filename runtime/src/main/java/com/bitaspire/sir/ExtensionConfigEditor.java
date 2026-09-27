@@ -1,15 +1,11 @@
 package com.bitaspire.sir;
 
 import com.bitaspire.sir.chat.ChatProcessor;
-import com.github.stefvanschie.inventoryframework.gui.GuiComponent;
-import com.github.stefvanschie.inventoryframework.gui.GuiItem;
-import com.github.stefvanschie.inventoryframework.gui.type.AnvilGui;
-import com.github.stefvanschie.inventoryframework.pane.OutlinePane;
 import com.github.stefvanschie.inventoryframework.pane.Pane;
 import com.github.stefvanschie.inventoryframework.pane.util.Slot;
+import me.croabeast.common.gui.AnvilBuilder;
 import me.croabeast.common.gui.ButtonBuilder;
 import me.croabeast.common.gui.ChestBuilder;
-import me.croabeast.common.gui.ItemCreator;
 import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.takion.character.SmallCaps;
 import me.croabeast.takion.logger.LogLevel;
@@ -238,39 +234,17 @@ final class ExtensionConfigEditor<E extends SIRExtension<?>> {
                                   String rootPath) {
         if (!(viewer instanceof Player)) return;
 
-        Player player = (Player) viewer;
-        try {
-            AnvilGui anvilGui = new AnvilGui(PrismaticAPI.colorize("&8" + key), api.getPlugin());
-            anvilGui.setCost((short) 0);
-
-            GuiComponent input = anvilGui.getFirstItemComponent();
-            OutlinePane inputPane = new OutlinePane(1, 1);
-            inputPane.addItem(ItemCreator.of(new ItemStack(Material.PAPER))
-                    .modifyName("&f" + (StringUtils.isBlank(current) ? "<empty>" : current))
-                    .create());
-            input.addPane(Slot.fromXY(0, 0), inputPane);
-
-            GuiComponent result = anvilGui.getResultComponent();
-            GuiItem resultItem = ItemCreator.of(Material.LIME_STAINED_GLASS_PANE)
-                    .modifyName("&a&lSave")
-                    .modifyLore("&7Click to save the value.")
-                    .setAction(click -> {
-                        click.setCancelled(true);
-                        YamlConfiguration configuration = YamlConfiguration.loadConfiguration(configFile);
-                        configuration.set(key, coerce(anvilGui.getRenameText()));
-                        save(configuration, configFile);
-                        reload(extension);
-                        open(extension, click.getWhoClicked(), rootPath);
-                    })
-                    .create(api.getPlugin());
-            OutlinePane resultPane = new OutlinePane(1, 1);
-            resultPane.addItem(resultItem);
-            result.addPane(Slot.fromXY(0, 0), resultPane);
-
-            anvilGui.show(viewer);
-        } catch (NoClassDefFoundError error) {
-            startStringChatEditor(extension, configFile, key, current, player, rootPath);
-        }
+        AnvilBuilder.of(api.getPlugin(), "&8" + key)
+                .setInput(current)
+                .setOnConfirm((player, text) -> {
+                    YamlConfiguration configuration = YamlConfiguration.loadConfiguration(configFile);
+                    configuration.set(key, coerce(text));
+                    save(configuration, configFile);
+                    reload(extension);
+                    open(extension, player, rootPath);
+                })
+                .setOnUnsupported(player -> startStringChatEditor(extension, configFile, key, current, player, rootPath))
+                .showGui((Player) viewer);
     }
 
     private void startStringChatEditor(E extension,
