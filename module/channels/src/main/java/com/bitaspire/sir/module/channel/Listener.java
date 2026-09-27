@@ -221,8 +221,11 @@ final class Listener extends com.bitaspire.sir.Listener {
             String temp = channel.formatString(p, player, displayMessage, true);
             temp = chat.formatString(p, player, temp);
 
-            Element.Builder builder = Element.parse(temp, lib.getMarkup()).toBuilder();
-            if (hover != null && !hover.isEmpty()) builder.hoverAll(hover);
+            Element parsed = Element.parse(temp, lib.getMarkup());
+
+            Element.Builder builder = parsed.toBuilder();
+            if (hover != null && !hover.isEmpty() && !parsed.hasEvents())
+                builder.hoverAll(hover);
             if (click != null)
                 builder.clickAll(click.getAction(), input);
 
