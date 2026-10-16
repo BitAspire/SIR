@@ -295,7 +295,10 @@ final class Factory {
             StringApplier applier = StringApplier.simplified(format)
                     .apply(s -> api.getLibrary().replace(parser, s))
                     .apply(s -> {
-                        String[] values = getChatValues(user, checker.check(parser, string));
+                        String message = checker.check(parser, string);
+                        if (!isChatEventless()) message = MarkupFormat.prismatic().strip(message);
+
+                        String[] values = getChatValues(user, message);
                         return ReplaceUtils.replaceEach(CHAT_KEYS, values, s);
                     });
 
@@ -319,7 +322,7 @@ final class Factory {
             if (chat)
                 applier.apply(api.getLibrary()::prepareText);
 
-            return (isChatEventless() ? applier : applier.apply(f::strip)).toString();
+            return applier.toString();
         }
 
         @Override
