@@ -110,8 +110,7 @@ public class Tags extends SIRModule implements UserFormatter<Object>, PluginDepe
         StringBuffer buffer = new StringBuffer(string.length());
         do {
             String temp = parseTag(user, matcher.group(1), true);
-            matcher.appendReplacement(buffer, Matcher.quoteReplacement(
-                    temp != null ? temp : matcher.group()));
+            matcher.appendReplacement(buffer, Matcher.quoteReplacement(StringUtils.defaultString(temp)));
         } while (matcher.find());
 
         matcher.appendTail(buffer);
