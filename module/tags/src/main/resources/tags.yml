@@ -22,8 +22,8 @@ tags:
       - "This tag is available to players with the configured permission."
       - "Use this description to explain how the tag is obtained."
     # Optional lines shown when a player hovers this tag in chat. PlaceholderAPI
-    # placeholders keep returning the plain tag text. A channel-wide hover is
-    # skipped on chat lines that carry a tag hover.
+    # placeholders keep returning the plain tag text. The channel hover still
+    # covers the rest of the chat line.
     hover:
       - "&7Tag: &f[Member]"
       - "&7Granted by &ftag.member&7."
