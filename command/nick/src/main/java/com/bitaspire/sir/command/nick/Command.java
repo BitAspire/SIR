@@ -4,9 +4,9 @@ import com.bitaspire.sir.SIRApi;
 import com.bitaspire.sir.command.SIRCommand;
 import com.bitaspire.sir.user.SIRUser;
 import me.croabeast.command.TabBuilder;
+import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.takion.message.MessageSender;
 import org.apache.commons.lang.StringUtils;
-import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -41,7 +41,7 @@ final class Command extends SIRCommand {
         if (user == null) return null;
 
         String name = user.getOffline().getName();
-        return StringUtils.isBlank(name) ? ChatColor.stripColor(user.getName()) : name;
+        return StringUtils.isBlank(name) ? PrismaticAPI.stripAll(user.getName()) : name;
     }
 
     private boolean matchesName(String candidate, String input) {
@@ -55,7 +55,7 @@ final class Command extends SIRCommand {
         return user.getUuid().toString().equalsIgnoreCase(input)
                 || matchesName(getAccountName(user), input)
                 || matchesName(display, input)
-                || matchesName(ChatColor.stripColor(display), input);
+                || matchesName(PrismaticAPI.stripAll(display), input);
     }
 
     private SIRUser resolveTarget(String input) {

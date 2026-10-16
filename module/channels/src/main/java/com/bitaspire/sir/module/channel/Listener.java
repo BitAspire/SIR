@@ -21,7 +21,6 @@ import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.apache.commons.lang.StringUtils;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -52,8 +51,7 @@ final class Listener extends com.bitaspire.sir.Listener {
         if (StringUtils.isBlank(message)) return true;
 
         String stripped = RGB_HEX_CODE.matcher(message).replaceAll("");
-        stripped = PrismaticAPI.stripAll(stripped);
-        stripped = ChatColor.stripColor(PrismaticAPI.colorize(stripped));
+        stripped = PrismaticAPI.stripAll(PrismaticAPI.colorize(stripped));
 
         return StringUtils.isBlank(stripped);
     }
@@ -297,7 +295,7 @@ final class Listener extends com.bitaspire.sir.Listener {
         }
 
         private String restore(String value) {
-            return token == null || value == null || value.indexOf(token) == -1 ? value : value.replace(token, "<");
+            return token == null || value == null || !value.contains(token) ? value : value.replace(token, "<");
         }
 
         private void restore(BaseComponent[] components) {

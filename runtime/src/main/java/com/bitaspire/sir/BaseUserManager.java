@@ -188,7 +188,7 @@ class BaseUserManager implements UserManager, Registrable {
         String effective = user.getName();
         return matchesName(user.getDefaultName(), input)
                 || matchesName(effective, input)
-                || matchesName(org.bukkit.ChatColor.stripColor(effective), input);
+                || matchesName(PrismaticAPI.stripAll(effective), input);
     }
 
     private boolean matchesName(String candidate, String input) {
