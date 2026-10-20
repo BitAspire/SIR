@@ -1,0 +1,39 @@
+# Magic Ball, shipped with SIR. Every key is explained in example.yml.
+enabled: true
+# Empty: every player can use it.
+permission: ''
+aliases: [ 8ball, magicball ]
+description: 'Asks the magic ball a question. Only you see the answer.'
+usage: '/ball <question>'
+override-existing: false
+toggleable: false
+respect-mute: false
+cooldown: 0
+
+arguments:
+  question:
+    type: STRING
+    greedy: true
+    # Rolled once per use, so both lines show the same answer.
+    random-values:
+      answer:
+        - 'Undeniably'
+        - 'No doubt about it'
+        - 'Definitely yes'
+        - 'That''s the base'
+        - 'You can be sure of it'
+        - 'Most likely'
+        - 'Good prospects'
+        - 'Yes'
+        - 'It''s not clear yet, try again'
+        - 'Ask later'
+        - 'It''s better not to tell'
+        - 'Can''t predict now'
+        - 'Concentrate and ask again'
+        - 'Don''t even think about it'
+        - 'No.'
+        - 'The prospects are not good'
+        - 'Very doubtful'
+    messages:
+      - '&7You asked: &f{question}'
+      - '&5Magic Ball: &d&n{answer}'

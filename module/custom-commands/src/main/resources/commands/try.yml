@@ -1,0 +1,21 @@
+# Try your luck, shipped with SIR. Every key is explained in example.yml.
+enabled: true
+# Empty: every player can use it.
+permission: ''
+aliases: [ attempt ]
+description: 'Tries an action; 50% or more is a success.'
+usage: '/try <action>'
+override-existing: false
+toggleable: true
+respect-mute: true
+cooldown: 0
+
+arguments:
+  action:
+    type: STRING
+    greedy: true
+    # Rolled once per use, so every player sees the same result.
+    random-values:
+      percent: '0-100'
+    messages:
+      - '[to:all]{if:{percent}>=50:&a☺|&c☹} &7{player} &f{action} {if:{percent}>=50:&a|&c}{percent}%'

@@ -1,0 +1,21 @@
+# Ping, shipped with SIR. Every key is explained in example.yml.
+enabled: true
+# Empty: every player can use it.
+permission: ''
+aliases: [ latency ]
+description: 'Shows your ping or the ping of another player.'
+usage: '/ping [player]'
+override-existing: false
+toggleable: false
+respect-mute: false
+cooldown: 0
+
+# /ping with no arguments: the sender's own ping. The console has none.
+messages:
+  - '&7Your ping is &e{ping:{player}}ms&7.'
+
+arguments:
+  target:
+    type: PLAYER
+    messages:
+      - '&e{target}&7''s ping is &e{ping:{target}}ms&7.'

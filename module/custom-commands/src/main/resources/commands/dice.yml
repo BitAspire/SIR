@@ -1,0 +1,34 @@
+# Dice, shipped with SIR. Every key is explained in example.yml.
+enabled: true
+# Empty: every player can use it.
+permission: ''
+aliases: [ roll ]
+description: 'Rolls from 1 to 6 dice. Only you see the result.'
+usage: '/dice [1-6]'
+override-existing: false
+toggleable: false
+respect-mute: false
+cooldown: 0
+
+# 1 die when no amount is typed.
+values:
+  amount: '1'
+
+# {amount} dice; each face shows its symbol and counts its [value:...] in {roll.sum}.
+random-values:
+  roll:
+    times: '{amount}'
+    separator: ' '
+    entries: [ '[value:1]⚀', '[value:2]⚁', '[value:3]⚂', '[value:4]⚃', '[value:5]⚄', '[value:6]⚅' ]
+
+# /dice and /dice <amount> send the same line (&roll, then *roll).
+messages: &roll
+  - '&7You rolled &f{roll} &7(&e{roll.sum}&7)'
+
+arguments:
+  amount:
+    type: INTEGER
+    min: 1
+    max: 6
+    suggestions: [ '1', '2', '3', '4', '5', '6' ]
+    messages: *roll

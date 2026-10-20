@@ -1,0 +1,19 @@
+# Action message, shipped with SIR. Every key is explained in example.yml.
+enabled: true
+# Empty: every player can use it.
+permission: ''
+aliases: [ action ]
+description: 'Describes an action you do.'
+usage: '/me <action>'
+# Replaces the vanilla /me; minecraft:me still works.
+override-existing: true
+toggleable: true
+respect-mute: true
+cooldown: 0
+
+arguments:
+  action:
+    type: STRING
+    greedy: true
+    messages:
+      - '[to:all]&d* {player} &f{action}'

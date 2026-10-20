@@ -1,0 +1,18 @@
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
+# Prefix of the permission given to a custom command when its file doesn't set one.
+# A command named 'warp' gets 'sir.custom.warp'.
+permission-prefix: 'sir.custom.'
+
+# Cooldown in seconds used when a command file doesn't set one. 0 disables it.
+# Players with '<command permission>.bypass' ignore the cooldown.
+cooldown: 0
+
+# Highest value accepted by the [repeat:N] prefix of messages and commands.
+max-repeat: 1000

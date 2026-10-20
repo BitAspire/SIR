@@ -1,0 +1,18 @@
+# Anonymous message, shipped with SIR. Every key is explained in example.yml.
+enabled: true
+# Empty: every player can use it.
+permission: ''
+aliases: [ anonymous ]
+description: 'Sends a message to every player without your name.'
+usage: '/anon <message>'
+override-existing: false
+toggleable: true
+respect-mute: true
+cooldown: 3
+
+arguments:
+  message:
+    type: STRING
+    greedy: true
+    messages:
+      - '[to:all] &fAnon » &7{message}'

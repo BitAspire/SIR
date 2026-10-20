@@ -1,0 +1,66 @@
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
+# Messages of the custom commands and the /customcommands command.
+lang:
+  # Shown when the reached argument has no actions. {usage}
+  usage: '<P> &7Usage: &f{usage}'
+  # Shown when an argument doesn't match. {arg}
+  wrong-arg: '<P> &cInvalid argument: &f{arg}&c.'
+  # Shown when a permission is missing. {perm}
+  no-permission: '<P> &cYou do not have permission: &f{perm}&c.'
+  only-player: '<P> &cOnly players can use this command.'
+  only-console: '<P> &cOnly the console can use this command.'
+  wrong-world: "<P> &cYou can't use this command in this world."
+  # Commands with 'respect-mute: true' used by a muted player.
+  muted: "<P> &cYou can't use this command while muted."
+  # Remaining cooldown in seconds. {time}
+  cooldown: '<P> &cWait &f{time}s &cbefore using this command again.'
+  # 'requires' that doesn't hold, when the argument has no 'deny-message'.
+  denied: "<P> &cYou can't use this command right now."
+  # 'confirm' asking to use the command again. {time}
+  confirm: '<P> &eUse the command again within &f{time}s &eto confirm.'
+  # Commands with a 'cost' when the player can't pay it. {cost}
+  not-enough-money: '<P> &cYou need &f{cost} &cto use this command.'
+
+  help:
+    - '<P> &7Usage: &b/customcommands &7[reload|list|create|toggle|rename|duplicate|delete] [<command>] [<new name>]'
+    - '<P> &7Saved values: &b/customcommands data &7<list|get|set|delete> [<key>] [<value>]'
+    - '<P> &7Of a player: &b/customcommands player-data &7<player> <list|get|set|delete> [<key>] [<value>]'
+    - '<P> &7Players open the menu with &b/customcommands&7.'
+  # {count}
+  reloaded: '<P> &7Loaded &b{count} &7custom commands.'
+  # {enabled} {disabled}
+  list:
+    - '<P> &7Enabled: &a{enabled}'
+    - '<P> &7Disabled: &c{disabled}'
+  # {command}
+  unknown: '<P> &cThere is no custom command named &f{command}&c.'
+  toggled-on: '<P> &7Custom command &b/{command} &7was &aenabled&7.'
+  created: '<P> &7Custom command &b/{command} &7was created, disabled until you enable it.'
+  create-failed: '<P> &cCan''t create &f{command}&c: use a-z, 0-9, _ or - and a name not in use.'
+  # {command} {target}
+  renamed: '<P> &7Custom command &b/{command} &7was renamed to &b/{target}&7.'
+  duplicated: '<P> &7Custom command &b/{command} &7was copied to &b/{target}&7, disabled until you enable it.'
+  deleted: '<P> &7Custom command &b/{command} &7was deleted.'
+  delete-failed: '<P> &cThe file of &f{command} &ccouldn''t be deleted.'
+  invalid-value: '<P> &f{command} &cisn''t a valid value.'
+  argument-failed: '<P> &cCan''t add &f{command}&c: use letters, numbers, _, @ or - and a name not in use.'
+  # Text typed in the chat from the menu. {field} {current}
+  chat-input:
+    - '<P> &7Type the new value for &f{field}&7.'
+    - '<P> &7Current: &f{current}'
+    - '<P> &7Type &ccancel &7to abort.'
+  toggled-off: '<P> &7Custom command &b/{command} &7was &cdisabled&7.'
+  # /customcommands data and player-data. {key} {value} {keys} {player}
+  data-list: '<P> &7Saved keys: &f{keys}'
+  data-value: '<P> &b{key} &7= &f{value}'
+  data-empty: '<P> &b{key} &7is not saved.'
+  data-set: '<P> &b{key} &7set to &f{value}&7.'
+  data-deleted: '<P> &b{key} &7was deleted.'
+  unknown-player: '<P> &cNo player named &f{player} &chas played here.'

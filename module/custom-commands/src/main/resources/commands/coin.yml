@@ -1,0 +1,18 @@
+# Coin flip, shipped with SIR. Every key is explained in example.yml.
+enabled: true
+# Empty: every player can use it.
+permission: ''
+aliases: [ flip, coinflip ]
+description: 'Flips a coin. Only you see the result.'
+usage: '/coin'
+override-existing: false
+toggleable: false
+respect-mute: false
+cooldown: 0
+
+# The edge is a 1% chance.
+random-values:
+  side: [ '[chance:49.5%]heads', '[chance:49.5%]tails', '[chance:1%]edge' ]
+
+messages:
+  - '{if:{side}=edge:&7You flipped a coin and it landed on its &eedge&7! :)|&7You flipped a coin and got &e{side}&7.}'

@@ -1,0 +1,36 @@
+# Clear Chat, shipped with SIR. Every key is explained in example.yml.
+enabled: true
+permission: sir.clear-chat
+aliases: [ clearchat, cc, clear ]
+description: 'Clears the chat to a player or all players.'
+usage: '/clear-chat [help|@a|<player>]'
+override-existing: true
+
+# /clear-chat with no arguments.
+messages: &help
+  - '&7'
+  - ' &6>> &eClear Chat - Help'
+  - '  &7- &b/clear-chat help&7: Displays this help menu.'
+  - '  &7- &b/clear-chat @a&7: Clears the chat for all online players.'
+  - '  &7- &b/clear-chat <player>&7: Clears the chat for a specific player.'
+  - '&7'
+
+arguments:
+  help:
+    type: LITERAL
+    permission: sir.clear-chat.help
+    messages: *help
+
+  '@a':
+    type: LITERAL
+    messages:
+      - '[to:all][repeat:200]'
+      - '<P> &7Chat has been cleared for all players.'
+
+  target:
+    type: PLAYER
+    # Accepts the start of a name, like 'Cro' for 'CroaBeast'.
+    exact: false
+    messages:
+      - '[to:target][repeat:200]'
+      - '<P> &7Chat has been cleared for &e{target}&7.'

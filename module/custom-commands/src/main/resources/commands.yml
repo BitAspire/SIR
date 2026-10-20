@@ -1,0 +1,17 @@
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
+main: com.bitaspire.sir.module.custom.CustomCommands
+
+commands:
+  customcommands:
+    permission: sir.customcommands.admin
+    override-existing: true
+    aliases: [ ccmd ]
+    description: 'Manage the custom commands of SIR.'
+    usage: '/customcommands [reload|list|create|toggle|rename|duplicate|delete|data|player-data] [<args>]'

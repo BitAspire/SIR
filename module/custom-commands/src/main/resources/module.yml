@@ -1,0 +1,14 @@
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
+main: com.bitaspire.sir.module.custom.CustomCommands
+name: CustomCommands
+title: "&7Custom Commands"
+description:
+  - "Creates custom commands from the files in"
+  - "the commands folder, one file per command."

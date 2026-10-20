@@ -1,0 +1,33 @@
+# Brand, shipped with SIR. Every key is explained in example.yml.
+# Changes the server name shown on the F3 screen, for good: the brand is saved
+# and sent again to every player who joins. Proxies like BungeeCord or Velocity
+# add their own name to it.
+enabled: true
+permission: sir.brand
+aliases: [ ]
+description: 'Changes the server brand shown on the F3 screen.'
+usage: '/brand <reset|brand>'
+override-existing: true
+cooldown: 0
+
+arguments:
+  # Back to the brand of the server itself, right away.
+  reset:
+    type: LITERAL
+    messages:
+      - '[save:brand]'
+      - '[to:all][brand]{server-brand}'
+      - '<P> &7Server brand reset to &f{server-brand}&7.'
+
+  brand:
+    type: STRING
+    greedy: true
+    messages:
+      - '[save:brand]{brand}'
+      - '[to:all][brand]{brand}'
+      - '<P> &7Server brand set to &f{brand}&7.'
+
+# Every player who joins gets the saved brand. Nothing is sent while none is saved.
+on-join:
+  messages:
+    - '[brand]{saved:brand}'

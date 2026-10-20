@@ -1,0 +1,138 @@
+# Print, shipped with SIR. Every key is explained in example.yml.
+enabled: true
+permission: sir.print
+aliases: [ raw-message, raw-msg, rawmsg, emit ]
+description: 'Sends messages through any channel to any player or group of players.'
+usage: '/print <channel> <target> <message>'
+override-existing: true
+# Players who disable Custom Commands in /settings don't get these messages.
+toggleable: true
+cooldown: 0
+# Each channel needs sir.print.<channel>, like sir.print.chat or sir.print.toast.
+argument-permissions: true
+
+# /print with no arguments.
+messages:
+  - '&7'
+  - ' &6>> &ePrint - Help'
+  - '  &7- &b/print targets&7: Explains target selectors.'
+  - '  &7- &b/print chat <target> [default|centered] <message>'
+  - '  &7- &b/print title <target> <default|seconds> <message>'
+  - '  &7- &b/print <action-bar|bossbar|tab-header|tab-footer|toast|json> <target> <message>'
+  - '  &7- &b/print <channel> <target> <message>&7: Any channel with its options,'
+  - '    &7like &ftitle:5&7, &fbossbar:10:RED &7or &ftoast:iron_ingot:goal&7.'
+  - '&7'
+
+# Every channel ends in the same 'message' argument, written once (&message) and
+# reused (*message). It sends {prefix}{message} to the target, and each channel
+# sets its 'prefix' in 'values'. Channels with nothing else to type also share the
+# whole target and message part (&send), so adding one takes four lines.
+arguments:
+  targets:
+    type: LITERAL
+    messages:
+      - '&7'
+      - ' &6>> &ePrint - Targets'
+      - '  &7- &b<player>&7: Select a specific player by exact name.'
+      - '  &7- &b@a&7: Select all online players.'
+      - '  &7- &bworld:world&7: Select players in the specified world.'
+      - '  &7- &bradius:50&7: Select players within 50 blocks of you.'
+      - '  &7- &bperm:example.permission&7: Select players with a permission.'
+      - '  &7- &bgroup:member&7: Select players in a permission group (Vault required).'
+      - '&7'
+
+  chat:
+    type: LITERAL
+    values:
+      prefix: ''
+    arguments:
+      target:
+        type: STRING
+        suggestions: &targets [ '@a', 'world:', 'radius:', 'perm:', 'group:', '@players' ]
+        arguments:
+          default:
+            type: LITERAL
+            aliases: [ mixed ]
+            arguments:
+              message: &message
+                type: STRING
+                greedy: true
+                messages:
+                  - '[to:{target}]{prefix}{message}'
+                  - '<P> &7Message sent to &e{target}&7.'
+          centered:
+            type: LITERAL
+            values:
+              prefix: '<C>'
+            arguments:
+              message: *message
+          message: *message
+
+  title:
+    type: LITERAL
+    arguments:
+      target:
+        type: STRING
+        suggestions: *targets
+        arguments:
+          default:
+            type: LITERAL
+            values:
+              prefix: '[title]'
+            arguments:
+              message: *message
+          seconds:
+            type: INTEGER
+            min: 1
+            suggestions: [ '3', '5', '10' ]
+            values:
+              prefix: '[title:{seconds}]'
+            arguments:
+              message: *message
+
+  action-bar:
+    type: LITERAL
+    aliases: [ action_bar ]
+    values: { prefix: '[action_bar]' }
+    arguments: &send
+      target:
+        type: STRING
+        suggestions: *targets
+        arguments:
+          message: *message
+
+  bossbar:
+    type: LITERAL
+    values: { prefix: '[bossbar]' }
+    arguments: *send
+
+  tab-header:
+    type: LITERAL
+    aliases: [ tab_header ]
+    values: { prefix: '[tab_header]' }
+    arguments: *send
+
+  tab-footer:
+    type: LITERAL
+    aliases: [ tab_footer ]
+    values: { prefix: '[tab_footer]' }
+    arguments: *send
+
+  # Needs PacketEvents and 1.12+. Use /print toast:<icon>:<style> for another icon.
+  toast:
+    type: LITERAL
+    values: { prefix: '[toast]' }
+    arguments: *send
+
+  json:
+    type: LITERAL
+    values: { prefix: '[json]' }
+    arguments: *send
+
+  # Anything else: a channel prefix without brackets, with its options.
+  channel:
+    type: STRING
+    permission: sir.print.channel
+    suggestions: [ 'title:5', 'bossbar:10:RED', 'toast:iron_ingot:goal' ]
+    values: { prefix: '[{channel}]' }
+    arguments: *send

@@ -1,0 +1,250 @@
+###############################################################################
+#                      Simple In-game Receptionist (SIR)                      #
+#                        Free Software | BitAspire.com                        #
+#                                                                             #
+#                 WIKI: https://wiki.bitaspire.com/en/docs/sir                #
+#                   Discord: https://discord.gg/DC4Gqj3y5V                    #
+###############################################################################
+
+# Texts of the /customcommands menu. Words in braces are placeholders.
+words:
+  none: '&8none'
+  'true': '&atrue'
+  'false': '&cfalse'
+  enabled: '&aenabled'
+  disabled: '&cdisabled'
+
+titles:
+  list: '&8Custom Commands'
+  editor: '&8Editing /{command}'
+  # {path} is the command plus the arguments above this one.
+  node: '&8{path}'
+  messages: '&8Messages'
+  commands: '&8Commands'
+  values: '&8Random values'
+  fixed-values: '&8Values'
+  # {key} is the key of the random value.
+  draw: '&8Draw {key}'
+  # {path} is the command plus the arguments above this one.
+  conditions: '&8Conditions of {path}'
+  requires: '&8Requires'
+  outcomes: '&8Random outcomes'
+  # {outcome} is the key of the outcome.
+  outcome: '&8Outcome {outcome}'
+  # {target} is what gets deleted.
+  delete: '&8Delete {target}?'
+
+# Item templates. {title} and {info} come from the fields section.
+templates:
+  back:
+    name: '&7Back'
+    lore: [ '&7{info}' ]
+  flag:
+    name: '&f{title}'
+    lore: [ '&7{info}', '&7Value: {value}', '', '&eClick &7to toggle' ]
+  text:
+    name: '&f{title}'
+    lore: [ '&7{info}', '&7Value: &f{value}', '', '&eClick &7to edit' ]
+  cycle:
+    name: '&f{title}'
+    lore: [ '&7{info}', '&7Value: &f{value}', '', '&eClick &7to cycle' ]
+  open:
+    name: '&b{title}'
+    lore: [ '&7{info}', '', '&eClick &7to open' ]
+  lines:
+    name: '&b{title}'
+    lore: [ '&7{info}', '&7Lines: &f{count}', '', '&eClick &7to open' ]
+
+back:
+  list: 'Return to the command list.'
+  editor: 'Return to the command editor.'
+  node: 'Return to the previous argument.'
+  previous: 'Return to the previous menu.'
+  outcomes: 'Return to the outcomes.'
+
+pages:
+  previous: '&7Previous page'
+  next: '&7Next page'
+
+list:
+  command:
+    name: '&b/{command}'
+    lore:
+      - '&7Status: {status}'
+      - '&7Aliases: &f{aliases}'
+      - '&7Permission: &f{permission}'
+      - ''
+      - '&eClick &7to edit'
+      - '&eShift-click &7to toggle'
+      - '&eRight-click &7to duplicate'
+      - '&eDrop &7to delete'
+  not-loaded: '&cNot loaded, check the console.'
+  empty:
+    name: '&7No commands'
+    lore: [ '&7Create one with the name tag below.' ]
+  create:
+    name: '&aCreate command'
+    lore: [ '&7Type the name of the new command.' ]
+  reload:
+    name: '&eReload'
+    lore: [ '&7Reload every command file.' ]
+
+node:
+  argument:
+    name: '&b{argument}'
+    lore:
+      - '&7Type: &f{type}'
+      - '&7Permission: &f{permission}'
+      - '&7Arguments: &f{arguments}'
+      - '&7Messages: &f{messages}'
+      - '&7Commands: &f{commands}'
+      - ''
+      - '&eClick &7to open'
+      - '&eShift-click &7to move up'
+      - '&eDrop &7to delete'
+  empty:
+    name: '&7No arguments'
+    lore: [ '&7Add one with the name tag below.' ]
+  add:
+    name: '&aAdd argument'
+    lore: [ '&7Type the name of the new argument.', '&7It starts as a LITERAL.' ]
+
+values:
+  value:
+    name: '&b{key}'
+    lore: [ '&7Spec: &f{spec}', '', '&eClick &7to edit', '&eShift-click &7to turn a|b|c into a list', '&eDrop &7to delete' ]
+  fixed:
+    name: '&b{key}'
+    lore: [ '&7Value: &f{spec}', '', '&eClick &7to edit', '&eDrop &7to delete' ]
+  to-fixed:
+    name: '&eValues'
+    lore: [ '&7Open the fixed values.' ]
+  to-random:
+    name: '&eRandom values'
+    lore: [ '&7Open the random values.' ]
+  list:
+    name: '&b{key}'
+    lore: [ '&7Chances: &f{spec}', '', '&eClick &7to edit the list', '&eShift-click &7to roll it more than once', '&eDrop &7to delete' ]
+  draw:
+    name: '&b{key}'
+    lore: [ '&7Rolls {spec}', '', '&eClick &7to open', '&eDrop &7to delete' ]
+  empty:
+    name: '&7No random values'
+    lore: [ '&7Add one with the name tag below.' ]
+  add:
+    name: '&aAdd random value'
+    lore: [ '&7Type its key, then its spec:', '&f1-10&7, &f0.5-2.5 &7or &fa|b|c' ]
+
+outcomes:
+  outcome:
+    name: '&b{outcome}'
+    lore:
+      - '&7Weight: &f{weight}'
+      - '&7Permission: &f{permission}'
+      - '&7Messages: &f{messages}'
+      - '&7Commands: &f{commands}'
+      - ''
+      - '&eClick &7to open'
+      - '&eShift-click &7to move up'
+      - '&eDrop &7to delete'
+  empty:
+    name: '&7No outcomes'
+    lore: [ '&7Add one with the name tag below.' ]
+  add:
+    name: '&aAdd outcome'
+    lore: [ '&7Type the key of the new outcome.' ]
+
+lines:
+  line:
+    name: '&7Line {number}'
+    lore: [ '', '&eClick &7to edit', '&eShift-click &7to move up', '&eDrop &7to delete' ]
+  empty:
+    name: '&7No lines'
+    lore: [ '&7Add one with the book below.' ]
+  add-message:
+    name: '&aAdd line'
+    lore:
+      - '&7Typed in the chat.'
+      - '&7Prefixes: &f[action_bar] [title:N]'
+      - '&f[bossbar:...] [json] [webhook:...]'
+      - '&f[tab_header] [tab_footer] [toast] [brand]'
+      - '&f[to:...] [repeat:N] [if:...] [delay:N]'
+      - '&f[sound:...] [log] [save:key]'
+      - '&7Placeholders: &f{player} {args} {<argument>}'
+      - '&f{random:1-6} {calc:1+2} {pick:2:a|b}'
+      - '&f{if:{x}>=5:yes|no} {ping:{player}}'
+      - '&f[save:key] {saved:key}'
+  add-entry:
+    name: '&aAdd entry'
+    lore: [ '&7Typed in the chat. One of the', '&7entries is picked each use.', '&7Prefixes: &f[weight:N] [chance:N%] [value:...]' ]
+  add-condition:
+    name: '&aAdd condition'
+    lore: [ '&7Typed in the chat, like [if:...]:', '&f{level}>=5 &7or &f{world}!=world_nether' ]
+  add-command:
+    name: '&aAdd line'
+    lore:
+      - '&7Typed in the chat, without the slash.'
+      - '&7Prefixes: &f[player] [op] [console]'
+      - '&f[to:...] [repeat:N] [if:...] [delay:N]'
+      - '&f[sound:...] [log] [save:key]'
+      - '&7Placeholders: &f{player} {args} {<argument>}'
+      - '&f{random:1-6} {calc:1+2} {pick:2:a|b}'
+      - '&f{if:{x}>=5:yes|no} {ping:{player}}'
+      - '&f[save:key] {saved:key}'
+
+# Title and description of each editable value.
+fields:
+  name: { title: 'Name', info: 'Renames it.' }
+  duplicate: { title: 'Copy name', info: 'Name of the copy.' }
+  enabled: { title: 'Enabled', info: 'Registers the command.' }
+  override-existing: { title: 'Override existing', info: "Replaces another plugin's command." }
+  hidden: { title: 'Hidden', info: 'Hides it from tab-complete.' }
+  toggleable: { title: 'Toggleable', info: 'Players can turn its messages off in /settings.' }
+  respect-mute: { title: 'Respect mute', info: 'Muted players can not use it.' }
+  sender: { title: 'Sender', info: 'Who can use the command.' }
+  cooldown: { title: 'Cooldown', info: 'Seconds between uses. Empty uses config.yml.' }
+  arguments: { title: 'Arguments', info: 'The argument tree of the command.' }
+  permission: { title: 'Permission', info: 'Empty uses the permission prefix.' }
+  aliases: { title: 'Aliases', info: 'Separated by commas.' }
+  description: { title: 'Description', info: 'Shown in the command help.' }
+  usage: { title: 'Usage', info: 'Empty generates it from the arguments.' }
+  permission-message: { title: 'Permission message', info: "Bukkit's message when the permission is missing." }
+  worlds: { title: 'Worlds', info: 'Separated by commas. Empty means all.' }
+  messages: { title: 'Messages', info: 'Sent when this argument is the last one.' }
+  commands: { title: 'Commands', info: 'Run when this argument is the last one.' }
+  type: { title: 'Type', info: 'How the argument is matched.' }
+  argument-permission: { title: 'Permission', info: 'Needed to use this argument. Empty means none.' }
+  argument-aliases: { title: 'Aliases', info: 'Other words that match. Separated by commas.' }
+  min: { title: 'Minimum', info: 'Lowest accepted value. Empty means none.' }
+  max: { title: 'Maximum', info: 'Highest accepted value. Empty means none.' }
+  choices: { title: 'Choices', info: 'Accepted values. Separated by commas.' }
+  greedy: { title: 'Greedy', info: 'Takes the rest of the input. Only for the last argument.' }
+  suggestions: { title: 'Suggestions', info: "Separated by commas; @players and @worlds add names. Empty uses the type's." }
+  global-cooldown: { title: 'Global cooldown', info: 'Seconds between uses of anyone. Empty means none.' }
+  cost: { title: 'Cost', info: 'Money taken from players, with Vault. Empty means free.' }
+  on-join-messages: { title: 'On join: messages', info: 'Sent to every player who joins.' }
+  on-join-commands: { title: 'On join: commands', info: 'Run for every player who joins.' }
+  random-values: { title: 'Values', info: 'Fixed and random values, shared by every line.' }
+  outcomes: { title: 'Random outcomes', info: 'Weighted results picked at random.' }
+  picks: { title: 'Picks', info: 'Outcomes picked each use. Empty means 1.' }
+  unique: { title: 'Unique', info: 'An outcome is picked once at most per use.' }
+  weight: { title: 'Weight', info: 'Chance compared with the others. Empty means 1.' }
+  outcome-permission: { title: 'Permission', info: 'Only players with it get this outcome. Empty means anyone.' }
+  value-key: { title: 'Key', info: 'Used as {key} in the lines.' }
+  value-spec: { title: 'Spec', info: '1-10, 0.5-2.5 or a|b|c.' }
+  value-text: { title: 'Value', info: 'Placeholders of typed arguments work.' }
+  times: { title: 'Times', info: 'Rolls each use, like 3 or {amount}. Empty means 1.' }
+  separator: { title: 'Separator', info: "Text between the rolls. Empty means ', '." }
+  unique-draw: { title: 'Unique', info: 'An entry comes out once at most per use.' }
+  conditions: { title: 'Conditions', info: 'Cost, requires and confirmation of this argument.' }
+  requires: { title: 'Requires', info: 'Conditions that must all hold to use it.' }
+  deny-message: { title: 'Deny message', info: "Sent when 'requires' doesn't hold. Empty uses lang.yml." }
+  confirm: { title: 'Confirm', info: 'Seconds to use it again in to confirm. Empty means none.' }
+  confirm-message: { title: 'Confirm message', info: 'Asks for the confirmation. Empty uses lang.yml.' }
+  argument-permissions: { title: 'Argument permissions', info: 'LITERAL arguments without one get <permission>.<argument>.' }
+  cooldown-message: { title: 'Cooldown message', info: '{time} and {time-left}. Empty uses lang.yml.' }
+  usage-message: { title: 'Usage message', info: '{usage}. Empty uses lang.yml.' }
+  on-first-join-messages: { title: 'First join: messages', info: 'Sent the first time a player joins.' }
+  on-first-join-commands: { title: 'First join: commands', info: 'Run the first time a player joins.' }
+  entries: { title: 'Entries', info: 'What can be rolled, with [weight:N] [chance:N%] [value:...].' }
+  line: { title: 'Line', info: 'The text of the line.' }

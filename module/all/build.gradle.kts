@@ -5,6 +5,7 @@ val moduleProjects = listOf(
     project(":module:announcements"),
     project(":module:channels"),
     project(":module:cooldowns"),
+    project(":module:custom-commands"),
     project(":module:discord"),
     project(":module:emojis"),
     project(":module:join-quit"),

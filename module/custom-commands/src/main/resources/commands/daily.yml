@@ -1,0 +1,45 @@
+# Daily reward, shipped with SIR. Every key is explained in example.yml.
+# Every player can claim it once a day: 3 different rewards are drawn from the
+# pool, each with its own chance, and given right away.
+enabled: true
+# Empty: every player can use it.
+permission: ''
+aliases: [ reward, dailyreward ]
+description: 'Claims your daily reward.'
+usage: '/daily'
+override-existing: false
+scope:
+  sender: PLAYER
+# One day. Players with 'sir.daily.bypass' can claim it again right away.
+cooldown: 86400
+cooldown-message: '<P> &7You already claimed it today. Come back in &e{time-left}&7.'
+
+# Solved once per claim, so the message and the saved count are the same number.
+values:
+  claims: '[once]{calc:{saved-player:claims}+1}'
+
+random-values:
+  # Each entry: what the player reads, and in [value:...] the item and amount
+  # given with /give. unique: true never gives the same reward twice in one claim.
+  reward:
+    times: 3
+    unique: true
+    separator: '&7, '
+    entries:
+      - '[weight:30][value:bread 16]&f16 Bread'
+      - '[weight:25][value:iron_ingot 8]&f8 Iron'
+      - '[weight:20][value:gold_ingot 5]&e5 Gold'
+      - '[weight:15][value:experience_bottle 10]&a10 XP Bottles'
+      - '[weight:8][value:diamond 2]&b2 Diamonds'
+      - '[chance:2%][value:netherite_ingot 1]&5&l1 Netherite Ingot'
+
+messages:
+  - '[sound:ENTITY_PLAYER_LEVELUP]&7Daily reward: {reward}'
+  # Only when the 2% one comes out.
+  - '[if:{reward.value}~netherite][to:all]&d{player} got a &5&lNetherite Ingot &dfrom their daily reward!'
+  - '&7You have claimed it &e{claims} &7times.'
+
+commands:
+  # One /give for each reward drawn.
+  - '[for:reward]give {player} {reward.value}'
+  - '[save-player:claims]{claims}'

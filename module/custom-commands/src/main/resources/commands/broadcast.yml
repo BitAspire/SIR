@@ -1,0 +1,23 @@
+# Broadcast, shipped with SIR. Every key is explained in example.yml.
+enabled: true
+permission: sir.broadcast
+aliases: [ bc, bcast ]
+description: 'Sends a highlighted message to every player.'
+usage: '/broadcast <message>'
+override-existing: true
+toggleable: false
+respect-mute: false
+cooldown: 0
+
+arguments:
+  message:
+    type: STRING
+    greedy: true
+    messages:
+      - '[to:all]'
+      - '[to:all]&6| &e&lMessage for everyone'
+      - '[to:all]&6|'
+      - '[to:all]&6| &7Author: &f{player}'
+      - '[to:all]&6|'
+      - '[to:all]&6| &f{message}'
+      - '[to:all]'

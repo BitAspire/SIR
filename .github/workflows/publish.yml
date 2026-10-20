@@ -245,7 +245,7 @@ jobs:
           }
 
           MODULES=(
-            advancements announcements channels cooldowns discord emojis
+            advancements announcements channels cooldowns custom-commands discord emojis
             join-quit login mentions moderation motd scoreboard tags vanish
           )
           COMMANDS=(

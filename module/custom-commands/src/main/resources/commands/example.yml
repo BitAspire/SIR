@@ -1,0 +1,470 @@
+###############################################################################
+#                          Custom command reference                           #
+###############################################################################
+#
+# Each .yml file in this folder is one command, and the file name is the command
+# name: 'example.yml' creates /example. Names use a-z, 0-9, _ and -.
+# Apply edits with /customcommands reload, or edit the command from the
+# /customcommands menu, which saves and reloads it for you.
+#
+# ---------------------------------------------------------------------------
+# How a command runs
+# ---------------------------------------------------------------------------
+# 1. scope.sender and scope.worlds are checked.
+# 2. The typed words are matched against the 'arguments' tree, one word per level:
+#    - LITERAL arguments are tried first.
+#    - Then the typed arguments, in the order they are written in the file;
+#      the first one that accepts the word wins.
+#    - A word that matches nothing sends 'wrong-arg' from lang.yml.
+#    - Every argument reached must pass its own 'permission'.
+# 3. The 'messages' and 'commands' of the LAST argument reached are run, then
+#    the outcomes picked from its 'random' section, if it has one.
+#    If that argument has none of them, the usage is shown instead.
+# 4. The cooldown is checked and started only when actions are run.
+#
+# An argument is optional when the level above it has its own messages or
+# commands: '/example' runs the root actions, '/example give' shows the usage
+# because 'give' has no actions of its own.
+#
+# ---------------------------------------------------------------------------
+# Placeholders, in messages and commands
+# ---------------------------------------------------------------------------
+# {player}         Name of who ran the command ('CONSOLE' for the console).
+# {args}           Everything typed after the command.
+# {server-brand}   The brand the server itself sends on the F3 screen: Paper, Spigot...
+# Of the player who uses the command (or joins), not of each receiver:
+#   {display-name} {uuid} {world} {x} {y} {z} {health} {food} {level} {gamemode}
+#   The console has none of them, and an argument with the same key wins.
+# {<argument>}     Value typed for a non-LITERAL argument, by its key: {target}, {amount}.
+#                  PLAYER arguments give the full name, even with 'exact: false'.
+# {to}             Name of who receives the message, or runs the command, of that line.
+#                  It is the sender unless the line has a [to:...] prefix.
+# {<random value>} A value from 'random-values', by its key (see below).
+# {outcome}        Inside an outcome: its own key.
+# {outcomes}       Keys of every outcome picked, separated by commas.
+# {random:<spec>}  A new random value each time it appears (see below).
+# {calc:<expr>}    The result of + - * / % and parentheses: {calc:{amount}*2+1}.
+# {pick:<n>:a|b|c} The n-th value of the list: {pick:{roll}:one|two|three}.
+# {if:<a><op><b>:yes|no}  yes when the condition holds, else no (or nothing
+#                  without '|'). <op> is >=, <=, >, <, = or !=; numbers compare as
+#                  numbers, text only with = and != (case ignored): {if:{roll}>=50:&aWin|&cLose}.
+#                  ~ is "contains" and !~ "doesn't contain", for text: {if:{reward.value}~diamond:...}.
+# {ping:<player>}  Ping in ms of that online player: {ping:{player}}, {ping:{target}}.
+# {saved:<key>}    A value saved with [save:<key>]. Empty when none was saved.
+# {saved-player:<key>}  A value saved with [save-player:<key>] for whoever receives
+#                  or runs the line.
+#                  With PlaceholderAPI, other plugins read them as %sir-custom_saved_<key>%
+#                  and %sir-custom_player_<key>%.
+# {cost}           The cost of the use, see 'cost' below.
+# {random}, {calc}, {pick}, {if}, {ping} and {saved} can go inside each other and are solved
+# from the innermost one out: {calc:{random:1-6}+{random:1-6}}. Invalid ones stay as written.
+# PlaceholderAPI placeholders are resolved for whoever receives the line, or for
+# the player the command runs for.
+#
+# ---------------------------------------------------------------------------
+# Random values
+# ---------------------------------------------------------------------------
+# A <spec> is one of:
+#   1-10          A whole number from 1 to 10, both included. Negatives work: -5-5.
+#   0.5-2.25      A decimal number, with as many decimals as the bounds have.
+#   red|green|b   One of the values, split by '|'.
+# {random:<spec>} is rolled again on every use, even inside the same line, and on
+# every [repeat:N] and every [to:...] receiver.
+# 'random-values' on any argument of the path defines values rolled ONCE per use
+# and shared by every line, so a message and a command can show the same number:
+#   random-values:
+#     amount: '1-64'
+#   messages: [ 'You got {amount} diamonds.' ]
+#   commands: [ 'give {player} diamond {amount}' ]
+# Besides a <spec>, a random value can be a list: one entry is picked each use,
+# all equally likely unless they start with one of these prefixes:
+#   [weight:N]     N times as likely as an entry without prefix (weight 1).
+#   [chance:N%]    Exactly N% of the uses; [chance:N] is the same. Decimals work.
+# The entries with a chance get it, and the rest of 100% is shared by the others
+# by their weight. When every entry has a chance and they add up to less than
+# 100%, the rest picks nothing: the value is empty. Over 100% they are scaled down.
+#   random-values:
+#     answer: [ 'Yes', 'No', 'Ask again later' ]
+#     reward:
+#       - '[chance:5%]Legendary sword'
+#       - '[chance:20]Diamond'
+#       - '[weight:2]Iron'   # 50% (two thirds of the remaining 75%)
+#       - 'Coal'             # 25%
+#     drop: [ '[chance:10%]Emerald' ]   # empty 90% of the uses: [if:{drop}]...
+# An entry can also keep a hidden value with [value:...]: the text is what players
+# read and the value is what lines use, like a number to add or an item to give.
+#
+# To roll a list more than once, write it as a section with 'entries':
+#   random-values:
+#     reward:
+#       times: 3            # Rolls each use; placeholders work: '{amount}'. Default 1.
+#       unique: true        # An entry comes out once at most. Default false.
+#       separator: '&7, '   # Between the rolls. Default ', '.
+#       entries: [ '[weight:3][value:diamond 2]&b2 Diamonds', '[value:iron_ingot 8]&f8 Iron' ]
+# Every random value then gives:
+#   {reward}          The text of every roll, joined by the separator.
+#   {reward.value}    Their values, joined by the separator.
+#   {reward.sum}      The values that are numbers, added up. Empty when none is.
+#   {reward.count}    How many rolls came out.
+#   {reward.1}, {reward.1.value}   One roll, from 1 to {reward.count}.
+# Use [for:reward] to use a line once for each roll; see "Line prefixes".
+# An argument deeper in the path overrides a value with the same key.
+#
+# ---------------------------------------------------------------------------
+# Argument types ('type' key, LITERAL when missing)
+# ---------------------------------------------------------------------------
+# LITERAL  A fixed word: the argument key itself, plus its 'aliases'.
+#          Case is ignored. It is not available as a placeholder.
+#          Tab-complete: the key.
+# STRING   Any single word. With 'greedy: true', the rest of the input.
+#          Tab-complete: only 'suggestions'.
+# INTEGER  A whole number, inside 'min' and 'max' when they are set.
+#          Tab-complete: only 'suggestions'.
+# NUMBER   A decimal number, inside 'min' and 'max' when they are set.
+#          Tab-complete: only 'suggestions'.
+# BOOLEAN  'true' or 'false', case ignored.
+#          Tab-complete: true, false.
+# PLAYER   An online player the sender can see, so vanished players are not
+#          accepted for players who can't see them. The exact name by default;
+#          with 'exact: false', the start of a name is enough ('Cro' for 'CroaBeast').
+#          Tab-complete: those players.
+# CHOICE   One of 'choices', case ignored. The value keeps the case it was typed with.
+#          Tab-complete: the choices.
+# WORLD    A loaded world, case ignored. The value is its real name.
+#          Tab-complete: the worlds.
+# OFFLINE_PLAYER  A player who has played here, online or not. The value is the
+#          real name. Tab-complete: the online players.
+# DURATION A time: 90 (seconds), 30s, 5m, 1h30m, 2d or 1w. The value is the total
+#          in seconds, so {calc} can use it. 'min' and 'max' are in seconds too.
+#          Tab-complete: 30s, 5m, 1h, 1d.
+# MATERIAL An item or block: diamond, minecraft:oak_log. The value is its name in
+#          lowercase, ready for /give. Tab-complete: every material.
+# ENTITY   An entity type: zombie, minecraft:cow. The value is its name in lowercase.
+#          Tab-complete: the entities that can be spawned.
+#
+# ---------------------------------------------------------------------------
+# Argument keys
+# ---------------------------------------------------------------------------
+# type         One of the types above.
+# permission   Needed to use this argument. Missing or empty: no permission.
+# aliases      LITERAL only. Other words that match it.
+# min, max     INTEGER, NUMBER and DURATION only. Inclusive limits; leave them out for none.
+# choices      CHOICE only. The accepted values.
+# exact        PLAYER only. false accepts the start of a name. Default true.
+# suggestions  Replaces the tab-complete values of any type. '@players' adds the
+#              online players and '@worlds' the worlds: [ '@a', 'perm:', '@players' ].
+# cost         Money taken from players when this is the deepest argument reached
+#              with a cost, before the actions run. Needs Vault and an economy
+#              plugin; without them it is free. {cost} shows it. Players with
+#              '<permission>.free' don't pay. The command itself takes it too.
+# requires     Conditions that must all hold to use this argument, like [if]:
+#                requires: [ '{level}>=10', '{world}!=world_nether', '{saved-player:rank}~vip' ]
+#              Checked for every argument reached, the command itself too, before
+#              the cooldown, the cost and the confirmation; nothing runs when one fails.
+# deny-message Sent when a condition of 'requires' fails. Empty uses 'denied' of lang.yml.
+# confirm      Seconds to use the same command again in to confirm it, for dangerous
+#              ones: the first use only asks. The deepest argument reached with it wins.
+# confirm-message  Asks for the confirmation; {time}. Empty uses 'confirm' of lang.yml.
+# greedy       true takes the current word and everything after it as one value.
+#              Only the first word is checked against the type, so use it with
+#              STRING. Its own 'arguments' are ignored, so it must be the last one.
+# messages     Sent when this is the last argument reached.
+# commands     Run when this is the last argument reached.
+# values       Fixed values, used as {<key>}: a text written once for many lines.
+#              The deepest argument reached wins, and a typed argument with the same
+#              key wins over all of them, so a value can be a default:
+#                values: { amount: '1', prefix: '[title:{seconds}]' }
+#              They can use the typed values, like {seconds} above, and hold
+#              expressions to write once: total: '{calc:{roll.sum}*2}', then {total}
+#              in any line. They are solved in each line, so keep {random:...} in
+#              'random-values' to get the same roll everywhere.
+#              Starting with [once], a value is solved a single time when the
+#              command is used, after the random values, and every line gets that
+#              result even if what it reads changes during the use:
+#                values: { claims: '[once]{calc:{saved-player:claims}+1}' }
+#                messages: [ 'Claim number {claims}.' ]
+#                commands: [ '[save-player:claims]{claims}' ]
+#              Values of the sender, like {saved-player:...} or {ping:...}, are read
+#              for the sender, not for each receiver.
+# random-values  Named random values, see "Random values".
+# random       Outcomes picked at random, see "Random outcomes".
+# arguments    The arguments that can follow this one, with the same keys.
+# The command itself takes 'messages', 'commands', 'values', 'random-values' and
+# 'random' too, for when it is used with no arguments.
+#
+# Repeated parts: YAML anchors write a part once (&name) and reuse it (*name),
+# like the help of clear-chat.yml, the roll of dice.yml or the 'message' argument
+# shared by every channel of print.yml. Edits from the menu write the copies out.
+#
+# ---------------------------------------------------------------------------
+# Random outcomes ('random')
+# ---------------------------------------------------------------------------
+# random:
+#   picks: 1          How many outcomes are picked each use. Default 1.
+#   unique: true      true: an outcome is picked once at most per use.
+#                     false: the same one can be picked several times.
+#   outcomes:
+#     <key>:
+#       weight: 1     Chance compared with the others: weight 3 is three times
+#                     as likely as weight 1. Default 1; 0 or less is never picked.
+#       permission: ''  Only players with it can get this outcome. Empty: anyone.
+#       messages: []  Same as any 'messages' list.
+#       commands: []  Same as any 'commands' list.
+# Weights are relative, they don't need to add up to 100. The argument's own
+# messages and commands run first, then each picked outcome in order.
+#
+# ---------------------------------------------------------------------------
+# Line prefixes, for both messages and commands
+# ---------------------------------------------------------------------------
+# They go at the very start of the line, before any channel prefix, in any order:
+#   '[to:all][repeat:3][action_bar]&7Hi'
+# [to:<who>]    Sends the message to, or runs the command for, someone else:
+#   sender              Who ran the command. The default.
+#   all / @a            Every online player.
+#   others              Every online player except the sender.
+#   world               Players in the sender's world (everyone for the console).
+#   world:<name>        Players in that world.
+#   radius:<blocks>     Players within that many blocks of the sender, in its world.
+#                       Everyone for the console.
+#   perm:<permission>   Online players with that permission.
+#   group:<group>       Online players in that primary group (Vault required).
+#   <argument>          The player typed in that argument: [to:target].
+#   <name>              That player, by exact name. Placeholders work: [to:{target}].
+#   A placeholder can also hold any word above: [to:{who}] with 'perm:vip' typed.
+#   The words above win over argument keys, so don't name an argument 'all'.
+#   For commands, [player] and [op] run as that receiver, once per receiver.
+# [repeat:<N>]  Sends or runs the line N times. Limited by 'max-repeat' in config.yml.
+# [save:<key>]  Saves the text of the line instead of sending or running it, once
+#               for the whole server. It survives restarts, in data.yml. An empty
+#               text removes the value. The key takes placeholders: [save:{target}_wins].
+# [save-player:<key>]  The same, but one value per player: the sender, or each
+#               [to:...] receiver.
+# [if:<condition>]  Uses the line only when the condition holds, checked for each
+#               receiver: [if:{saved:brand}], [if:{percent}>=90], [if:{world}=nether].
+#               Same conditions as {if}; with no operator, true when the value isn't
+#               empty, false or 0.
+# [delay:<seconds>]  Waits before using the line; decimals work: [delay:0.5].
+#               Only that line waits, so give later lines bigger delays for a sequence.
+# [sound:<sound>:<volume>:<pitch>]  Plays a sound to each receiver; volume and pitch
+#               are optional. A Sound name (ENTITY_PLAYER_LEVELUP) or a resource key
+#               (minecraft:block.bell.use). With no text, only the sound plays.
+# [log]         Writes the line to the console instead of sending or running it.
+# [for:<random value>]  Uses the line once for each roll of that random value, with
+#               {<key>} and {<key>.value} being the ones of that roll:
+#               '[for:reward]give {player} {reward.value}'.
+# A line that is empty after its prefixes sends an empty chat line:
+#   '[to:all][repeat:100]' clears the chat of every player.
+#
+# ---------------------------------------------------------------------------
+# Message lines ('messages')
+# ---------------------------------------------------------------------------
+# Plain text goes to the chat. After the line prefixes, start the text with a
+# channel prefix for another channel:
+# [action_bar]                     Action bar.
+# [title] / [title:<seconds>]      Title; <seconds> is how long it stays.
+# [bossbar:<id>]                   A bar from SIR's bossbars.yml.
+# [bossbar:<seconds>:<COLOR>:<STYLE>]  A new bar; the values go in any order.
+# [json]                           Raw JSON chat component.
+# [webhook:<id>]                   A webhook from SIR's webhooks.yml.
+# [tab_header] / [tab_footer]      Top or bottom of the player list (TAB). It stays
+#                                  until changed; TAB plugins may overwrite it.
+# [toast:<icon>:<style>]           Advancement popup; both values are optional.
+#                                  <style> is TASK, GOAL or CHALLENGE. Needs 1.12+
+#                                  and the PacketEvents plugin.
+# [brand]                          Server name on the F3 screen, until the player rejoins.
+# Colors, hex and SIR tags work as in any SIR message.
+#
+# ---------------------------------------------------------------------------
+# Command lines ('commands'), written without the slash
+# ---------------------------------------------------------------------------
+# [console] (default)  Run by the console.
+# [player]             Run by the sender, with their own permissions.
+# [op]                 Run by the sender with temporary OP. Use with care.
+# Values are inserted as typed: a greedy STRING lets the player write the rest
+# of a console command, so prefer [player] or CHOICE for anything sensitive.
+#
+###############################################################################
+
+# false keeps the file without registering the command.
+enabled: false
+
+# Needed to run the command at all. Remove the key to use 'permission-prefix'
+# from config.yml plus the command name (sir.custom.example).
+# Players with '<permission>.bypass' ignore the cooldown.
+permission: sir.custom.example
+
+# Other names for the command.
+aliases: [ ex ]
+
+# Shown in /help.
+description: 'An example custom command.'
+
+# Shown when the last argument reached has no actions. Leave it empty to build
+# it from the arguments: <a|b> means one is required, [a|b] means optional.
+usage: ''
+
+# Bukkit's message when the permission is missing. SIR's own 'no-permission'
+# from lang.yml is the one players usually see.
+permission-message: ''
+
+# true replaces a command with the same name from another plugin. When false
+# and the name is taken, the command is skipped with a warning in the console.
+# Commands of SIR itself are never replaced.
+override-existing: false
+
+# true hides the command from tab-complete, even for players with permission.
+# It can still be run. Needs 1.13 or newer.
+hidden: false
+
+# true lets players turn off its messages to them by disabling Custom Commands
+# in /settings. The sender always gets them, and commands still run.
+toggleable: false
+
+# true stops muted players from using it, like the chat does. Uses SIR's mutes
+# and the mute plugins SIR hooks into.
+respect-mute: false
+
+# Seconds between uses for each player. Remove the key to use the cooldown of
+# config.yml; 0 disables it. The console has no cooldown.
+cooldown: 5
+
+# Seconds between uses of anyone: after a player uses it, nobody can until it ends.
+# 0 or missing disables it. Players with '<permission>.bypass' ignore both cooldowns.
+global-cooldown: 0
+
+# Money taken from players, see 'cost' in "Argument keys". 0 or missing is free.
+cost: 0
+
+# true gives every LITERAL argument right after the command, without a permission
+# of its own, the permission '<permission>.<argument>': sir.custom.example.give.
+argument-permissions: false
+
+# Replace the messages of lang.yml for this command; empty uses lang.yml.
+# The cooldown one takes {time} (seconds) and {time-left} (1h 5m 30s).
+cooldown-message: ''
+usage-message: ''
+
+scope:
+  # PLAYER, CONSOLE or ALL.
+  sender: ALL
+  # Worlds where players can use it. Empty means every world.
+  worlds: []
+
+# Actions of '/example' with no arguments.
+messages:
+  - '<P> &7Hello &b{player}&7! Try &b/example give <player> <amount>&7.'
+commands: []
+
+arguments:
+  # /example give <player> <amount>
+  give:
+    type: LITERAL
+    permission: sir.custom.example.give
+    aliases: [ g ]
+    arguments:
+      target:
+        type: PLAYER
+        arguments:
+          amount:
+            type: INTEGER
+            min: 1
+            max: 64
+            suggestions: [ '1', '16', '32', '64' ]
+            messages:
+              - '<P> &7Gave &b{amount} &7diamonds to &b{target}&7.'
+            commands:
+              - '[console] give {target} diamond {amount}'
+
+  # /example speed <0.1-1.0>
+  speed:
+    type: LITERAL
+    arguments:
+      value:
+        type: NUMBER
+        min: 0.1
+        max: 1.0
+        suggestions: [ '0.2', '0.5', '1.0' ]
+        commands:
+          - '[console] speed walk {value} {player}'
+
+  # /example fly <true|false>
+  fly:
+    type: LITERAL
+    arguments:
+      state:
+        type: BOOLEAN
+        messages:
+          - '[action_bar]&7Fly set to &b{state}'
+
+  # /example <red|green|blue>
+  color:
+    type: CHOICE
+    choices: [ red, green, blue ]
+    messages:
+      - '[title:10]&7You picked &b{color}'
+
+  # /example reward: one prize, weighted. {outcome} is the prize's key.
+  reward:
+    type: LITERAL
+    messages:
+      - '<P> &7Rolling a prize...'
+    random:
+      picks: 1
+      unique: true
+      outcomes:
+        diamonds:
+          weight: 1
+          messages: [ '<P> &bLucky! &7You won &b{outcome}&7.' ]
+          commands: [ '[console] give {player} diamond 3' ]
+        iron:
+          weight: 4
+          messages: [ '<P> &7You won &f{outcome}&7.' ]
+          commands: [ '[console] give {player} iron_ingot 8' ]
+        vip-only:
+          weight: 2
+          permission: sir.custom.example.vip
+          messages: [ '<P> &6VIP prize!' ]
+          commands: [ '[console] give {player} emerald 2' ]
+
+  # /example roll: {amount} is the same in every line, {random:...} is not.
+  roll:
+    type: LITERAL
+    random-values:
+      amount: '1-6'
+      side: 'heads|tails'
+    messages:
+      - '<P> &7You rolled &b{amount}&7, the coin says &b{side}&7.'
+      - '[to:others]<P> &b{player} &7rolled &b{amount}&7. Lucky number: &b{random:1-100}'
+    commands:
+      - '[console] give {player} gold_nugget {amount}'
+
+  # /example announce <text...>: every player gets the title, the sender a confirmation.
+  announce:
+    type: LITERAL
+    permission: sir.custom.example.announce
+    arguments:
+      text:
+        type: STRING
+        greedy: true
+        messages:
+          - '[to:all][title:3]&e{text}'
+          - '<P> &7Sent to every player.'
+
+  # /example say <text...>
+  say:
+    type: LITERAL
+    arguments:
+      text:
+        type: STRING
+        greedy: true
+        commands:
+          - '[player] say {text}'
+
+# Run for every player who joins, as if that player was the sender, without
+# permission, scope or cooldown checks. Same lines as any 'messages' and 'commands'.
+# Use it to send again what the client forgets when it leaves, like a [brand].
+# 'on-first-join' works the same, only the first time a player joins the server,
+# and runs before 'on-join'. Use it for a welcome kit.
+# on-join:
+#   messages: [ '&7Welcome back, {player}. Your color: {saved-player:color}' ]
+#   commands: []
