@@ -30,6 +30,7 @@ softdepend:
   - Vault
   - PlaceholderAPI
   - InteractiveChat
+  - packetevents
   # Login plugins
   - AuthMe
   - nLogin
