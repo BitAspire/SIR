@@ -249,7 +249,7 @@ jobs:
             join-quit login mentions moderation motd scoreboard tags vanish
           )
           COMMANDS=(
-            clear-chat color ignore message mute nick print settings
+            color ignore message mute nick settings
           )
 
           deploy_api

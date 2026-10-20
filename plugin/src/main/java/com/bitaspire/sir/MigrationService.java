@@ -1105,8 +1105,6 @@ final class MigrationService {
                 : new YamlConfiguration();
 
         Map<String, String> commandMapping = new LinkedHashMap<>();
-        commandMapping.put("print", "print");
-        commandMapping.put("clearchat", "clear-chat");
         commandMapping.put("ignore", "ignore");
         commandMapping.put("chatcolor", "chat-color");
         commandMapping.put("msg", "message");
@@ -1143,8 +1141,6 @@ final class MigrationService {
 
     private String resolveProvider(String commandKey) {
         switch (commandKey.toLowerCase(Locale.ENGLISH)) {
-            case "clear-chat":
-                return "ClearProvider";
             case "chat-color":
                 return "ColorProvider";
             case "ignore":
@@ -1158,8 +1154,6 @@ final class MigrationService {
                 return "MuteProvider";
             case "nick":
                 return "NickProvider";
-            case "print":
-                return "PrintProvider";
             default:
                 return null;
         }

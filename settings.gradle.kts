@@ -7,6 +7,6 @@ include(
     "module:all"
 )
 include(
-    "command:clear-chat", "command:color", "command:ignore", "command:message",
-    "command:mute", "command:nick", "command:print", "command:settings", "command:all"
+    "command:color", "command:ignore", "command:message",
+    "command:mute", "command:nick", "command:settings", "command:all"
 )

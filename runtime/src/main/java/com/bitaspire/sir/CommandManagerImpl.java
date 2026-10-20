@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.IdentityHashMap;
@@ -136,6 +137,9 @@ class CommandManagerImpl extends BaseManager<ProviderInformation> implements Com
     @Override String ymlFileName() { return "commands.yml"; }
     @Override ProviderInformation parseInformation(YamlConfiguration config) { return new ProviderInformation(config); }
     @Override void onBundledJarExtracted(File jar) { load(jar, false); }
+
+    // Clear Chat and Print moved to the CustomCommands module as commands/clear-chat.yml and print.yml.
+    @Override Set<String> retiredNames() { return new LinkedHashSet<>(Arrays.asList("ClearProvider", "PrintProvider")); }
 
     @Override
     void log(LogLevel level, String... messages) {

@@ -126,6 +126,11 @@ abstract class BaseManager<I extends Information> {
 
     abstract void onBundledJarExtracted(File jar);
 
+    // Names of extensions SIR no longer ships, whose old extracted jars must not keep loading.
+    Set<String> retiredNames() {
+        return Collections.emptySet();
+    }
+
     List<String> findBundledJars() {
         List<String> results = new ArrayList<>();
         String folder = extensionFolder();
@@ -213,6 +218,24 @@ abstract class BaseManager<I extends Information> {
                 startupUpdatedJars.add(fileName);
 
             if (!saveDefaults) onBundledJarExtracted(target);
+        }
+
+        if (saveDefaults) deleteRetiredJars(outputDir);
+    }
+
+    private void deleteRetiredJars(File outputDir) {
+        Set<String> retired = retiredNames();
+        File[] jars = outputDir.listFiles((dir, name) -> name.endsWith(".jar"));
+        if (retired.isEmpty() || jars == null) return;
+
+        for (File jar : jars) {
+            String name = readInformationName(jar);
+            if (name == null || retired.stream().noneMatch(name::equalsIgnoreCase)) continue;
+
+            if (jar.delete())
+                log(LogLevel.INFO, "Deleted retired " + extensionType() + " jar '" + jar.getName() + "'.");
+            else
+                log(LogLevel.WARN, "Could not delete retired " + extensionType() + " jar '" + jar.getName() + "'.");
         }
     }
 

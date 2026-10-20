@@ -1,13 +1,11 @@
 import org.gradle.api.file.DuplicatesStrategy
 
 val commandProjects = listOf(
-    project(":command:clear-chat"),
     project(":command:color"),
     project(":command:ignore"),
     project(":command:message"),
     project(":command:mute"),
     project(":command:nick"),
-    project(":command:print"),
     project(":command:settings")
 )
 
