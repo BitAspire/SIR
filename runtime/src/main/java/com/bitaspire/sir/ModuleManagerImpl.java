@@ -6,7 +6,7 @@ import com.bitaspire.sir.module.JoinQuitService;
 import com.bitaspire.sir.module.ModuleInformation;
 import com.bitaspire.sir.module.ModuleManager;
 import com.bitaspire.sir.module.SIRModule;
-import me.croabeast.common.gui.ChestBuilder;
+import me.croabeast.inventory.builder.ChestBuilder;
 import me.croabeast.takion.logger.LogLevel;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;

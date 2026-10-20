@@ -1,7 +1,7 @@
 package com.bitaspire.sir.module;
 
 import com.bitaspire.sir.UserFormatter;
-import me.croabeast.common.gui.ChestBuilder;
+import me.croabeast.inventory.builder.ChestBuilder;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.jetbrains.annotations.NotNull;
 

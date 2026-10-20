@@ -1,9 +1,10 @@
 package com.bitaspire.sir;
 
 import com.bitaspire.sir.command.StandaloneProvider;
-import com.github.stefvanschie.inventoryframework.pane.Pane;
-import com.github.stefvanschie.inventoryframework.pane.util.Slot;
-import me.croabeast.common.gui.ChestBuilder;
+import me.croabeast.inventory.pane.Pane;
+import me.croabeast.inventory.pane.util.Slot;
+import me.croabeast.inventory.builder.ChestBuilder;
+import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.takion.character.SmallCaps;
 import org.bukkit.Material;
 import org.jetbrains.annotations.NotNull;
@@ -23,7 +24,7 @@ final class CommandMenu {
         int rows = MenuVisuals.mainRowsFor(providers.size());
         int totalPages = MenuVisuals.pageCount(providers.size(), MenuVisuals.MAIN_ITEMS_PER_PAGE);
         String title = "&8" + SmallCaps.toSmallCaps("Loaded SIR Commands:");
-        ChestBuilder menu = ChestBuilder.of(api.getPlugin(), rows, title);
+        ChestBuilder menu = ChestBuilder.of(rows, PrismaticAPI.colorize(title), api.getPlugin());
 
         MenuVisuals.addFrame(
                 menu,
@@ -39,11 +40,11 @@ final class CommandMenu {
         MenuVisuals.addPageControls(menu, api.getPlugin(), rows, totalPages);
 
         if (providers.isEmpty()) {
-            menu.addSingleItem(
+            menu.addItem(
                     0, 4, 1,
                     MenuVisuals.emptyItem(api.getPlugin(), "No Commands",
                             "No command provider jars are loaded right now."),
-                    pane -> pane.setPriority(Pane.Priority.LOW)
+                    Pane.Priority.LOW
             );
             return menu;
         }

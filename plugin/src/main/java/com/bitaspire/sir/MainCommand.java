@@ -249,7 +249,7 @@ final class MainCommand implements TabExecutor {
                     if (player == null)
                         return mainSender.send("&cThis command is only for players.");
 
-                    main.getModuleManager().getMenu().showGui(player);
+                    main.getModuleManager().getMenu().show(player);
                     return true;
                 }
 
@@ -260,7 +260,7 @@ final class MainCommand implements TabExecutor {
                     if (player == null)
                         return mainSender.send("&cThis command is only for players.");
 
-                    main.getCommandManager().getMenu().showGui(player);
+                    main.getCommandManager().getMenu().show(player);
                     return true;
                 }
 

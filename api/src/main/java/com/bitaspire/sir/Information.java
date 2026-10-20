@@ -1,6 +1,6 @@
 package com.bitaspire.sir;
 
-import com.github.stefvanschie.inventoryframework.pane.util.Slot;
+import me.croabeast.inventory.pane.util.Slot;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;

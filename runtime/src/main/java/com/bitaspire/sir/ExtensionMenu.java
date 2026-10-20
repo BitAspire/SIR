@@ -1,9 +1,10 @@
 package com.bitaspire.sir;
 
-import com.github.stefvanschie.inventoryframework.gui.GuiItem;
-import com.github.stefvanschie.inventoryframework.pane.Pane;
-import com.github.stefvanschie.inventoryframework.pane.util.Slot;
-import me.croabeast.common.gui.ChestBuilder;
+import me.croabeast.inventory.gui.GuiItem;
+import me.croabeast.inventory.pane.Pane;
+import me.croabeast.inventory.pane.util.Slot;
+import me.croabeast.inventory.builder.ChestBuilder;
+import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.takion.character.SmallCaps;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -46,7 +47,7 @@ final class ExtensionMenu<I extends Information, E extends SIRExtension<I>> {
         int rows = MenuVisuals.mainRowsFor(extensions.size());
         int totalPages = MenuVisuals.pageCount(extensions.size(), MenuVisuals.MAIN_ITEMS_PER_PAGE);
         String title = "&8" + SmallCaps.toSmallCaps("Loaded SIR " + pluralLabel + ":");
-        ChestBuilder menu = ChestBuilder.of(api.getPlugin(), rows, title);
+        ChestBuilder menu = ChestBuilder.of(rows, PrismaticAPI.colorize(title), api.getPlugin());
 
         MenuVisuals.addFrame(
                 menu,
@@ -62,11 +63,11 @@ final class ExtensionMenu<I extends Information, E extends SIRExtension<I>> {
         MenuVisuals.addPageControls(menu, api.getPlugin(), rows, totalPages);
 
         if (extensions.isEmpty()) {
-            menu.addSingleItem(
+            menu.addItem(
                     0, 4, 1,
                     MenuVisuals.emptyItem(api.getPlugin(), "No " + pluralLabel,
                             "No " + typeLabel.toLowerCase() + " jars are loaded right now."),
-                    pane -> pane.setPriority(Pane.Priority.LOW)
+                    Pane.Priority.LOW
             );
             return menu;
         }

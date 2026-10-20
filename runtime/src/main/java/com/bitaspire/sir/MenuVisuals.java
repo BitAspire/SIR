@@ -1,11 +1,11 @@
 package com.bitaspire.sir;
 
-import com.github.stefvanschie.inventoryframework.gui.GuiItem;
-import com.github.stefvanschie.inventoryframework.pane.Pane;
-import com.github.stefvanschie.inventoryframework.pane.util.Slot;
+import me.croabeast.inventory.gui.GuiItem;
+import me.croabeast.inventory.pane.Pane;
+import me.croabeast.inventory.pane.util.Slot;
 import lombok.experimental.UtilityClass;
-import me.croabeast.common.gui.ChestBuilder;
-import me.croabeast.common.gui.ItemCreator;
+import me.croabeast.inventory.builder.ChestBuilder;
+import me.croabeast.inventory.builder.ItemBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Material;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -83,23 +83,23 @@ class MenuVisuals {
         for (int page = 0; page < pages; page++) {
             for (int y = 0; y < rows; y++) {
                 for (int x = 0; x < 9; x++) {
-                    menu.addSingleItem(
+                    menu.addItem(
                             page, x, y,
                             filler(plugin),
-                            pane -> pane.setPriority(Pane.Priority.LOWEST)
+                            Pane.Priority.LOWEST
                     );
                 }
             }
 
-            menu.addSingleItem(
+            menu.addItem(
                     page, 4, 0,
                     item(plugin, summaryMaterial, headerName(title), summaryLore, event -> event.setCancelled(true)),
-                    pane -> pane.setPriority(Pane.Priority.LOW)
+                    Pane.Priority.LOW
             );
-            menu.addSingleItem(
+            menu.addItem(
                     page, 8, 0,
                     close(plugin),
-                    pane -> pane.setPriority(Pane.Priority.LOW)
+                    Pane.Priority.LOW
             );
         }
     }
@@ -113,36 +113,36 @@ class MenuVisuals {
         int bottomRow = rows - 1;
         for (int page = 0; page < pages; page++) {
             int displayPage = page + 1;
-            menu.addSingleItem(
+            menu.addItem(
                     page, 4, bottomRow,
                     item(plugin, Material.PAPER, "&e&l" + small("Page") + " &f" + displayPage + "/" + pages,
                             new String[]{"&8" + POINTER + " &7Use navigation buttons to browse."}, event -> event.setCancelled(true)),
-                    pane -> pane.setPriority(Pane.Priority.LOW)
+                    Pane.Priority.LOW
             );
 
             if (page > 0) {
                 int target = page - 1;
-                menu.addSingleItem(
+                menu.addItem(
                         page, 2, bottomRow,
                         navigation(plugin, "&e&l" + BACK + " " + small("Previous"), "&7Go to page &f" + (target + 1) + "&7.", event -> {
                             event.setCancelled(true);
-                            menu.setDisplayedPage(target);
-                            menu.showGui(event.getWhoClicked());
+                            menu.setPage(target);
+                            menu.show(event.getWhoClicked());
                         }),
-                        pane -> pane.setPriority(Pane.Priority.LOW)
+                        Pane.Priority.LOW
                 );
             }
 
             if (page < pages - 1) {
                 int target = page + 1;
-                menu.addSingleItem(
+                menu.addItem(
                         page, 6, bottomRow,
                         navigation(plugin, "&e&l" + small("Next") + " →", "&7Go to page &f" + (target + 1) + "&7.", event -> {
                             event.setCancelled(true);
-                            menu.setDisplayedPage(target);
-                            menu.showGui(event.getWhoClicked());
+                            menu.setPage(target);
+                            menu.show(event.getWhoClicked());
                         }),
-                        pane -> pane.setPriority(Pane.Priority.LOW)
+                        Pane.Priority.LOW
                 );
             }
         }
@@ -290,11 +290,11 @@ class MenuVisuals {
             formattedLore.add(format(line));
         }
 
-        return ItemCreator.of(material)
-                .modifyName(format(name))
-                .modifyLore(formattedLore)
+        return ItemBuilder.of(material)
+                .setName(format(name))
+                .setLore(formattedLore)
                 .setAction(handler)
-                .create(plugin);
+                .build(plugin);
     }
 
     @NotNull

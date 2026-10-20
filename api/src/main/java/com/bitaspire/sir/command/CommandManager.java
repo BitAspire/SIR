@@ -3,7 +3,7 @@ package com.bitaspire.sir.command;
 import com.bitaspire.sir.addon.SIRAddon;
 import com.bitaspire.sir.module.SIRModule;
 import me.croabeast.command.Synchronizer;
-import me.croabeast.common.gui.ChestBuilder;
+import me.croabeast.inventory.builder.ChestBuilder;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.jetbrains.annotations.NotNull;
 

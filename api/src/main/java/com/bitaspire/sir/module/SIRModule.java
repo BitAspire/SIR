@@ -1,7 +1,7 @@
 package com.bitaspire.sir.module;
 
 import com.bitaspire.sir.SIRApi;
-import com.github.stefvanschie.inventoryframework.pane.util.Slot;
+import me.croabeast.inventory.pane.util.Slot;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import me.croabeast.common.util.ArrayUtils;

@@ -1,6 +1,6 @@
 package com.bitaspire.sir.command;
 
-import com.github.stefvanschie.inventoryframework.pane.util.Slot;
+import me.croabeast.inventory.pane.util.Slot;
 import com.google.common.base.Preconditions;
 import lombok.AccessLevel;
 import lombok.Getter;

@@ -1,10 +1,10 @@
 package com.bitaspire.sir;
 
-import com.github.stefvanschie.inventoryframework.gui.GuiItem;
-import com.github.stefvanschie.inventoryframework.pane.component.ToggleButton;
+import me.croabeast.inventory.gui.GuiItem;
+import me.croabeast.inventory.pane.component.ToggleButton;
 import me.croabeast.common.CollectionBuilder;
 import me.croabeast.common.Registrable;
-import me.croabeast.common.gui.ItemCreator;
+import me.croabeast.inventory.builder.ItemBuilder;
 import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.takion.character.SmallCaps;
 import me.croabeast.vnc.VNC;
@@ -179,12 +179,12 @@ public interface MenuToggleable {
             String resolvedTitle = smallCapsMenuText(title != null ? title : information.getTitle());
             String status = enabled ? " &a&l✔" : " &c&l❌";
 
-            return ItemCreator.of(
+            return ItemBuilder.of(
                             enabled ?
                                     Material.LIME_STAINED_GLASS_PANE :
                                     Material.RED_STAINED_GLASS_PANE
                     )
-                    .modifyName(formatMenuText("&7• &f" + resolvedTitle + ':' + status))
+                    .setName(formatMenuText("&7• &f" + resolvedTitle + ':' + status))
                     .modifyMeta(m -> m.setLore(CollectionBuilder
                             .of(information.getDescription())
                             .apply(MenuToggleable::smallCapsMenuText)
@@ -192,7 +192,7 @@ public interface MenuToggleable {
                             .apply(MenuToggleable::formatMenuText)
                             .toList()
                     ))
-                    .create();
+                    .build(SIRApi.instance().getPlugin());
         }
 
         /**

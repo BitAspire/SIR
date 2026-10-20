@@ -17,6 +17,11 @@ allprojects {
         maven("https://jitpack.io")
         maven("https://repo.papermc.io/repository/maven-public/")
         maven("https://croabeast.github.io/repo/")
+
+        // The InventoryFramework fork is only published to the local Maven repository.
+        mavenLocal {
+            content { includeGroup("me.croabeast.inventory") }
+        }
     }
 }
 
@@ -68,6 +73,8 @@ subprojects {
 
         val takionVersion: String by project
         compileOnly("me.croabeast.takion:shaded:$takionVersion:all")
+        val inventoryVersion: String by project
+        compileOnly("me.croabeast.inventory:framework:$inventoryVersion")
         compileOnly("me.clip:placeholderapi:2.12.2")
     }
 }

@@ -1,7 +1,7 @@
 package com.bitaspire.sir.addon;
 
 import com.bitaspire.sir.UserFormatter;
-import me.croabeast.common.gui.ChestBuilder;
+import me.croabeast.inventory.builder.ChestBuilder;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;

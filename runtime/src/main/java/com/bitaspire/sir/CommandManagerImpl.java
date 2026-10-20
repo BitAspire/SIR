@@ -12,7 +12,7 @@ import com.bitaspire.sir.module.SIRModule;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import me.croabeast.command.Synchronizer;
-import me.croabeast.common.gui.ChestBuilder;
+import me.croabeast.inventory.builder.ChestBuilder;
 import me.croabeast.scheduler.GlobalScheduler;
 import me.croabeast.scheduler.GlobalTask;
 import me.croabeast.takion.logger.LogLevel;

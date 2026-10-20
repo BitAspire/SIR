@@ -9,6 +9,7 @@ val apiProject = project(":api")
 val runtimeProject = project(":runtime")
 val takionShaded: Configuration by configurations.creating
 val takionVersion: String by project
+val inventoryVersion: String by project
 
 dependencies {
     implementation(apiProject)
@@ -23,6 +24,8 @@ dependencies {
     }
 
     takionShaded("me.croabeast.takion:shaded:$takionVersion:all")
+    // Takion no longer bundles a menu library, so SIR ships its InventoryFramework fork itself.
+    takionShaded("me.croabeast.inventory:framework:$inventoryVersion")
 }
 
 val apiMainOutput = apiProject.extensions.getByType<SourceSetContainer>()["main"].output
@@ -44,10 +47,6 @@ tasks.named<ShadowJar>("shadowJar") {
     archiveBaseName.set("SIR")
     archiveClassifier.set("")
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
-    // The Takion shaded jar carries kotlin-stdlib because Takion's own build applies the Kotlin
-    // Gradle plugin without having any Kotlin sources. SIR has no use for it either.
-    exclude("kotlin/**")
 
     dependsOn(apiProject.tasks.named("classes"))
     from(apiMainOutput)

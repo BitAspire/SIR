@@ -1,11 +1,11 @@
 package com.bitaspire.sir;
 
 import com.bitaspire.sir.chat.ChatProcessor;
-import com.github.stefvanschie.inventoryframework.pane.Pane;
-import com.github.stefvanschie.inventoryframework.pane.util.Slot;
-import me.croabeast.common.gui.AnvilBuilder;
-import me.croabeast.common.gui.ButtonBuilder;
-import me.croabeast.common.gui.ChestBuilder;
+import me.croabeast.inventory.pane.Pane;
+import me.croabeast.inventory.pane.util.Slot;
+import me.croabeast.inventory.builder.AnvilInputBuilder;
+import me.croabeast.inventory.builder.ChestBuilder;
+import me.croabeast.inventory.builder.ToggleBuilder;
 import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.takion.character.SmallCaps;
 import me.croabeast.takion.logger.LogLevel;
@@ -92,7 +92,7 @@ final class ExtensionConfigEditor<E extends SIRExtension<?>> {
         int totalPages = MenuVisuals.pageCount(keys.size(), itemsPerPage);
         String title = "&8" + SmallCaps.toSmallCaps(extension.getName() + " Config"
                 + (rootPath == null ? ":" : " - " + rootPath + ":"));
-        ChestBuilder menu = ChestBuilder.of(api.getPlugin(), rows, title);
+        ChestBuilder menu = ChestBuilder.of(rows, PrismaticAPI.colorize(title), api.getPlugin());
         MenuVisuals.addFrame(
                 menu,
                 api.getPlugin(),
@@ -106,10 +106,10 @@ final class ExtensionConfigEditor<E extends SIRExtension<?>> {
         );
 
         if (keys.isEmpty()) {
-            menu.addSingleItem(
+            menu.addItem(
                     0, 4, 1,
                     MenuVisuals.emptyItem(api.getPlugin(), "No Options", "This section has no editable keys."),
-                    pane -> pane.setPriority(Pane.Priority.LOW)
+                    Pane.Priority.LOW
             );
         }
 
@@ -124,22 +124,24 @@ final class ExtensionConfigEditor<E extends SIRExtension<?>> {
 
             if (value instanceof Boolean) {
                 boolean enabled = configuration.getBoolean(path);
-                menu.addPane(page, slot, ButtonBuilder
-                        .of(api.getPlugin(), slot, enabled)
-                        .setItem(MenuVisuals.booleanItem(api.getPlugin(), key, true), true)
-                        .setItem(MenuVisuals.booleanItem(api.getPlugin(), key, false), false)
-                        .modify(button -> button.allowToggle(false))
-                        .setAction(button -> click -> {
+                menu.addPane(page, slot, ToggleBuilder
+                        .of(enabled, api.getPlugin())
+                        .setItems(
+                                MenuVisuals.booleanItem(api.getPlugin(), key, true),
+                                MenuVisuals.booleanItem(api.getPlugin(), key, false)
+                        )
+                        .setAllowToggle(false)
+                        .setOnToggle((click, on) -> {
                             click.setCancelled(true);
-                            configuration.set(path, !button.isEnabled());
+                            configuration.set(path, !on);
                             save(configuration, configFile);
                             reload(extension);
                             open(extension, click.getWhoClicked(), rootPath);
                         })
-                        .getValue());
+                        .getButton());
             } else if (value instanceof List) {
                 List<String> values = configuration.getStringList(path);
-                menu.addSingleItem(
+                menu.addItem(
                         page, slot.getX(9), slot.getY(9),
                         MenuVisuals.configItem(
                                 api.getPlugin(),
@@ -153,12 +155,12 @@ final class ExtensionConfigEditor<E extends SIRExtension<?>> {
                                     click.setCancelled(true);
                                     openListEditor(extension, configFile, path, values, click.getWhoClicked(), rootPath);
                                 }),
-                        pane -> pane.setPriority(Pane.Priority.LOW)
+                        Pane.Priority.LOW
                 );
             } else if (value instanceof ConfigurationSection) {
                 ConfigurationSection child = section.getConfigurationSection(key);
                 int childCount = child == null ? 0 : child.getKeys(false).size();
-                menu.addSingleItem(
+                menu.addItem(
                         page, slot.getX(9), slot.getY(9),
                         MenuVisuals.configItem(
                                 api.getPlugin(),
@@ -172,11 +174,11 @@ final class ExtensionConfigEditor<E extends SIRExtension<?>> {
                                     click.setCancelled(true);
                                     open(extension, click.getWhoClicked(), path);
                                 }),
-                        pane -> pane.setPriority(Pane.Priority.LOW)
+                        Pane.Priority.LOW
                 );
             } else {
                 String current = configuration.getString(path, "");
-                menu.addSingleItem(
+                menu.addItem(
                         page, slot.getX(9), slot.getY(9),
                         MenuVisuals.configItem(
                                 api.getPlugin(),
@@ -190,7 +192,7 @@ final class ExtensionConfigEditor<E extends SIRExtension<?>> {
                                     click.setCancelled(true);
                                     openStringEditor(extension, configFile, path, current, click.getWhoClicked(), rootPath);
                                 }),
-                        pane -> pane.setPriority(Pane.Priority.LOW)
+                        Pane.Priority.LOW
                 );
             }
         }
@@ -201,29 +203,29 @@ final class ExtensionConfigEditor<E extends SIRExtension<?>> {
                 String parentPath = rootPath.contains(".")
                         ? rootPath.substring(0, rootPath.lastIndexOf('.'))
                         : null;
-                menu.addSingleItem(
+                menu.addItem(
                         page, 0, 0,
                         MenuVisuals.back(api.getPlugin(), "Previous Section",
                                 "&7Return to the previous config section.", event -> {
                                     event.setCancelled(true);
                                     open(extension, event.getWhoClicked(), parentPath);
                                 }),
-                        pane -> pane.setPriority(Pane.Priority.LOW)
+                        Pane.Priority.LOW
                 );
             } else {
-                menu.addSingleItem(
+                menu.addItem(
                         page, 0, 0,
                         MenuVisuals.back(api.getPlugin(), parentLabel,
                                 "&7Return to the " + parentLabel.toLowerCase() + " menu.", event -> {
                                     event.setCancelled(true);
-                                    parentMenu.get().showGui(event.getWhoClicked());
+                                    parentMenu.get().show(event.getWhoClicked());
                                 }),
-                        pane -> pane.setPriority(Pane.Priority.LOW)
+                        Pane.Priority.LOW
                 );
             }
         }
 
-        menu.showGui(viewer);
+        menu.show(viewer);
     }
 
     private void openStringEditor(E extension,
@@ -234,7 +236,7 @@ final class ExtensionConfigEditor<E extends SIRExtension<?>> {
                                   String rootPath) {
         if (!(viewer instanceof Player)) return;
 
-        AnvilBuilder.of(api.getPlugin(), "&8" + key)
+        AnvilInputBuilder.of(PrismaticAPI.colorize("&8" + key), api.getPlugin())
                 .setInput(current)
                 .setOnConfirm((player, text) -> {
                     YamlConfiguration configuration = YamlConfiguration.loadConfiguration(configFile);
@@ -243,8 +245,8 @@ final class ExtensionConfigEditor<E extends SIRExtension<?>> {
                     reload(extension);
                     open(extension, player, rootPath);
                 })
-                .setOnUnsupported(player -> startStringChatEditor(extension, configFile, key, current, player, rootPath))
-                .showGui((Player) viewer);
+                .setOnUnsupported(player -> startStringChatEditor(extension, configFile, key, current, (Player) player, rootPath))
+                .show(viewer);
     }
 
     private void startStringChatEditor(E extension,

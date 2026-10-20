@@ -1,14 +1,14 @@
 package com.bitaspire.sir.command.settings;
 
-import com.github.stefvanschie.inventoryframework.gui.GuiItem;
-import com.github.stefvanschie.inventoryframework.pane.Pane;
-import com.github.stefvanschie.inventoryframework.pane.util.Slot;
+import me.croabeast.inventory.gui.GuiItem;
+import me.croabeast.inventory.pane.Pane;
+import me.croabeast.inventory.pane.util.Slot;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.SneakyThrows;
-import me.croabeast.common.gui.ButtonBuilder;
-import me.croabeast.common.gui.ChestBuilder;
-import me.croabeast.common.gui.ItemCreator;
+import me.croabeast.inventory.builder.ChestBuilder;
+import me.croabeast.inventory.builder.ItemBuilder;
+import me.croabeast.inventory.builder.ToggleBuilder;
 import com.bitaspire.sir.ChatToggleable;
 import com.bitaspire.sir.file.ExtensionFile;
 import com.bitaspire.sir.MenuToggleable;
@@ -16,6 +16,7 @@ import com.bitaspire.sir.PluginDependant;
 import com.bitaspire.sir.command.*;
 import com.bitaspire.sir.module.SIRModule;
 import com.bitaspire.sir.user.SIRUser;
+import me.croabeast.prismatic.PrismaticAPI;
 import me.croabeast.takion.logger.LogLevel;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Material;
@@ -107,11 +108,11 @@ public final class SettingsProvider extends StandaloneProvider implements Settin
     // ---------------- Menus ----------------
 
     void openMainMenu(@NotNull Player player) {
-        getMainMenu().showGui(player);
+        getMainMenu().show(player);
     }
 
     void openCategoryMenu(@NotNull Player player, @NotNull Category category) {
-        getCategoryMenu(player, category).showGui(player);
+        getCategoryMenu(player, category).show(player);
     }
 
     @NotNull
@@ -159,27 +160,28 @@ public final class SettingsProvider extends StandaloneProvider implements Settin
     @NotNull
     private ChestBuilder getMainMenu() {
         String title = menuString("main.title", "&8Chat Settings:");
-        ChestBuilder menu = ChestBuilder.of(getApi().getPlugin(), 3, title);
+        ChestBuilder menu = ChestBuilder.of(3, PrismaticAPI.colorize(title), getApi().getPlugin());
 
         List<ChatToggleable> modules = getToggleableList(Category.MODULES);
         List<ChatToggleable> commands = getToggleableList(Category.COMMANDS);
 
-        menu.addSingleItem(0, 3, 1, buildCategoryItem(Category.MODULES, modules),
-                pane -> pane.setPriority(Pane.Priority.LOW));
-        menu.addSingleItem(0, 4, 1, buildCategoryItem(Category.COMMANDS, commands),
-                pane -> pane.setPriority(Pane.Priority.LOW));
+        menu.addItem(0, 3, 1, buildCategoryItem(Category.MODULES, modules),
+                Pane.Priority.LOW);
+        menu.addItem(0, 4, 1, buildCategoryItem(Category.COMMANDS, commands),
+                Pane.Priority.LOW);
 
-        menu.addSingleItem(
+        menu.addItem(
                 0, 5, 1,
-                ItemCreator.of(Material.BARRIER)
-                        .modifyName(menuString("main.close.name", "&cClose"))
-                        .modifyLore(menuList("main.close.lore", Collections.singletonList("&7Close this menu.")))
+                ItemBuilder.of(Material.BARRIER)
+                        .setName(PrismaticAPI.colorize(menuString("main.close.name", "&cClose")))
+                        .setLore(menuList("main.close.lore", Collections.singletonList("&7Close this menu."))
+                                .stream().map(PrismaticAPI::colorize).collect(Collectors.toList()))
                         .setAction(event -> {
                             event.setCancelled(true);
                             event.getWhoClicked().closeInventory();
                         })
-                        .create(getApi().getPlugin()),
-                pane -> pane.setPriority(Pane.Priority.LOW)
+                        .build(getApi().getPlugin()),
+                Pane.Priority.LOW
         );
 
         return menu;
@@ -197,7 +199,7 @@ public final class SettingsProvider extends StandaloneProvider implements Settin
                 placeholders("category", category.getLabel())
         );
 
-        ChestBuilder menu = ChestBuilder.of(getApi().getPlugin(), rows, title);
+        ChestBuilder menu = ChestBuilder.of(rows, PrismaticAPI.colorize(title), getApi().getPlugin());
 
         SIRUser viewer = getApi().getUserManager().getUser(player);
         if (viewer == null) return menu;
@@ -213,30 +215,30 @@ public final class SettingsProvider extends StandaloneProvider implements Settin
             Slot slot = Slot.fromXY(x, y);
 
             menu.addPane(0, slot,
-                    ButtonBuilder.of(getApi().getPlugin(), slot, isToggled(viewer, toggleable))
-                            .setItem(buildToggleItem(toggleable, true), true)
-                            .setItem(buildToggleItem(toggleable, false), false)
-                            .modify(button -> button.allowToggle(false))
-                            .setAction(button -> event -> {
+                    ToggleBuilder.of(isToggled(viewer, toggleable), getApi().getPlugin())
+                            .setItems(buildToggleItem(toggleable, true), buildToggleItem(toggleable, false))
+                            .setAllowToggle(false)
+                            .setOnToggle((event, on) -> {
                                 event.setCancelled(true);
-                                setToggle(viewer, toggleable, !button.isEnabled());
+                                setToggle(viewer, toggleable, !on);
                                 openCategoryMenu((Player) event.getWhoClicked(), category);
                             })
-                            .getValue()
+                            .getButton()
             );
         }
 
-        menu.addSingleItem(
+        menu.addItem(
                 0, 0, rows - 1,
-                ItemCreator.of(Material.ARROW)
-                        .modifyName(menuString("category.back.name", "&eBack"))
-                        .modifyLore(menuList("category.back.lore", Collections.singletonList("&7Return to the main menu.")))
+                ItemBuilder.of(Material.ARROW)
+                        .setName(PrismaticAPI.colorize(menuString("category.back.name", "&eBack")))
+                        .setLore(menuList("category.back.lore", Collections.singletonList("&7Return to the main menu."))
+                                .stream().map(PrismaticAPI::colorize).collect(Collectors.toList()))
                         .setAction(event -> {
                             event.setCancelled(true);
                             openMainMenu((Player) event.getWhoClicked());
                         })
-                        .create(getApi().getPlugin()),
-                pane -> pane.setPriority(Pane.Priority.LOW)
+                        .build(getApi().getPlugin()),
+                Pane.Priority.LOW
         );
 
         return menu;
@@ -261,12 +263,12 @@ public final class SettingsProvider extends StandaloneProvider implements Settin
                 ? Arrays.asList("&7Chat settings for {category}.", "&7Available: &f{count}")
                 : Arrays.asList("&7Chat settings for {category}.", "&cNo entries available to toggle.");
 
-        ItemCreator creator = ItemCreator.of(material)
-                .modifyName(applyPlaceholders(
+        ItemBuilder creator = ItemBuilder.of(material)
+                .setName(applyPlaceholders(
                         menuString(namePath, "&7• &f{category}:"),
                         ph
                 ))
-                .modifyLore(applyPlaceholders(menuList(lorePath, loreDefault), ph));
+                .setLore(applyPlaceholders(menuList(lorePath, loreDefault), ph));
 
         if (hasEntries) {
             creator.setAction(event -> {
@@ -274,10 +276,10 @@ public final class SettingsProvider extends StandaloneProvider implements Settin
                 openCategoryMenu((Player) event.getWhoClicked(), category);
             });
         } else {
-            creator.setActionToEmpty();
+            creator.cancelClicks();
         }
 
-        return creator.create(getApi().getPlugin());
+        return creator.build(getApi().getPlugin());
     }
 
     @NotNull
@@ -307,13 +309,13 @@ public final class SettingsProvider extends StandaloneProvider implements Settin
 
         Material material = enabled ? Material.LIME_STAINED_GLASS_PANE : Material.RED_STAINED_GLASS_PANE;
 
-        return ItemCreator.of(material)
-                .modifyName(applyPlaceholders(
+        return ItemBuilder.of(material)
+                .setName(applyPlaceholders(
                         menuString("toggle.name", "&7• &f{title}: {status}"),
                         ph
                 ))
-                .modifyLore(lore)
-                .create(getApi().getPlugin());
+                .setLore(lore)
+                .build(getApi().getPlugin());
     }
 
     @NotNull
