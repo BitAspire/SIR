@@ -12,7 +12,7 @@ final class Expansion {
     private final PAPIExpansion expansion;
 
     Expansion(SettingsProvider provider) {
-        expansion = new PAPIExpansion("sir_toggle") {
+        expansion = new PAPIExpansion("sir-toggle") {
             @Override
             public String onRequest(OfflinePlayer off, @NotNull String params) {
                 if (off == null || StringUtils.isBlank(params)) return null;

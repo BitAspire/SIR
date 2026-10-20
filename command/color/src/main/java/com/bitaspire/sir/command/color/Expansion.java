@@ -14,7 +14,7 @@ final class Expansion {
     private final PAPIExpansion expansion;
 
     Expansion() {
-        expansion = new PAPIExpansion("sir_color") {
+        expansion = new PAPIExpansion("sir-color") {
             @Override
             public String onRequest(OfflinePlayer off, @NotNull String params) {
                 Player player = off.getPlayer();
