@@ -248,12 +248,18 @@ class BaseLibrary extends TakionLib {
         try {
             bossbars = new ConfigurableFile(plugin, "bossbars");
             bossbars.saveDefaults();
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            plugin.getLogger().warning("Failed to load bossbars.yml.");
+            e.printStackTrace();
+        }
 
         try {
             webhooks = new ConfigurableFile(plugin, "webhooks");
             webhooks.saveDefaults();
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            plugin.getLogger().warning("Failed to load webhooks.yml.");
+            e.printStackTrace();
+        }
     }
 
     @Override

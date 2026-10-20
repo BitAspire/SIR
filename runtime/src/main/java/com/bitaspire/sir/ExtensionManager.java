@@ -404,6 +404,7 @@ abstract class ExtensionManager<I extends Information, E extends SIRExtension<I>
         } catch (Exception e) {
             log(LogLevel.ERROR, "Failed to reload " + extensionType() + " '"
                     + extension.getName() + "' after config change: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 

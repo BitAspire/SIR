@@ -71,6 +71,8 @@ class BaseUserManager implements UserManager, Registrable {
             ensureUserFile(name);
             return new ConfigurableFile(plugin, "users", name);
         } catch (Exception e) {
+            plugin.getLogger().severe("Failed to load users/" + name + ".yml.");
+            e.printStackTrace();
             return null;
         }
     }

@@ -204,6 +204,7 @@ final class MainCommand implements TabExecutor {
                     .addPlaceholder("{backup}", backupPath)
                     .send("migrate.done");
         } catch (Exception exception) {
+            exception.printStackTrace();
             return displayer.addPlaceholder("{error}", exception.getMessage())
                     .send("migrate.error");
         }

@@ -63,7 +63,10 @@ final class ConfigImpl implements Config {
             centerPrefix = file.get("values.center-prefix", centerPrefix);
             chatCenterWidth = file.getConfiguration().getInt("values.center-width.chat", chatCenterWidth);
             lineSeparator = file.get("values.line-separator", lineSeparator);
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            main.getLogger().warning("Failed to load config.yml, default values will be used.");
+            e.printStackTrace();
+        }
     }
 
     @Override

@@ -99,6 +99,7 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
             }
         } catch (Exception exception) {
             getLogger().warning("SIR legacy migration failed: " + exception.getMessage());
+            exception.printStackTrace();
         }
 
         PluginCommand command = getCommand("sir");
@@ -107,7 +108,10 @@ public final class SIRPlugin extends JavaPlugin implements SIRApi {
                 MainCommand main = new MainCommand(this);
                 command.setExecutor(main);
                 command.setTabCompleter(main);
-            } catch (Exception ignored) {}
+            } catch (Exception exception) {
+                getLogger().severe("Failed to set up the /sir command.");
+                exception.printStackTrace();
+            }
 
         library.getGameRuleManager().load();
 
