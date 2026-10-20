@@ -103,7 +103,12 @@ public final class CustomCommands extends SIRModule implements CommandProvider, 
             installed.add(name);
         }
 
+        // Clear Chat and Print used to be command providers; their settings move into their files once.
+        List<String> migrated = yml.getStringList("migrated");
+        new LegacyProviders(this).migrate(migrated);
+
         yml.set("installed", installed);
+        yml.set("migrated", migrated);
         yml.save(file);
     }
 
