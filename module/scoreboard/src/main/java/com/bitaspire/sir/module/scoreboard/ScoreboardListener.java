@@ -27,6 +27,6 @@ final class ScoreboardListener extends Listener {
     @EventHandler
     void onWorld(PlayerChangedWorldEvent event) {
         module.refresh(event.getPlayer());
-        module.refreshLater(event.getPlayer(), 2L);
+        module.refreshLater(event.getPlayer());
     }
 }

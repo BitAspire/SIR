@@ -67,7 +67,7 @@ public class ScoreboardModule extends SIRModule implements CommandProvider {
         return true;
     }
 
-    protected ScoreboardCommand createCommand(ConfigurableFile lang) {
+    ScoreboardCommand createCommand(ConfigurableFile lang) {
         return new ScoreboardCommand(this, lang);
     }
 
@@ -113,10 +113,10 @@ public class ScoreboardModule extends SIRModule implements CommandProvider {
         refresh(player, ScoreboardRefreshContext.create(tick));
     }
 
-    void refreshLater(Player player, long delay) {
+    void refreshLater(Player player) {
         getApi().getScheduler().runTaskLater(() -> {
             if (isRegistered() && player != null && player.isOnline()) refresh(player);
-        }, delay);
+        }, 2L);
     }
 
     void refreshAllLater(long delay) {
