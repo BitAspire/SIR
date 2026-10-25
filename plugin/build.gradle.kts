@@ -10,6 +10,7 @@ val runtimeProject = project(":runtime")
 val takionShaded: Configuration by configurations.creating
 val takionVersion: String by project
 val inventoryVersion: String by project
+val advancementInfoVersion: String by project
 
 dependencies {
     implementation(apiProject)
@@ -26,6 +27,8 @@ dependencies {
     takionShaded("me.croabeast.takion:shaded:$takionVersion:all")
     // Takion no longer bundles a menu library, so SIR ships its InventoryFramework fork itself.
     takionShaded("me.croabeast.inventory:framework:$inventoryVersion")
+    // Used by the advancements module; Takion's all jar no longer bundles it
+    takionShaded("me.croabeast:AdvancementInfo:$advancementInfoVersion")
 }
 
 val apiMainOutput = apiProject.extensions.getByType<SourceSetContainer>()["main"].output
