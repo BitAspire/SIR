@@ -78,6 +78,11 @@ tasks.named<ShadowJar>("shadowJar") {
                 shadowedNestedJars.joinToString { it.name }
         }
     }
+
+    exclude(
+        "META-INF/**", "org/apache/commons/**", "org/intellij/**",
+        "org/jetbrains/**", "kotlin/**", "fonts/**"
+    )
 }
 
 tasks.assemble {
