@@ -1,5 +1,6 @@
 package com.bitaspire.sir.module.advancement;
 
+import lombok.Getter;
 import lombok.SneakyThrows;
 import me.croabeast.file.Configurable;
 import com.bitaspire.sir.file.ExtensionFile;
@@ -13,6 +14,9 @@ final class Config {
 
     private final Map<Type, Boolean> enabledMap = new HashMap<>(), whitelists = new HashMap<>();
     private final Map<Type, List<String>> values = new HashMap<>();
+
+    @Getter
+    private final boolean logToConsole;
 
     private void loadEntries(Type type, ConfigurationSection section) {
         if (section == null) return;
@@ -29,6 +33,8 @@ final class Config {
         loadEntries(Type.GAME_MODE, file.getSection("game-modes"));
         loadEntries(Type.WORLD, file.getSection("worlds"));
         loadEntries(Type.ADVANCEMENT, file.getSection("advancements"));
+
+        logToConsole = file.get("log-to-console", true);
     }
 
     boolean isProhibited(Type type, String value) {

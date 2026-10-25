@@ -65,6 +65,7 @@ final class Announcement implements PermissibleUnit {
 
         SIRApi.instance().getSender()
                 .setTargets(users.stream().map(SIRUser::getPlayer).collect(Collectors.toList()))
+                .setLogger(isLogged(main.config.isLogToConsole()))
                 .send(lines);
         if (sound != null) users.forEach(u -> sound.playSound(u));
         SIRApi.executeCommands(null, commands);

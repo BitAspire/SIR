@@ -70,6 +70,16 @@ public interface PermissibleUnit extends ConfigurableUnit {
     }
 
     /**
+     * Returns whether messages sent by this unit should be logged to console.
+     *
+     * @param def the value used when the unit has no {@code log} key.
+     * @return the unit's {@code log} value, or {@code def} if it is not set.
+     */
+    default boolean isLogged(boolean def) {
+        return getSection().getBoolean("log", def);
+    }
+
+    /**
      * Creates a new PermissibleUnit instance based on the provided configuration section.
      *
      * @param section The configuration section.

@@ -22,3 +22,7 @@ cooldown:
 
 # If true, first-join spawn handling runs before login hooks finish.
 spawn-before-login: true
+
+# If false, join and quit messages are not logged to console.
+# Each message entry can override this with its own 'log' option.
+log-to-console: true

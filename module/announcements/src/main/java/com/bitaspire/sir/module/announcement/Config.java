@@ -8,12 +8,13 @@ import com.bitaspire.sir.file.ExtensionFile;
 final class Config {
 
     private int interval = 2400;
-    private final boolean random;
+    private final boolean random, logToConsole;
 
     @SneakyThrows
     Config(Announcements main) {
         ExtensionFile file = new ExtensionFile(main, "config", true);
         interval = file.getConfiguration().getInt("interval", interval);
         random = file.get("random", false);
+        logToConsole = file.get("log-to-console", true);
     }
 }

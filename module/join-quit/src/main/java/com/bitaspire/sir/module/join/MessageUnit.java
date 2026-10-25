@@ -63,7 +63,7 @@ final class MessageUnit implements PermissibleUnit {
     }
 
     void execute(SIRUser user) {
-        MessageSender sender = api.getSender();
+        MessageSender sender = api.getSender().setLogger(isLogged(main.config.isLogToConsole()));
         Player player = user.isOnline() ? user.getPlayer() : null;
 
         List<Player> targets = Bukkit.getOnlinePlayers().stream()

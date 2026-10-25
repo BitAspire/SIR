@@ -66,6 +66,7 @@ final class Messages {
 
         TakionLib library = SIRApi.instance().getLibrary();
         SIRApi.instance().getSender().setTargets(players)
+                .setLogger(main.config.isLogToConsole())
                 .setParser(player)
                 .addFunctions(replacer::replace)
                 .send(messages.getOrDefault(type, new ArrayList<>()));

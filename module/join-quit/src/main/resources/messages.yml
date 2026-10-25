@@ -47,6 +47,8 @@ first-join:
     # Commands run from console after the first join event.
     commands:
       - 'msg {player} Welcome to the server.'
+    # Optional. Overrides 'log-to-console' from config.yml for this entry.
+    log: true
 
   # Compact first-join example using the same options as the full example above.
   section1:

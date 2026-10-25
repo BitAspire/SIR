@@ -12,3 +12,6 @@ interval: 2400
 # If true, announcements are selected randomly instead of sequentially.
 # If false, announcements follow their configured order.
 random: false
+# If false, announcements are not logged to console.
+# Each announcement can override this with its own 'log' option.
+log-to-console: true

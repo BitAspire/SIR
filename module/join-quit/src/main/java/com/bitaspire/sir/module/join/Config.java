@@ -10,7 +10,7 @@ final class Config {
     private final boolean joinDisabled, quitDisabled;
     private int joinCooldown = 0, betweenCooldown = 0, quitCooldown = 0;
 
-    private final boolean spawnBeforeLogin;
+    private final boolean spawnBeforeLogin, logToConsole;
 
     @SneakyThrows
     Config(JoinQuit main) {
@@ -24,5 +24,6 @@ final class Config {
         quitCooldown = file.getConfiguration().getInt("cooldown.quit", quitCooldown);
 
         spawnBeforeLogin = file.get("spawn-before-login", true);
+        logToConsole = file.get("log-to-console", true);
     }
 }

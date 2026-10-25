@@ -30,3 +30,6 @@ advancements:
     - minecraft:story/mine_stone
     - minecraft:nether/root
     - minecraft:end/root
+
+# If false, advancement messages are not logged to console.
+log-to-console: true
