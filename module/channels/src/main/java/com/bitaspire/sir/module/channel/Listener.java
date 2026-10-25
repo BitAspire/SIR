@@ -90,7 +90,7 @@ final class Listener extends com.bitaspire.sir.Listener {
             return;
         }
 
-        MessageSender sender = main.getApi().getSender()
+        MessageSender sender = main.getApi().getSender().setLogger(false)
                 .setTargets(user.getPlayer());
 
         if (user.getMuteData().isMuted()) {
@@ -149,7 +149,7 @@ final class Listener extends com.bitaspire.sir.Listener {
 
         event.setCancelled(true);
 
-        MessageSender sender = main.getApi().getSender()
+        MessageSender sender = main.getApi().getSender().setLogger(false)
                 .setTargets(event.getPlayer());
 
         String message = SIRApi.joinArray(1, args);

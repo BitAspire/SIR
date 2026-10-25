@@ -71,7 +71,7 @@ final class Listeners implements Registrable {
         Player player = context.getPlayer();
         List<String> list = main.config.getNotAllowed();
 
-        MessageSender sender = main.getApi().getSender().setTargets(player);
+        MessageSender sender = main.getApi().getSender().setTargets(player).setLogger(false);
         if (main.config.isRegex()) {
             Matcher match = main.config.getChatPattern().matcher(message);
 
