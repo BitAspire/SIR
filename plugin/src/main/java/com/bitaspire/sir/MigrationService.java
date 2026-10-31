@@ -20,11 +20,21 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 final class MigrationService {
 
     private static final long SECONDS_THRESHOLD = 10_000_000_000L;
+
+    // PlaceholderAPI expansions renamed from sir_<name> to sir-<name>; also matches the {bracket} form
+    private static final Pattern LEGACY_PLACEHOLDER =
+            Pattern.compile("([%{])sir_(color|toggle|emoji|tag|vanish)(?=[_%}])");
+    private static final List<String> PLACEHOLDER_FILE_EXTENSIONS = Arrays.asList(".yml", ".yaml", ".txt", ".json");
+    private static final long MAX_PLACEHOLDER_FILE_SIZE = 5L * 1024 * 1024;
+
     private final SIRPlugin plugin;
 
     MigrationService(SIRPlugin plugin) {
@@ -1750,6 +1760,54 @@ final class MigrationService {
         return placeholders;
     }
 
+    Result migratePlaceholders(boolean allPlugins) throws IOException {
+        Path root = (allPlugins ? plugin.getDataFolder().getParentFile() : plugin.getDataFolder()).toPath();
+        Path backups = new File(plugin.getDataFolder(), "back-ups").toPath();
+        Path backupRoot = backups.resolve("placeholders-" + new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date()));
+
+        List<Path> files;
+        try (Stream<Path> walk = Files.walk(root)) {
+            files = walk.filter(path -> !path.startsWith(backups) && Files.isRegularFile(path))
+                    .filter(path -> {
+                        String name = path.getFileName().toString().toLowerCase(Locale.ENGLISH);
+                        return PLACEHOLDER_FILE_EXTENSIONS.stream().anyMatch(name::endsWith);
+                    })
+                    .collect(Collectors.toList());
+        }
+
+        Result result = new Result();
+        result.ok = true;
+        result.path = root.toString();
+
+        for (Path file : files) {
+            if (Files.size(file) > MAX_PLACEHOLDER_FILE_SIZE) continue;
+
+            // ISO-8859-1 maps every byte to one char, so files in any encoding are written back unchanged
+            String text = new String(Files.readAllBytes(file), StandardCharsets.ISO_8859_1);
+            Matcher matcher = LEGACY_PLACEHOLDER.matcher(text);
+
+            StringBuffer buffer = new StringBuffer();
+            int count = 0;
+            while (matcher.find()) {
+                matcher.appendReplacement(buffer, "$1sir-$2");
+                count++;
+            }
+            if (count == 0) continue;
+            matcher.appendTail(buffer);
+
+            Path backup = backupRoot.resolve(root.relativize(file));
+            Files.createDirectories(backup.getParent());
+            Files.copy(file, backup, StandardCopyOption.REPLACE_EXISTING);
+            Files.write(file, buffer.toString().getBytes(StandardCharsets.ISO_8859_1));
+
+            result.configs++;
+            result.placeholders += count;
+        }
+
+        if (result.configs > 0) result.backupPath = backupRoot.toString();
+        return result;
+    }
+
     private String backupLegacySirArtifacts(File sirFolder) throws IOException {
         File backupsFolder = new File(plugin.getDataFolder(), "back-ups");
         if (!backupsFolder.exists() && !backupsFolder.mkdirs())
@@ -2082,5 +2140,6 @@ final class MigrationService {
         private int configs = 0;
         private int moduleStates = 0;
         private int commandStates = 0;
+        private int placeholders = 0;
     }
 }
