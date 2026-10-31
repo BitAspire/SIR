@@ -35,9 +35,10 @@ lang:
   reload: '<P> All data was reloaded successfully in {time} ms.'
 
   migrate:
-    help: '<P> &7Usage: &f/sir migrate <Essentials>'
+    help: '<P> &7Usage: &f/sir migrate <Essentials|SIR|Placeholders> [--all]'
     start: '<P> &7Starting migration from &f{source}&7...'
     no-data: '<P> &cNo  &f{source} userdata folder found at &f{path}&c.'
     unknown: '<P> &cUnknown migration source: &f{source}&c.'
     done: '<P> &aMigration complete: &f{users}&7 users, &f{ignore-users}&7 ignore lists, &f{ignored}&7 ignores, &f{muted-users}&7 mutes, &f{nick-users}&7 nicks, &f{configs}&7 configs, &f{module-states}&7 module states, &f{command-states}&7 command states, &f{skipped}&7 skipped, &f{expired}&7 expired, &f{invalid}&7 invalid, &f{backup}&7 backup.'
+    placeholders-done: '<P> &aPlaceholder migration complete: &f{placeholders}&7 placeholders in &f{files}&7 files under &f{path}&7, &f{backup}&7 backup.'
     error: '<P> &cMigration failed: &f{error}'

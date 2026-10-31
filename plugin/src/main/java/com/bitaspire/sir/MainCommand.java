@@ -19,6 +19,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -167,6 +168,9 @@ final class MainCommand implements TabExecutor {
         if (args.length < 2) return displayer.send("migrate.help");
 
         String source = args[1];
+        if (source.equalsIgnoreCase("Placeholders"))
+            return migratePlaceholders(args.length > 2 && args[2].equalsIgnoreCase("--all"), displayer);
+
         if (!source.equalsIgnoreCase("Essentials") && !source.equalsIgnoreCase("SIR"))
             return displayer.addPlaceholder("{source}", source).send("migrate.unknown");
 
@@ -207,6 +211,22 @@ final class MainCommand implements TabExecutor {
             exception.printStackTrace();
             return displayer.addPlaceholder("{error}", exception.getMessage())
                     .send("migrate.error");
+        }
+    }
+
+    private boolean migratePlaceholders(boolean allPlugins, MessageSender displayer) {
+        try {
+            displayer.addPlaceholder("{source}", "Placeholders").send("migrate.start");
+            MigrationService.Result result = new MigrationService(main).migratePlaceholders(allPlugins);
+            return displayer
+                    .addPlaceholder("{placeholders}", result.getPlaceholders())
+                    .addPlaceholder("{files}", result.getConfigs())
+                    .addPlaceholder("{path}", result.getPath())
+                    .addPlaceholder("{backup}", result.getBackupPath() == null ? "N/A" : result.getBackupPath())
+                    .send("migrate.placeholders-done");
+        } catch (Exception exception) {
+            exception.printStackTrace();
+            return displayer.addPlaceholder("{error}", exception.getMessage()).send("migrate.error");
         }
     }
 
@@ -301,7 +321,8 @@ final class MainCommand implements TabExecutor {
         builder.addArguments(1, (s, a) -> a[0].equalsIgnoreCase("commands"), commandManager.getProviderNames());
         builder.addArguments(2, (s, a) -> a[0].equalsIgnoreCase("modules") || a[0].equalsIgnoreCase("commands"), STATE_ARGUMENTS);
 
-        builder.addArguments(1, (s, a) -> a[0].equalsIgnoreCase("migrate"), Arrays.asList("Essentials", "SIR"));
+        builder.addArguments(1, (s, a) -> a[0].equalsIgnoreCase("migrate"), Arrays.asList("Essentials", "SIR", "Placeholders"));
+        builder.addArguments(2, (s, a) -> a[0].equalsIgnoreCase("migrate") && a[1].equalsIgnoreCase("Placeholders"), Collections.singletonList("--all"));
         return builder.build(sender, args);
     }
 }
