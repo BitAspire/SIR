@@ -9,7 +9,7 @@ final class EmojiExpansion extends PAPIExpansion {
     private final Data data;
 
     EmojiExpansion(Data data) {
-        super("sir_emoji");
+        super("sir-emoji");
         this.data = data;
     }
 

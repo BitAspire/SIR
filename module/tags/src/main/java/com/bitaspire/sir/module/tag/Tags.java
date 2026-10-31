@@ -43,12 +43,12 @@ public class Tags extends SIRModule implements UserFormatter<Object>, PluginDepe
             if (!((com.bitaspire.sir.PAPIExpansion) hook).register()) {
                 hook = null;
                 getLogger().log(LogLevel.WARN,
-                        "PlaceholderAPI expansion 'sir_tag' could not be registered; continuing without PAPI placeholders.");
+                        "PlaceholderAPI expansion 'sir-tag' could not be registered; continuing without PAPI placeholders.");
             }
         } catch (LinkageError | RuntimeException e) {
             hook = null;
             getLogger().log(LogLevel.WARN,
-                    "PlaceholderAPI expansion 'sir_tag' could not be registered: " + e.getMessage());
+                    "PlaceholderAPI expansion 'sir-tag' could not be registered: " + e.getMessage());
         }
         return true;
     }

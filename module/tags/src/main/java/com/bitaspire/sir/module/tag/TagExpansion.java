@@ -12,7 +12,7 @@ final class TagExpansion extends PAPIExpansion {
     private final Tags tags;
 
     TagExpansion(Tags tags) {
-        super("sir_tag");
+        super("sir-tag");
         this.tags = tags;
     }
 

@@ -40,12 +40,12 @@ public class Emojis extends SIRModule implements UserFormatter<Object>, PluginDe
             if (!((com.bitaspire.sir.PAPIExpansion) hook).register()) {
                 hook = null;
                 getLogger().log(LogLevel.WARN,
-                        "PlaceholderAPI expansion 'sir_emoji' could not be registered; continuing without PAPI placeholders.");
+                        "PlaceholderAPI expansion 'sir-emoji' could not be registered; continuing without PAPI placeholders.");
             }
         } catch (LinkageError | RuntimeException e) {
             hook = null;
             getLogger().log(LogLevel.WARN,
-                    "PlaceholderAPI expansion 'sir_emoji' could not be registered: " + e.getMessage());
+                    "PlaceholderAPI expansion 'sir-emoji' could not be registered: " + e.getMessage());
         }
         return true;
     }
